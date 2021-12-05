@@ -2,7 +2,7 @@ import mongoose from "mongoose"
 import { config } from "./config"
 export const initializeDatabese = () => {
   mongoose
-    .connect(process.env.MONGODB_URL_LOCAL || config.MONGODB.MONGODB_URL)
+    .connect(process.env.MONGODB_URL || config.MONGODB.MONGODB_URL)
     .then(() => {
       console.log("Successfully connected to database");
     })

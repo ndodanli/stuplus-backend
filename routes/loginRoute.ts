@@ -1,67 +1,44 @@
-import { UserModel } from "../models/userModel";
 import bcrypt from "bcryptjs"
-import UserDTO from "../dtos/UserDTOs";
 import { Router } from "express"
-import { validateLogin, validateRegister } from "../middlewares/validation/login/validateLoginRoutes"
+import { validateLogin, validateRegister } from "../middlewares/validation/login/validateLoginRoute"
 import BaseResponse from "../utils/base/BaseResponse";
 import { InternalError, Ok } from "../utils/base/ResponseObjectResults";
 import { getNewToken } from "../utils/auth";
-import { Role } from "../enums/enums";
+import { UserModel } from "../models/BaseModel";
+import { UserAccess } from "../dataAccess/userAccess";
+import { CustomRequest } from "../utils/base/baseOrganizers";
 const router = Router();
 
-router.post("/", validateLogin, async (req: any, res: any) => {
+router.post("/", validateLogin, async (req: CustomRequest<object>, res: any) => {
     const response = new BaseResponse<object>();
     try {
-        const userDTO = new UserDTO(req.body);
-
-        const user = await UserModel.findOne({ Email: userDTO.Email });
-
-        if (!user || !(await bcrypt.compare(userDTO.Password, user.Password))) {
-            response.setErrorMessage("Girilen bilgilere ait bir kullanıcımız bulunmamaktadır.");
-            return Ok(res, response)
-        }
-
-        response.data = { token: getNewToken(user) }
+        response.data = await UserAccess.loginUser(req.body);
 
     } catch (err: any) {
         response.setErrorMessage(err.message)
 
-        return InternalError(res, response);
+        if (err.status != 200)
+            return InternalError(res, response);
     }
 
     return Ok(res, response)
 });
 
-router.post("/register", validateRegister, async (req: any, res: any) => {
+router.post("/register", validateRegister, async (req: CustomRequest<object>, res: any) => {
     const response = new BaseResponse<object>();
     try {
+        response.data = await UserAccess.registerUser(req.body)
 
-        const userDTO = new UserDTO(req.body);
-
-        const isUserExist = await UserModel.findOne({ Email: userDTO.Email }, { _id: 1 });
-        if (isUserExist) {
-            response.setErrorMessage("Bu kullanıcı zaten kayıtlı.");
-            return Ok(res, response)
-        }
-
-        userDTO.Password = await bcrypt.hash(userDTO.Password, 10);
-        userDTO.Role = Role.User;
-
-        const createdUser = await UserModel.create({
-            ...userDTO,
-        });
-
-        response.data = { token: getNewToken(createdUser) }
+        response.setMessage("Hesabınız başarıyla oluşturuldu.")
 
     } catch (err: any) {
         response.setErrorMessage(err.message)
 
-        return InternalError(res, response);
+        if (err.status != 200)
+            return InternalError(res, response);
     }
 
     return Ok(res, response)
 });
-
-
 
 export default router;
