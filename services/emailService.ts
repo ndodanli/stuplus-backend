@@ -10,7 +10,7 @@ export default class EmailService {
         },
     });
 
-    public static sendEmail = async (to: string, subject: string, text: string, html: string) => {
+    public static sendEmail = async (to: string | string[], subject: string, text: string, html: string) => {
         return this.emailTransporter.sendMail({
             from: process.env.HOST_EMAIL || config.EMAIL_SERVICE.HOST_EMAIL,
             to: to,

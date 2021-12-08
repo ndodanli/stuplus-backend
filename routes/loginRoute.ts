@@ -7,12 +7,13 @@ import { getNewToken } from "../utils/auth";
 import { UserModel } from "../models/BaseModel";
 import { UserAccess } from "../dataAccess/userAccess";
 import { CustomRequest } from "../utils/base/baseOrganizers";
+import { LoginUserDTO, RegisterUserDTO } from "../dtos/UserDTOs";
 const router = Router();
 
-router.post("/", validateLogin, async (req: CustomRequest<object>, res: any) => {
+router.post("/", validateLogin, async (req: CustomRequest<LoginUserDTO>, res: any) => {
     const response = new BaseResponse<object>();
     try {
-        response.data = await UserAccess.loginUser(req.body);
+        response.data = await UserAccess.loginUser(new LoginUserDTO(req.body));
 
     } catch (err: any) {
         response.setErrorMessage(err.message)
@@ -24,10 +25,10 @@ router.post("/", validateLogin, async (req: CustomRequest<object>, res: any) => 
     return Ok(res, response)
 });
 
-router.post("/register", validateRegister, async (req: CustomRequest<object>, res: any) => {
+router.post("/register", validateRegister, async (req: CustomRequest<RegisterUserDTO>, res: any) => {
     const response = new BaseResponse<object>();
     try {
-        response.data = await UserAccess.registerUser(req.body)
+        response.data = await UserAccess.registerUser(new RegisterUserDTO(req.body))
 
         response.setMessage("Hesabınız başarıyla oluşturuldu.")
 

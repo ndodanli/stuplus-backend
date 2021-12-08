@@ -9,7 +9,7 @@ import { SchoolAccess } from "../dataAccess/schoolAccess";
 import { CustomRequest } from "../utils/base/baseOrganizers";
 const router = Router();
 
-router.get("/getAllSchools", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getAllSchools", async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     response.data = await SchoolAccess.getAllSchools();
@@ -24,7 +24,7 @@ router.get("/getAllSchools", authorize([Role.User, Role.Admin]), async (req: Cus
   return Ok(res, response);
 });
 
-router.get("/getFaculties/:schoolId", authorize([Role.User, Role.Admin]), validategetFaculties, async (req: CustomRequest<object>, res: any) => {
+router.get("/getFaculties/:schoolId", validategetFaculties, async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     response.data = await SchoolAccess.getFaculties(req.params.schoolId);
@@ -39,7 +39,7 @@ router.get("/getFaculties/:schoolId", authorize([Role.User, Role.Admin]), valida
   return Ok(res, response);
 });
 
-router.get("/getDepartments/:facultyId", authorize([Role.User, Role.Admin]), validategetDepartments, async (req: CustomRequest<object>, res: any) => {
+router.get("/getDepartments/:facultyId", validategetDepartments, async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     response.data = await SchoolAccess.getDepartments(req.params.facultyId);

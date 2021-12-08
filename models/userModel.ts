@@ -1,9 +1,11 @@
 import { Document, Model, Schema } from "mongoose";
+import { Gender } from "../enums/enums";
 import BaseModel from "./BaseModel";
 
 export interface User extends BaseModel {
   email: string;
   password: string;
+  username: string;
   role: Number;
   firstName: string;
   lastName: string;
@@ -17,6 +19,7 @@ export interface User extends BaseModel {
   emailConfirmation: EmailConfirmation;
   grade: Number;
   profilePhotoUrl: string;
+  gender: Gender;
   chatSettings: object,
   notificationSettings: NotificationSettings,
   roomIds: Array<String>,
@@ -51,6 +54,7 @@ export interface UserDocument extends User, Document {
 export const UserSchema: Schema = new Schema({
   email: { type: String, required: true },
   password: { type: String, required: true },
+  username: { type: String, required: true },
   role: { type: Number, required: true },
   schoolId: { type: String, required: true },
   facultyId: { type: String, required: true },
@@ -60,6 +64,7 @@ export const UserSchema: Schema = new Schema({
   lastName: { type: String, required: false },
   phoneNumber: { type: String, required: false },
   profilePhotoUrl: { type: String, required: false },
+  gender: { type: Number, required: true, default: Gender.NotDefined },
   chatSettings: { type: Object, required: true, default: {} },
   notificationSettings: { type: Object, required: true, default: {} },
   emailConfirmation: { type: Object, required: true, default: { code: null, expiresAt: null } },
@@ -91,6 +96,7 @@ UserSchema.methods.minify = async function (
     _id: this._id,
     email: this.email,
     password: this.password,
+    username: this.username,
     role: this.role,
     firstName: this.firstName,
     lastName: this.lastName,
@@ -108,6 +114,7 @@ UserSchema.methods.minify = async function (
     notificationSettings: this.notificationSettings,
     grade: this.grade,
     profilePhotoUrl: this.profilePhotoUrl,
+    gender: this.gender,
     chatSettings: this.chatSettings,
     roomIds: this.roomIds,
     blockedUserIds: this.blockedUserIds,

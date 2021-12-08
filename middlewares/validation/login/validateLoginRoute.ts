@@ -25,6 +25,16 @@ export const validateRegister = [
         .isEmail()
         .withMessage("E-mail geçerli değil.")
         .bail(),
+    check('username')
+        .notEmpty()
+        .withMessage('Kullanıcı adı boş bırakılamaz.')
+        .bail()
+        .isLength({ min: 4, max: 18 })
+        .withMessage("Kullanıcı adı en az 4, en fazla 18 karakterden oluşmalıdır.")
+        .bail()
+        .isAlphanumeric("tr-TR")
+        .withMessage("Kullanıcı adı geçersiz, lütfen uygun bir kullanıcı adı seçiniz.")
+        .bail(),
     check('schoolId')
         .notEmpty()
         .withMessage('Lütfen okulunuzu seçiniz.')
@@ -92,10 +102,10 @@ export const validateLogin = [
         .bail(),
     check('email')
         .notEmpty()
-        .withMessage('E-mail boş bırakılamaz.')
+        .withMessage("Kullanıcı adı ya da email boş bırakılamaz.")
         .bail()
-        .isEmail()
-        .withMessage("E-mail geçerli değil.")
+        .isLength({ min: 4, max: 254 })
+        .withMessage("Geçersiz kullanıcı adı ya da email")
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);

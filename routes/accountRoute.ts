@@ -5,8 +5,13 @@ import { authorize } from "../utils/auth";
 import { UserAccess } from "../dataAccess/userAccess";
 import { Role } from "../enums/enums";
 import { validateForgotPassword, validateForgotPasswordCode, validateResetPassword, validateUpdatePassword, validateUpdateProfile } from "../middlewares/validation/account/validateAccountRoute";
-import { UpdateUserDTO } from "../dtos/UserDTOs";
+import { UpdateUserProfileDTO } from "../dtos/UserDTOs";
 import { CustomRequest, CustomResponse } from "../utils/base/baseOrganizers";
+import { uploadFileToS3, uploadWithMulterS3 } from "../services/fileService";
+import multer from "multer";
+
+const upload = multer();
+
 const router = Router();
 
 router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
@@ -26,10 +31,13 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
   return Ok(res, response);
 });
 
-router.post("/updateProfile", authorize([Role.User, Role.Admin]), validateUpdateProfile, async (req: CustomRequest<UpdateUserDTO>, res: any) => {
+router.post("/updateProfile", uploadWithMulterS3.single('file1'),  async (req: CustomRequest<UpdateUserProfileDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.updateProfile(req.user._id, new UpdateUserDTO(req.body))
+    
+    const file = req.file;
+    // uploadFileToS3(req.file, "testFileName");
+    // await UserAccess.updateProfile(req.user._id, new UpdateUserProfileDTO(req.body))
 
     response.setMessage("Hesabınız başarıyla güncellendi.")
 

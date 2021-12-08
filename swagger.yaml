@@ -50,6 +50,7 @@ paths:
                 - email
                 - password
                 - passwordRepeat
+                - username
                 - schoolId
                 - facultyId
                 - departmentId
@@ -60,6 +61,8 @@ paths:
                 password:
                   type: string
                 passwordRepeat:
+                  type: string
+                username:
                   type: string
                 firstName:
                   type: string
@@ -78,6 +81,9 @@ paths:
                   type: string
                 grade:
                   type: number
+                gender:
+                  type: number
+                  description: 0(NotSpecified), 1(Male), 2(Female)
       responses:
         "200":
           description: Success
@@ -100,14 +106,6 @@ paths:
                   example: 5073959353
                 profilePhotoUrl:
                   type: string
-                schoolId:
-                  type: string
-                facultyId:
-                  type: string
-                departmentId:
-                  type: string
-                grade:
-                  type: number
       responses:
         "200":
           description: Success

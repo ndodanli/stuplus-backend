@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response, } from "express";
 import { initializeDatabese } from "./config/database";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -9,6 +9,7 @@ import accountRoute from "./routes/accountRoute";
 import schoolRoute from "./routes/schoolRoute";
 
 import swaggerRoute from "./routes/swaggerRoute";
+import path from "path";
 
 dotenv.config();
 
@@ -29,6 +30,9 @@ app.use(
 
 app.use(cookieParser());
 
+app.get("/", async (req: Request, res: Response) => {
+  return res.sendFile('index.html', { root: path.join(__dirname, './public') })
+});
 app.use("/account", accountRoute);
 app.use("/login", loginRoute);
 app.use("/school", schoolRoute);

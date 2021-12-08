@@ -10,6 +10,7 @@ import { getNewToken } from "../utils/auth";
 import EmailService from "../services/emailService";
 import moment from "moment";
 import { generateCode } from "../utils/general";
+import { LoginUserDTO, RegisterUserDTO, UpdateUserProfileDTO } from "../dtos/UserDTOs";
 export class UserAccess {
     public static async getUserWithFields(id: string, fields?: Array<string>): Promise<UserDocument | null> {
         const user = await UserModel.findOne({ _id: id }, fields, { lean: convertToObject });
@@ -28,7 +29,7 @@ export class UserAccess {
         return user;
     }
 
-    public static async updateProfile(id: string, payload: object): Promise<UserDocument | null> {
+    public static async updateProfile(id: string, payload: UpdateUserProfileDTO): Promise<UserDocument | null> {
         const user = await UserModel.findOneAndUpdate({ _id: id }, payload, { new: true, lean: convertToObject });
 
         if (!user) throw new NotValidError("Kullanıcı bulunamadı.");
@@ -52,8 +53,9 @@ export class UserAccess {
         return user;
     }
 
-    public static async registerUser(payload: any): Promise<object> {
-        const isUserExist = await UserModel.findOne({ email: payload.email }, { _id: 1 });
+    public static async registerUser(payload: RegisterUserDTO): Promise<object> {
+
+        const isUserExist = await UserModel.findOne({ $or: [{ email: payload.email }, { username: payload.username }] }, { _id: 1 });
 
         if (isUserExist) throw new NotValidError("Bu kullanıcı zaten kayıtlı.");
 
@@ -67,8 +69,8 @@ export class UserAccess {
         return { token: getNewToken(createdUser) };
     }
 
-    public static async loginUser(payload: any): Promise<object> {
-        const user = await UserModel.findOne({ email: payload.email });
+    public static async loginUser(payload: LoginUserDTO): Promise<object> {
+        const user = await UserModel.findOne({ $or: [{ email: payload.email }, { username: payload.email }] });
 
         if (!user || !(await bcrypt.compare(payload.password, user.password)))
             throw new NotValidError(("Girilen bilgilere ait bir kullanıcımız bulunmamaktadır."));
