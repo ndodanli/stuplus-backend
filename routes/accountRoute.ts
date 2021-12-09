@@ -31,13 +31,10 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
   return Ok(res, response);
 });
 
-router.post("/updateProfile", uploadWithMulterS3.any(), validateUpdateProfile, async (req: CustomRequest<UpdateUserProfileDTO>, res: any) => {
+router.post("/updateProfile", authorize([Role.User, Role.Admin]), validateUpdateProfile, async (req: CustomRequest<UpdateUserProfileDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-
-    const fileErrors = req.fileValidationErrors;
-    // uploadFileToS3(req.file, "testFileName");
-    // await UserAccess.updateProfile(req.user._id, new UpdateUserProfileDTO(req.body))
+    await UserAccess.updateProfile(req.user._id, new UpdateUserProfileDTO(req.body))
 
     response.setMessage("Hesabınız başarıyla güncellendi.")
 
