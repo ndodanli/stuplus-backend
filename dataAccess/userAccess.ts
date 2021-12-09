@@ -6,7 +6,7 @@ import { SchoolModel } from "../models/BaseModel";
 import { UserDocument } from "../models/UserModel";
 import NotValidError from "../errors/NotValidError";
 import { Role } from "../enums/enums";
-import { getNewToken } from "../utils/auth";
+import { getNewToken } from "../utils/token";
 import EmailService from "../services/emailService";
 import moment from "moment";
 import { generateCode } from "../utils/general";

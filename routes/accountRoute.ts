@@ -1,7 +1,7 @@
 import { Router } from "express";
 import BaseResponse from "../utils/base/BaseResponse";
 import { InternalError, Ok } from "../utils/base/ResponseObjectResults";
-import { authorize } from "../utils/auth";
+import { authorize } from "../middlewares/auth";
 import { UserAccess } from "../dataAccess/userAccess";
 import { Role } from "../enums/enums";
 import { validateForgotPassword, validateForgotPasswordCode, validateResetPassword, validateUpdatePassword, validateUpdateProfile } from "../middlewares/validation/account/validateAccountRoute";
@@ -31,11 +31,11 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
   return Ok(res, response);
 });
 
-router.post("/updateProfile", uploadWithMulterS3.single('file1'),  async (req: CustomRequest<UpdateUserProfileDTO>, res: any) => {
+router.post("/updateProfile", uploadWithMulterS3.any(), validateUpdateProfile, async (req: CustomRequest<UpdateUserProfileDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    
-    const file = req.file;
+
+    const fileErrors = req.fileValidationErrors;
     // uploadFileToS3(req.file, "testFileName");
     // await UserAccess.updateProfile(req.user._id, new UpdateUserProfileDTO(req.body))
 

@@ -6,54 +6,6 @@ import { Ok } from "../../../utils/base/ResponseObjectResults";
 import { noUsage } from "../customValidators";
 
 export const validateUpdateProfile = [
-    check('notificationSettings')
-        .custom(noUsage)
-        .bail(),
-    check('chatSettings')
-        .custom(noUsage)
-        .bail(),
-    check('roomIds')
-        .custom(noUsage)
-        .bail(),
-    check('blockedUserIds')
-        .custom(noUsage)
-        .bail(),
-    check('interestIds')
-        .custom(noUsage)
-        .bail(),
-    check('friendIds')
-        .custom(noUsage)
-        .bail(),
-    check('takenFriendRequestIds')
-        .custom(noUsage)
-        .bail(),
-    check('sendedFriendRequestIds')
-        .custom(noUsage)
-        .bail(),
-    check('schoolId')
-        .optional()
-        .bail()
-        .isString()
-        .withMessage("Lütfen geçerli bir okul seçiniz.")
-        .bail(),
-    check('facultyId')
-        .optional()
-        .bail()
-        .isString()
-        .withMessage("Lütfen geçerli bir fakülte seçiniz.")
-        .bail(),
-    check('departmentId')
-        .optional()
-        .bail()
-        .isString()
-        .withMessage("Lütfen geçerli bir bölüm seçiniz.")
-        .bail(),
-    check('grade')
-        .optional()
-        .bail()
-        .isInt({ min: 0, max: 7 })
-        .withMessage("Lütfen geçerli bir sınıf seçiniz.")
-        .bail(),
     check('firstName')
         .optional()
         .bail()
@@ -80,11 +32,6 @@ export const validateUpdateProfile = [
         .withMessage("Geçersiz profil fotoğraf yolu.")
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
-        if (req.body["schoolId"] || req.body["facultyId"] || req.body["departmentId"]) {
-            if (!req.body["schoolId"] || !req.body["facultyId"] || !req.body["departmentId"]) {
-                return Ok(res, new BaseResponse(true, [], null, "Okul bilgileri eksik."));
-            }
-        }
         const errors = validationResult(req);
         if (!errors.isEmpty())
             return Ok(res, new BaseResponse(true, errors.array(), null, "Lütfen gerekli bilgileri doldurun."));

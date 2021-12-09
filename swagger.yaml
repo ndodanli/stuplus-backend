@@ -240,6 +240,11 @@ paths:
                 type: array
                 items:
                   type: object
+                  properties:
+                    _id:
+                      type: string
+                    title:
+                      type: string
   /school/getFaculties/{schoolId}:
     get:
       summary: Get all departments of the relevant school.
@@ -258,6 +263,11 @@ paths:
                 type: array
                 items:
                   type: object
+                  properties:
+                    _id:
+                      type: string
+                    title:
+                      type: string
   /school/getDepartments/{facultyId}:
     get:
       summary: Get all departments of the relevant faculty.
@@ -276,3 +286,10 @@ paths:
                 type: array
                 items:
                   type: object
+                  properties:
+                    _id:
+                      type: string
+                    title:
+                      type: string
+                    grade:
+                      type: number

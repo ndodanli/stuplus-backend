@@ -1,10 +1,7 @@
 import { Router } from "express";
 import BaseResponse from "../utils/base/BaseResponse";
 import { InternalError, Ok } from "../utils/base/ResponseObjectResults";
-import { authorize } from "../utils/auth";
-import { DepartmentModel, FacultyModel, SchoolModel, UserModel } from "../models/BaseModel";
 import { validategetFaculties, validategetDepartments } from "../middlewares/validation/school/validateSchoolRoute";
-import { Role } from "../enums/enums";
 import { SchoolAccess } from "../dataAccess/schoolAccess";
 import { CustomRequest } from "../utils/base/baseOrganizers";
 const router = Router();

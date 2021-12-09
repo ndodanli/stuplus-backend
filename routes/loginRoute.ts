@@ -1,10 +1,7 @@
-import bcrypt from "bcryptjs"
 import { Router } from "express"
 import { validateLogin, validateRegister } from "../middlewares/validation/login/validateLoginRoute"
 import BaseResponse from "../utils/base/BaseResponse";
 import { InternalError, Ok } from "../utils/base/ResponseObjectResults";
-import { getNewToken } from "../utils/auth";
-import { UserModel } from "../models/BaseModel";
 import { UserAccess } from "../dataAccess/userAccess";
 import { CustomRequest } from "../utils/base/baseOrganizers";
 import { LoginUserDTO, RegisterUserDTO } from "../dtos/UserDTOs";

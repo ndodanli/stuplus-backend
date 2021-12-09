@@ -3,6 +3,7 @@ import BaseModel from "./BaseModel";
 
 export interface Department extends BaseModel {
   facultyId: string;
+  grade: Number;
 }
 
 export interface DepartmentDocument extends Department, Document {
@@ -11,6 +12,7 @@ export interface DepartmentDocument extends Department, Document {
 
 export const DepartmentSchema: Schema = new Schema({
   facultyId: { type: String, required: true },
+  grade: { type: Number, required: true, default: 4 },
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -30,6 +32,7 @@ DepartmentSchema.methods.minify = async function (
   const response: Department & { _id: string } = {
     _id: this._id,
     facultyId: this.facultyId,
+    grade: this.grade,
     title: this.title,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
