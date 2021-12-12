@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=1.0, initial-scale=1.0">
+    <title>Fakultem Email</title>
+</head>
+
+<body>
+    <div style="padding: 1%;">
+        <div id="email-confirmation"></div>
+    </div>
+    <script>
+        const el = document.getElementById("email-confirmation")
+        fetch(location.href, { method: "post" })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.hasError)
+                if (data.hasError) {
+                    el.innerHTML = `<div style="background-color:red">${data.message}</div>`
+                } else {
+                    el.innerHTML = `<div style="background-color:green">${data.message}</div>`
+                }
+            })
+            .catch(err => {
+                if (err.hasError) {
+                    el.innerHTML = `<div style="background-color:red">${data.message}</div>`
+                }
+            });
+    </script>
+</body>
+
+
+</html>

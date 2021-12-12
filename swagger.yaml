@@ -55,6 +55,7 @@ paths:
                 - facultyId
                 - departmentId
                 - grade
+                - gender
               properties:
                 email:
                   type: string
@@ -109,6 +110,24 @@ paths:
       responses:
         "200":
           description: Success
+  /account/sendConfirmationEmail:
+    post:
+      summary: This is only for user to send email confirmation after logged in if email confirmation some way failed(e.g. mail send failed, confirmation code expired).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - isStudentEmail
+              properties:
+                isStudentEmail:
+                  description: Declare as true if the confirmation is for student email, false if it is not. Declare it even if both account and student emails are same. It will be handled at backend.
+                  type: boolean
+      responses:
+        "200":
+          description: Success
   /account/updatePassword:
     post:
       summary: Update user password.
@@ -125,6 +144,25 @@ paths:
                   type: string
                 newPasswordRepeat:
                   type: string
+      responses:
+        "200":
+          description: Success
+  /account/updateInterests:
+    post:
+      summary: Update user's interests.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - interestIds
+              properties:
+                interestIds:
+                  type: array
+                  items:
+                    type: string
       responses:
         "200":
           description: Success
@@ -293,3 +331,20 @@ paths:
                       type: string
                     grade:
                       type: number
+  /interest/getAllInterests:
+    get:
+      summary: Get all interests.
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                    title:
+                      type: string

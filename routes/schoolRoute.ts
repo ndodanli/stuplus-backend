@@ -9,7 +9,7 @@ const router = Router();
 router.get("/getAllSchools", async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    response.data = await SchoolAccess.getAllSchools();
+    response.data = await SchoolAccess.getAllSchools(["_id", "title"]);
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -24,7 +24,7 @@ router.get("/getAllSchools", async (req: CustomRequest<object>, res: any) => {
 router.get("/getFaculties/:schoolId", validategetFaculties, async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    response.data = await SchoolAccess.getFaculties(req.params.schoolId);
+    response.data = await SchoolAccess.getFaculties(req.params.schoolId, ["_id", "title","schoolId"]);
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -39,7 +39,7 @@ router.get("/getFaculties/:schoolId", validategetFaculties, async (req: CustomRe
 router.get("/getDepartments/:facultyId", validategetDepartments, async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    response.data = await SchoolAccess.getDepartments(req.params.facultyId);
+    response.data = await SchoolAccess.getDepartments(req.params.facultyId, ["_id", "title","facultyId","grade"]);
 
   } catch (err: any) {
     response.setErrorMessage(err.message);

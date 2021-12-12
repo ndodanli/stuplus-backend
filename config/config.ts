@@ -1,4 +1,5 @@
 let config = {
+    DOMAIN: process.env.DOMAIN || "http://165.227.153.191",
     EMAIL_SERVICE: {
         HOST_EMAIL: "fakultemdestekmail@gmail.com",
         HOST_EMAIL_PASSWORD: "denemE1@"
@@ -13,7 +14,7 @@ let config = {
         MONGODB_URL_LOCAL: "mongodb://localhost/fakultem",
     },
     JWT_SECRET: "FAKULTEMJWT!!@#!@$!@SECRE@$@$T",
-    PORT: 5000
+    PORT: 25010
 }
 
 export {

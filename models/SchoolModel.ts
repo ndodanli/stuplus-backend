@@ -2,6 +2,7 @@ import { Document, Model, Schema } from "mongoose";
 import BaseModel from "./BaseModel";
 
 export interface School extends BaseModel {
+  emailFormat: string;
 }
 
 export interface SchoolDocument extends School, Document {
@@ -9,6 +10,7 @@ export interface SchoolDocument extends School, Document {
 }
 
 export const SchoolSchema: Schema = new Schema({
+  emailFormat: { type: String, required: true },
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -27,6 +29,7 @@ SchoolSchema.methods.minify = async function (
 ) {
   const response: School & { _id: string } = {
     _id: this._id,
+    emailFormat: this.emailFormat,
     title: this.title,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,

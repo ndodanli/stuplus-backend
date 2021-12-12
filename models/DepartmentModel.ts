@@ -12,7 +12,7 @@ export interface DepartmentDocument extends Department, Document {
 
 export const DepartmentSchema: Schema = new Schema({
   facultyId: { type: String, required: true },
-  grade: { type: Number, required: true, default: 4 },
+  grade: { type: Number, required: false, default: 4 },
 });
 
 // Just to prove that hooks are still functioning as expected

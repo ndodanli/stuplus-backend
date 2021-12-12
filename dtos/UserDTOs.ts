@@ -1,4 +1,6 @@
+import { EmailConfigurations } from "aws-sdk/clients/iotevents";
 import { Role } from "../enums/enums";
+import { EmailConfirmation } from "../models/UserModel";
 import { mapToDTO } from "../utils/general";
 
 export class UpdateUserProfileDTO {
@@ -13,8 +15,20 @@ export class UpdateUserProfileDTO {
     }
 }
 
+export class UpdateUserInterestsDTO {
+    interestIds: Array<string> = []
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
 export class RegisterUserDTO {
     email: string = "";
+    accEmailConfirmation: EmailConfirmation = new EmailConfirmation();
+    schoolEmail: string | undefined;
+    schoolEmailConfirmation: EmailConfirmation = new EmailConfirmation();
     password: string = "";
     passwordRepeat: string = "";
     username: string = "";

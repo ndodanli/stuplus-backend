@@ -1,16 +1,17 @@
 import { AcceptsDiscriminator, Model, model, Schema } from "mongoose";
 import { DepartmentDocument, DepartmentSchema } from "./DepartmentModel";
 import { FacultyDocument, FacultySchema } from "./FacultyModel";
+import { InterestDocument, InterestSchema } from "./InterestModel";
 import { SchoolDocument, SchoolSchema } from "./SchoolModel";
 import { UserDocument, UserSchema } from "./UserModel";
 
 export default interface BaseModel {
   createdAt: Date;
   updatedAt: Date;
-  title: String | null;
+  title: string | null;
 }
 
-const collections = ["User", "School", "Faculty", "Department"];
+const collections = ["User", "School", "Faculty", "Department", "Interest"];
 
 const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
 
@@ -39,3 +40,8 @@ export const UserModel = baseSpreadator["User"].discriminator<
   UserDocument,
   Model<UserDocument>
 >("User", UserSchema);
+
+export const InterestModel = baseSpreadator["Interest"].discriminator<
+  InterestDocument,
+  Model<InterestDocument>
+>("Interest", InterestSchema);

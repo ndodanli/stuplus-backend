@@ -9,13 +9,15 @@ import { Role } from "../enums/enums";
 import { getNewToken } from "../utils/token";
 import EmailService from "../services/emailService";
 import moment from "moment";
-import { generateCode } from "../utils/general";
-import { LoginUserDTO, RegisterUserDTO, UpdateUserProfileDTO } from "../dtos/UserDTOs";
+import { checkIfStudentEmail, checkIfValidSchool, generateCode } from "../utils/general";
+import { LoginUserDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO } from "../dtos/UserDTOs";
+import { getMessage } from "../config/responseMessages";
+import { config } from "../config/config";
 export class UserAccess {
-    public static async getUserWithFields(id: string, fields?: Array<string>): Promise<UserDocument | null> {
+    public static async getUserWithFields(acceptedLanguages: Array<string>, id: string, fields?: Array<string>): Promise<UserDocument | null> {
         const user = await UserModel.findOne({ _id: id }, fields, { lean: convertToObject });
 
-        if (!user) throw new NotValidError("Kullanıcı bulunamadı.");
+        if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
         const school = await SchoolModel.findOne({ _id: user?.schoolId });
         const faculty = await FacultyModel.findOne({ _id: user?.facultyId });
@@ -29,23 +31,31 @@ export class UserAccess {
         return user;
     }
 
-    public static async updateProfile(id: string, payload: UpdateUserProfileDTO): Promise<UserDocument | null> {
+    public static async updateProfile(acceptedLanguages: Array<string>, id: string, payload: UpdateUserProfileDTO): Promise<UserDocument | null> {
         const user = await UserModel.findOneAndUpdate({ _id: id }, payload, { new: true, lean: convertToObject });
 
-        if (!user) throw new NotValidError("Kullanıcı bulunamadı.");
+        if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
         return user;
     }
 
-    public static async updatePassword(id: string, payload: any): Promise<UserDocument | null> {
+    public static async updateInterests(acceptedLanguages: Array<string>, id: string, payload: UpdateUserInterestsDTO): Promise<UserDocument | null> {
+        const user = await UserModel.findOneAndUpdate({ _id: id }, { $set: { 'interestIds': payload.interestIds } }, { new: true });
+
+        if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
+
+        return user;
+    }
+
+    public static async updatePassword(acceptedLanguages: Array<string>, id: string, payload: any): Promise<UserDocument | null> {
         const user = await UserModel.findOne({ _id: id });
-        if (!user) throw new NotValidError("Kullanıcı bulunamadı.");
+        if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
         if (!(await bcrypt.compare(payload.password, user.password)))
-            throw new NotValidError("Parolanız doğru değil.");
+            throw new NotValidError(getMessage("passwordNotTrue", acceptedLanguages));
 
         if ((await bcrypt.compare(payload.newPassword, user.password)))
-            throw new NotValidError("Yeni parolanız eskisiyle aynı olamaz.");
+            throw new NotValidError(getMessage("passwordCanNotBeSameAsOld", acceptedLanguages));
 
         user.password = await bcrypt.hash(payload.newPassword, 10);
         await user.save();
@@ -53,45 +63,145 @@ export class UserAccess {
         return user;
     }
 
-    public static async registerUser(payload: RegisterUserDTO): Promise<object> {
+    public static async registerUser(acceptedLanguages: Array<string>, payload: RegisterUserDTO): Promise<object> {
+        const user = await UserModel.findOne({ $or: [{ email: payload.email }, { schoolEmail: payload.email }, { username: payload.username }] });
 
-        const isUserExist = await UserModel.findOne({ $or: [{ email: payload.email }, { username: payload.username }] }, { _id: 1 });
-
-        if (isUserExist) throw new NotValidError("Bu kullanıcı zaten kayıtlı.");
+        if (user)
+            throw new NotValidError(getMessage("userAlreadyRegistered", acceptedLanguages));
 
         payload.password = await bcrypt.hash(payload.password, 10);
         payload.role = Role.User;
+
+        const now = new Date();
+        const code = generateCode();
+
+        const isStudentEmail = checkIfStudentEmail(payload.email);
+        if (isStudentEmail) {
+            const school = await SchoolModel.findOne({ _id: payload.schoolId })
+            if (!school)
+                throw new NotValidError(getMessage("schoolNotFound", acceptedLanguages));
+
+            if (!checkIfValidSchool(payload.email, school.emailFormat))
+                throw new NotValidError(getMessage("schoolNotValid", acceptedLanguages));
+
+            payload.schoolEmail = payload.email;
+            payload.schoolEmailConfirmation.code = code;
+            payload.schoolEmailConfirmation.expiresAt = moment(now).add(30, 'm').toDate();
+        } else {
+            payload.accEmailConfirmation.code = code;
+            payload.accEmailConfirmation.expiresAt = moment(now).add(30, 'm').toDate();
+        }
 
         const createdUser = await UserModel.create({
             ...payload
         });
 
+        const verifyLink = config.DOMAIN + `/account/emailConfirmation?uid=${createdUser._id}&code=${code}&t=${isStudentEmail ? "1" : "0"}`
+
+        await EmailService.sendEmail(
+            payload.email,
+            "Hesabınızı onaylayın",
+            "Hesabınızı onaylamak için linkiniz hazır.",
+            `<div>Linke tıklayarak hesabınızı onaylayın: <a href="${verifyLink}" style="text-decoration:underline;">Onaylayın</a></div>`,
+        )
+
         return { token: getNewToken(createdUser) };
     }
 
-    public static async loginUser(payload: LoginUserDTO): Promise<object> {
+    public static async sendConfirmationEmail(acceptedLanguages: Array<string>, userId: string, isStudentEmail: Boolean) {
+        const user = await UserModel.findOne({ _id: userId });
+
+        if (!user)
+            throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
+
+        const now = new Date();
+        const code = generateCode();
+
+        if (isStudentEmail) {
+            user.schoolEmailConfirmation.code = code;
+            user.schoolEmailConfirmation.expiresAt = moment(now).add(30, 'm').toDate();
+            user.markModified("schoolEmailConfirmation");
+        } else {
+            user.accEmailConfirmation.code = code;
+            user.accEmailConfirmation.expiresAt = moment(now).add(30, 'm').toDate();
+            user.markModified("accEmailConfirmation");
+        }
+
+
+        const verifyLink = config.DOMAIN + `/account/emailConfirmation?uid=${user._id}&code=${code}&t=${isStudentEmail ? "1" : "0"}`
+
+        await EmailService.sendEmail(
+            isStudentEmail ? user.schoolEmail : user.email,
+            "Hesabınızı onaylayın",
+            "Hesabınızı onaylamak için linkiniz hazır.",
+            `<div>Linke tıklayarak hesabınızı onaylayın: <a href="${verifyLink}" style="text-decoration:underline;">Onaylayın</a></div>`,
+        )
+    }
+
+    public static async confirmEmail(acceptedLanguages: Array<string>, userId: string, code: Number, isStudentEmail: Number) {
+        const user = await UserModel.findOne({ _id: userId });
+
+        if (!user)
+            throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
+
+        if (user.isAccEmailConfirmed && !isStudentEmail)
+            throw new NotValidError(getMessage("accountEmailAlreadyConfirmed", acceptedLanguages));
+
+        if (user.isSchoolEmailConfirmed && isStudentEmail)
+            throw new NotValidError(getMessage("schoolEmailAlreadyConfirmed", acceptedLanguages));
+
+        if (moment(new Date()).isAfter(isStudentEmail ? user.schoolEmailConfirmation.expiresAt : user.accEmailConfirmation.expiresAt))
+            throw new NotValidError(getMessage("confirmationNotValidExpTime", acceptedLanguages));
+
+        if (isStudentEmail ? user.schoolEmailConfirmation.code !== code : user.accEmailConfirmation.code !== code)
+            throw new NotValidError(getMessage("confirmationNotValid", acceptedLanguages));
+
+        if (user.email == user.schoolEmail) {
+            user.schoolEmailConfirmation.code = null;
+            user.isSchoolEmailConfirmed = true;
+            user.markModified("schoolEmailConfirmation");
+            user.accEmailConfirmation.code = null;
+            user.isAccEmailConfirmed = true;
+            user.markModified("accEmailConfirmation");
+        } else if (isStudentEmail) {
+            user.schoolEmailConfirmation.code = null;
+            user.isSchoolEmailConfirmed = true;
+            user.markModified("schoolEmailConfirmation");
+        } else {
+            user.accEmailConfirmation.code = null;
+            user.isAccEmailConfirmed = true;
+            user.markModified("accEmailConfirmation");
+        }
+
+        user.save();
+    }
+
+    public static async loginUser(acceptedLanguages: Array<string>, payload: LoginUserDTO): Promise<object> {
         const user = await UserModel.findOne({ $or: [{ email: payload.email }, { username: payload.email }] });
 
         if (!user || !(await bcrypt.compare(payload.password, user.password)))
-            throw new NotValidError(("Girilen bilgilere ait bir kullanıcımız bulunmamaktadır."));
+            throw new NotValidError(getMessage("userNotFoundWithEnteredInfo", acceptedLanguages));
 
         return { token: getNewToken(user) };
     }
 
-    public static async sendConfirmationEmailForgotPassword(email: string) {
+    public static async sendConfirmationEmailForgotPassword(acceptedLanguages: Array<string>, email: string) {
         const user = await UserModel.findOne({ email: email });
         if (!user)
-            throw new NotValidError("Bu e-maile sahip bir kullanıcımız bulunmamaktadır.");
+            throw new NotValidError(getMessage("userNotFoundWithThisEmail", acceptedLanguages));
+
+        if (!user.accEmailConfirmation)
+            throw new NotValidError(getMessage("cantSendWithoutEmailConfirm", acceptedLanguages));
 
         const now = new Date()
-        const validDate = moment(user.emailConfirmation.expiresAt).subtract(9, 'm').toDate()
+        const validDate = moment(user.fpEmailConfirmation.expiresAt).subtract(9, 'm').toDate()
         if (moment(now).isBefore(validDate))
-            throw new NotValidError("Parola sıfırlama kodunuz kısa süre önce gönderildi. Lütfen bir dakika bekleyip tekrar deneyin.");
+            throw new NotValidError(getMessage("codeRecentlySent", acceptedLanguages));
 
         const code = generateCode();
 
-        user.emailConfirmation.code = code;
-        user.emailConfirmation.expiresAt = moment(now).add(10, 'm').toDate();
+        user.fpEmailConfirmation.code = code;
+        user.fpEmailConfirmation.expiresAt = moment(now).add(10, 'm').toDate();
 
         await EmailService.sendEmail(
             user.email,
@@ -103,32 +213,35 @@ export class UserAccess {
         await user.save();
     }
 
-    public static async confirmForgotPasswordCode(email: string, code: Number) {
+    public static async confirmForgotPasswordCode(acceptedLanguages: Array<string>, email: string, code: Number) {
         const user = await UserModel.findOne({ email: email });
         if (!user)
-            throw new NotValidError("İlgili e-maile sahip kullanıcı bulunamadığından doğrulama sağlanamadı.");
+            throw new NotValidError(getMessage("noUserFoundWithRelEmail", acceptedLanguages));
 
-        if (moment(new Date()).isAfter(user.emailConfirmation.expiresAt))
-            throw new NotValidError("Doğrulama kodunuz geçersiz. Biraz geç mi kaldınız? Lütfen tekrar deneyin.");
+        if (moment(new Date()).isAfter(user.fpEmailConfirmation.expiresAt))
+            throw new NotValidError(getMessage("codeNotValidExpTime", acceptedLanguages));
 
-        if (user.emailConfirmation.code !== code)
-            throw new NotValidError("Doğrulama kodunuz geçersiz.");
+        if (user.fpEmailConfirmation.code !== code)
+            throw new NotValidError(getMessage("codeNotValid", acceptedLanguages));
     }
 
-    public static async resetPassword(email: string, code: Number, newPassword: string) {
+    public static async resetPassword(acceptedLanguages: Array<string>, email: string, code: Number, newPassword: string) {
         const user = await UserModel.findOne({ email: email });
         if (!user)
-            throw new NotValidError("İlgili e-maile sahip kullanıcı bulunamadığından doğrulama sağlanamadı.");
+            throw new NotValidError(getMessage("noUserFoundWithRelEmail", acceptedLanguages));
 
-        if (moment(new Date()).isAfter(user.emailConfirmation.expiresAt))
-            throw new NotValidError("Doğrulama kodunuzun süresi bitti. Biraz geç mi kaldınız? Lütfen tekrar deneyin.");
+        if (moment(new Date()).isAfter(user.fpEmailConfirmation.expiresAt))
+            throw new NotValidError(getMessage("codeNotValidExpTime", acceptedLanguages));
 
-        if (user.emailConfirmation.code != code)
-            throw new NotValidError("Doğrulama kodunuz geçersiz. Yasadışı işler yapmaya çalışıyorsanız lütfen uzak durun.");
+        if (user.fpEmailConfirmation.code != code)
+            throw new NotValidError(getMessage("codeNotValidNoTry", acceptedLanguages));
+
+        if ((await bcrypt.compare(newPassword, user.password)))
+            throw new NotValidError(getMessage("passwordCanNotBeSameAsOld", acceptedLanguages));
 
         user.password = await bcrypt.hash(newPassword, 10);
 
-        user.emailConfirmation.code = null;
+        user.fpEmailConfirmation.code = null;
 
         user.markModified("emailConfirmation")
         await user.save();

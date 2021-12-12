@@ -1,4 +1,4 @@
-import { check, validationResult } from "express-validator"
+import { check, validationResult, query } from "express-validator"
 import { NotificationSettings } from "../../../models/UserModel";
 import { CustomRequest } from "../../../utils/base/baseOrganizers";
 import BaseResponse from "../../../utils/base/BaseResponse";
@@ -139,6 +139,46 @@ export const validateForgotPassword = [
         .bail()
         .isEmail()
         .withMessage("E-mail geçerli değil.")
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, "Lütfen gerekli bilgileri doldurun."));
+        next();
+    },
+];
+
+export const validateUpdateInterests = [
+    check('interestIds')
+        .notEmpty()
+        .withMessage("İlgi alanlarını göndermek zorunludur.")
+        .bail()
+        .isArray()
+        .withMessage("Geçersiz format[Array req]")
+        .bail()
+        .isLength({ min: 1 })
+        .withMessage("En az bir ilgi alanı göndermek zorunludur.")
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, "Lütfen gerekli bilgileri doldurun."));
+        next();
+    },
+];
+
+export const validateEmailConfirmation = [
+    query('t')
+        .notEmpty()
+        .withMessage("Hatalı bilgi.")
+        .bail(),
+    query("uid")
+        .notEmpty()
+        .withMessage("Kullanıcı bulunamadı.")
+        .bail(),
+    query("code")
+        .notEmpty()
+        .withMessage("Kod bulunamadı.")
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);

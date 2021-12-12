@@ -7,27 +7,32 @@ export interface User extends BaseModel {
   password: string;
   username: string;
   role: Number;
+  schoolEmail: string;
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  schoolId: String;
-  schoolName: String | null; //ignore
-  facultyId: String;
-  facultyName: String | null; //ignore
-  departmentId: String;
-  departmentName: String | null; //ignore
-  emailConfirmation: EmailConfirmation;
+  schoolId: string;
+  schoolName: string | null; //ignore
+  facultyId: string;
+  facultyName: string | null; //ignore
+  departmentId: string;
+  departmentName: string | null; //ignore
+  isAccEmailConfirmed: Boolean;
+  isSchoolEmailConfirmed: Boolean;
+  accEmailConfirmation: EmailConfirmation;
+  schoolEmailConfirmation: EmailConfirmation;
+  fpEmailConfirmation: EmailConfirmation;
   grade: Number;
   profilePhotoUrl: string;
   gender: Gender;
   chatSettings: object,
   notificationSettings: NotificationSettings,
-  roomIds: Array<String>,
-  blockedUserIds: Array<String>,
-  interestIds: Array<String>,
-  friendIds: Array<String>,
-  takenFriendRequestIds: Array<String>,
-  sendedFriendRequestIds: Array<String>,
+  roomIds: Array<string>,
+  blockedUserIds: Array<string>,
+  interestIds: Array<string>,
+  friendIds: Array<string>,
+  takenFriendRequestIds: Array<string>,
+  sendedFriendRequestIds: Array<string>,
 }
 
 export class EmailConfirmation {
@@ -53,6 +58,7 @@ export interface UserDocument extends User, Document {
 
 export const UserSchema: Schema = new Schema({
   email: { type: String, required: true },
+  schoolEmail: { type: String, required: false, default: null },
   password: { type: String, required: true },
   username: { type: String, required: true },
   role: { type: Number, required: true },
@@ -60,14 +66,18 @@ export const UserSchema: Schema = new Schema({
   facultyId: { type: String, required: true },
   departmentId: { type: String, required: true },
   grade: { type: Number, required: true },
-  firstName: { type: String, required: false },
-  lastName: { type: String, required: false },
-  phoneNumber: { type: String, required: false },
-  profilePhotoUrl: { type: String, required: false },
+  firstName: { type: String, required: false, default: null },
+  lastName: { type: String, required: false, default: null },
+  phoneNumber: { type: String, required: false, default: null },
+  profilePhotoUrl: { type: String, required: false, default: null },
   gender: { type: Number, required: true, default: Gender.NotDefined },
   chatSettings: { type: Object, required: true, default: {} },
   notificationSettings: { type: Object, required: true, default: {} },
-  emailConfirmation: { type: Object, required: true, default: { code: null, expiresAt: null } },
+  isAccEmailConfirmed: { type: Boolean, required: true, default: false },
+  isSchoolEmailConfirmed: { type: Boolean, required: true, default: false },
+  accEmailConfirmation: { type: Object, required: true, default: { code: null, expiresAt: null } },
+  schoolEmailConfirmation: { type: Object, required: true, default: { code: null, expiresAt: null } },
+  fpEmailConfirmation: { type: Object, required: true, default: { code: null, expiresAt: null } },
   roomIds: { type: Array.of(String), required: true, default: [] },
   blockedUserIds: { type: Array.of(String), required: true, default: [] },
   interestIds: { type: Array.of(String), required: true, default: [] },
@@ -98,6 +108,7 @@ UserSchema.methods.minify = async function (
     password: this.password,
     username: this.username,
     role: this.role,
+    schoolEmail: this.schoolEmail,
     firstName: this.firstName,
     lastName: this.lastName,
     createdAt: this.createdAt,
@@ -110,7 +121,11 @@ UserSchema.methods.minify = async function (
     facultyName: null,
     departmentId: this.departmentId,
     departmentName: null,
-    emailConfirmation: this.emailConfirmation,
+    isAccEmailConfirmed: this.isAccEmailConfirmed,
+    isSchoolEmailConfirmed: this.isSchoolEmailConfirmed,
+    fpEmailConfirmation: this.fpEmailConfirmation,
+    accEmailConfirmation: this.accEmailConfirmation,
+    schoolEmailConfirmation: this.schoolEmailConfirmation,
     notificationSettings: this.notificationSettings,
     grade: this.grade,
     profilePhotoUrl: this.profilePhotoUrl,

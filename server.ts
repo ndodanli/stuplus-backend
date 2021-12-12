@@ -10,6 +10,8 @@ import schoolRoute from "./routes/schoolRoute";
 
 import swaggerRoute from "./routes/swaggerRoute";
 import path from "path";
+import { config } from "./config/config";
+import interestRoute from "./routes/interestRoute";
 
 dotenv.config();
 
@@ -36,7 +38,8 @@ app.get("/", async (req: Request, res: Response) => {
 app.use("/account", accountRoute);
 app.use("/login", loginRoute);
 app.use("/school", schoolRoute);
+app.use("/interest", interestRoute);
 
 app.use("/doc", swaggerRoute);
 
-app.listen(process.env.PORT, () => console.log("Server started at http://localhost:" + process.env.PORT));
+app.listen((process.env.PORT || config.PORT), () => console.log("Server started at http://localhost:" + (process.env.PORT || config.PORT)));
