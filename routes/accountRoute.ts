@@ -9,6 +9,8 @@ import { UpdateUserInterestsDTO, UpdateUserProfileDTO } from "../dtos/UserDTOs";
 import { CustomRequest, CustomResponse } from "../utils/base/baseOrganizers";
 import { getMessage } from "../config/responseMessages";
 import path from "path";
+import { uploadSingleFileS3 } from "../services/fileService";
+import NotValidError from "../errors/NotValidError";
 
 
 const router = Router();
@@ -16,7 +18,10 @@ const router = Router();
 router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    const user = await UserAccess.getUserWithFields(req.acceptsLanguages(), req.user._id, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl", "role", "grade", "schoolId", "facultyId", "departmentId"])
+    const user = await UserAccess.getUserWithFields(req.acceptsLanguages(), res.locals.user._id,
+      ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
+        "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
+        "isSchoolEmailConfirmed"])
 
     response.data = user;
 
@@ -33,7 +38,7 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
 router.post("/updateProfile", authorize([Role.User, Role.Admin]), validateUpdateProfile, async (req: CustomRequest<UpdateUserProfileDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.updateProfile(req.acceptsLanguages(), req.user._id, new UpdateUserProfileDTO(req.body))
+    await UserAccess.updateProfile(req.acceptsLanguages(), res.locals.user._id, new UpdateUserProfileDTO(req.body))
 
     response.setMessage(getMessage("profileUpdated", req.acceptsLanguages()))
 
@@ -50,7 +55,7 @@ router.post("/updateProfile", authorize([Role.User, Role.Admin]), validateUpdate
 router.post("/updateInterests", authorize([Role.User, Role.Admin]), validateUpdateInterests, async (req: CustomRequest<UpdateUserInterestsDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.updateInterests(req.acceptsLanguages(), req.user._id, new UpdateUserInterestsDTO(req.body))
+    await UserAccess.updateInterests(req.acceptsLanguages(), res.locals.user._id, new UpdateUserInterestsDTO(req.body))
 
     response.setMessage(getMessage("interestsUpdated", req.acceptsLanguages()))
 
@@ -67,7 +72,7 @@ router.post("/updateInterests", authorize([Role.User, Role.Admin]), validateUpda
 router.post("/updatePassword", authorize([Role.User, Role.Admin]), validateUpdatePassword, async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.updatePassword(req.acceptsLanguages(), req.user._id, req.body)
+    await UserAccess.updatePassword(req.acceptsLanguages(), res.locals.user._id, req.body)
 
     response.setMessage(getMessage("passwordUpdated", req.acceptsLanguages()))
 
@@ -139,7 +144,7 @@ router.get("/emailConfirmation", async (req: CustomRequest<object>, res: any) =>
 router.post("/emailConfirmation", validateEmailConfirmation, async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.confirmEmail(req.acceptsLanguages(), req.query.uid as string, Number(req.query.code), Number(req.query.isStudentEmail));
+    await UserAccess.confirmEmail(req.acceptsLanguages(), req.query.uid as string, Number(req.query.code), Number(req.query.t));
 
     response.setMessage(getMessage("emailVerified", req.acceptsLanguages()));
 
@@ -156,7 +161,7 @@ router.post("/emailConfirmation", validateEmailConfirmation, async (req: CustomR
 router.post("/sendConfirmationEmail", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.sendConfirmationEmail(req.acceptsLanguages(), req.user._id as string, req.body.isStudentEmail);
+    await UserAccess.sendConfirmationEmail(req.acceptsLanguages(), res.locals.user._id as string, req.body.isStudentEmail);
 
     response.setMessage(getMessage("emailVerified", req.acceptsLanguages()));
 
@@ -169,5 +174,29 @@ router.post("/sendConfirmationEmail", authorize([Role.User, Role.Admin]), async 
 
   return Ok(res, response);
 });
+
+router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSingleFileS3.single("photo", [".png", ".jpg", ".jpeg", ".svg"], "public/profile_photos/", 5242880), async (req: CustomRequest<object>, res: any) => {
+  const response = new BaseResponse<object>();
+  try {
+    if (req.fileValidationErrors?.length) {
+      response.validationErrors = req.fileValidationErrors;
+      throw new NotValidError(getMessage("fileError", req.acceptsLanguages()))
+    }
+
+    await UserAccess.updateProfilePhoto(req.acceptsLanguages(), res.locals.user._id, req.file?.location)
+
+    response.data = { url: req.file?.location }
+
+    response.setMessage(getMessage("ppUpdated", req.acceptsLanguages()))
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+})
 
 export default router;

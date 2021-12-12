@@ -47,6 +47,17 @@ export class UserAccess {
         return user;
     }
 
+    public static async updateProfilePhoto(acceptedLanguages: Array<string>, id: string, newPPUrl: string | undefined): Promise<UserDocument | null> {
+        if (!newPPUrl)
+            throw new NotValidError(getMessage("photoUrlNotFound", acceptedLanguages))
+
+        const user = await UserModel.findOneAndUpdate({ _id: id }, { $set: { 'profilePhotoUrl': newPPUrl } }, { new: true });
+
+        if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
+
+        return user;
+    }
+
     public static async updatePassword(acceptedLanguages: Array<string>, id: string, payload: any): Promise<UserDocument | null> {
         const user = await UserModel.findOne({ _id: id });
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
@@ -117,21 +128,40 @@ export class UserAccess {
         const now = new Date();
         const code = generateCode();
 
+
         if (isStudentEmail) {
+            if (user.isSchoolEmailConfirmed)
+                throw new NotValidError(getMessage("schoolEmailAlreadyConfirmed", acceptedLanguages));
+
+            if (!user.schoolEmail)
+                throw new NotValidError(getMessage("schoolEmailNotFound", acceptedLanguages));
+
+            if (moment(now).isBefore(moment(user.schoolEmailConfirmation.expiresAt).subtract(29, 'm').toDate()))
+                throw new NotValidError(getMessage("codeRecentlySent", acceptedLanguages));
+
             user.schoolEmailConfirmation.code = code;
             user.schoolEmailConfirmation.expiresAt = moment(now).add(30, 'm').toDate();
             user.markModified("schoolEmailConfirmation");
         } else {
+            if (user.isAccEmailConfirmed)
+                throw new NotValidError(getMessage("accountEmailAlreadyConfirmed", acceptedLanguages));
+
+            if (moment(now).isBefore(moment(user.accEmailConfirmation.expiresAt).subtract(29, 'm').toDate()))
+                throw new NotValidError(getMessage("codeRecentlySent", acceptedLanguages));
+
             user.accEmailConfirmation.code = code;
             user.accEmailConfirmation.expiresAt = moment(now).add(30, 'm').toDate();
             user.markModified("accEmailConfirmation");
         }
 
+        user.save();
 
         const verifyLink = config.DOMAIN + `/account/emailConfirmation?uid=${user._id}&code=${code}&t=${isStudentEmail ? "1" : "0"}`
-
+        const validEmail = isStudentEmail ? user.schoolEmail : user.email
+        if (!validEmail)
+            throw new NotValidError(getMessage("noRecipientsFound", acceptedLanguages))
         await EmailService.sendEmail(
-            isStudentEmail ? user.schoolEmail : user.email,
+            validEmail,
             "Hesabınızı onaylayın",
             "Hesabınızı onaylamak için linkiniz hazır.",
             `<div>Linke tıklayarak hesabınızı onaylayın: <a href="${verifyLink}" style="text-decoration:underline;">Onaylayın</a></div>`,

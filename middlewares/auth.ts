@@ -14,7 +14,7 @@ export const authorize = (role: Role[]) => {
                 if (err || !role.includes(decode.role)) {
                     return Ok(res, new BaseResponse<null>(true, [], null, "Bu işlem için yetkiniz yok!"));
                 }
-                req.user = decode;
+                res.locals.user = decode;
                 next();
                 return;
             });

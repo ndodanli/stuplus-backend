@@ -1,4 +1,4 @@
-import { Document, Model, Schema } from "mongoose";
+import { Document, Schema } from "mongoose";
 import BaseModel from "./BaseModel";
 
 export interface School extends BaseModel {

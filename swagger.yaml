@@ -105,11 +105,33 @@ paths:
                 phoneNumber:
                   type: string
                   example: 5073959353
-                profilePhotoUrl:
-                  type: string
       responses:
         "200":
           description: Success
+  /account/updateProfilePhoto:
+    post:
+      summary: Update user profile photo(accepts only with one of ".png", ".jpg", ".jpeg", ".svg" extensions and 5MB size limit).
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+               - photo
+              properties:
+                photo:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
   /account/sendConfirmationEmail:
     post:
       summary: This is only for user to send email confirmation after logged in if email confirmation some way failed(e.g. mail send failed, confirmation code expired).
@@ -266,6 +288,10 @@ paths:
                     type: string
                   departmentName:
                     type: string
+                  isAccEmailConfirmed:
+                    type: boolean
+                  isSchoolEmailConfirmed:
+                    type: boolean
   /school/getAllSchools:
     get:
       summary: Get all schools.

@@ -1,4 +1,4 @@
-import { Document, Model, Schema } from "mongoose";
+import { Document, Schema } from "mongoose";
 import { Gender } from "../enums/enums";
 import BaseModel from "./BaseModel";
 
