@@ -25,7 +25,7 @@ app.use(bodyParser.json());
 app.use(
   cors()
   // cors({
-  //   origin: "http://localhost:3000",
+  //   origin: "http://localhost:25010",
   //   credentials: true,
   // })
 );

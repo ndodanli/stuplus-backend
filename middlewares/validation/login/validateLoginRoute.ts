@@ -8,8 +8,11 @@ export const validateRegister = [
         .notEmpty()
         .withMessage('Parola boş bırakılamaz.')
         .bail()
-        .isStrongPassword({ minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1 })
+        .isStrongPassword({ minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 0 })
         .withMessage('Parolanız en az 8 karakterden oluşmalı, en az bir sayı, bir büyük harf ve bir küçük harf içermelidir.')
+        .bail()
+        .isLength({ max: 20 })
+        .withMessage("Bu değer fazla uzun, bunu içeri alamayız.")
         .bail(),
     check('passwordRepeat')
         .custom(async (passwordRepeat, { req }) => {

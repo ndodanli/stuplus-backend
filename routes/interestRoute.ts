@@ -3,9 +3,6 @@ import BaseResponse from "../utils/base/BaseResponse";
 import { InternalError, Ok } from "../utils/base/ResponseObjectResults";
 import { CustomRequest } from "../utils/base/baseOrganizers";
 import { InterestAccess } from "../dataAccess/interestAccess";
-import { authorize } from "../middlewares/auth";
-import { Role } from "../enums/enums";
-import { UpdateUserInterestsDTO } from "../dtos/UserDTOs";
 const router = Router();
 
 router.get("/getAllInterests", async (req: CustomRequest<object>, res: any) => {

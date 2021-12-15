@@ -17,7 +17,6 @@
         fetch(location.href, { method: "post" })
             .then(response => response.json())
             .then(data => {
-                console.log(data.hasError)
                 if (data.hasError) {
                     el.innerHTML = `<div style="background-color:red">${data.message}</div>`
                 } else {

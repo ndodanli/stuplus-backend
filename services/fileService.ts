@@ -3,8 +3,8 @@ import { config } from "../config/config";
 import multer from "multer"
 import multerS3 from "multer-s3"
 import path from "path";
-import { CustomRequest } from "../utils/base/baseOrganizers";
 import { getMessage } from "../config/responseMessages";
+
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY_ID_S3 || config.S3.ACCESS_KEY_ID_S3,
   secretAccessKey: process.env.SECRET_ACCESS_KEY_S3 || config.S3.SECRET_ACCESS_KEY_S3,
