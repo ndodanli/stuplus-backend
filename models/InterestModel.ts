@@ -2,7 +2,7 @@ import { Document, Schema } from "mongoose";
 import BaseModel from "./BaseModel";
 
 export interface Interest extends BaseModel {
-  url: string;
+  icon: string;
 }
 
 export interface InterestDocument extends Interest, Document {
@@ -10,7 +10,7 @@ export interface InterestDocument extends Interest, Document {
 }
 
 export const InterestSchema: Schema = new Schema({
-  url: { type: String, required: true },
+  icon: { type: String, required: true },
 });
 
 InterestSchema.pre("save", function (next) {
@@ -28,7 +28,7 @@ InterestSchema.methods.minify = async function (
 ) {
   const response: Interest & { _id: string } = {
     _id: this._id,
-    url: this.url,
+    icon: this.icon,
     title: this.title,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,

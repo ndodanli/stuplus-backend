@@ -1,4 +1,5 @@
 import { check, validationResult } from "express-validator"
+import { getMessage } from "../../../config/responseMessages";
 import { CustomRequest } from "../../../utils/base/baseOrganizers";
 import BaseResponse from "../../../utils/base/BaseResponse";
 import { Ok } from "../../../utils/base/ResponseObjectResults";
@@ -6,94 +7,95 @@ import { Ok } from "../../../utils/base/ResponseObjectResults";
 export const validateRegister = [
     check('password')
         .notEmpty()
-        .withMessage('Parola boş bırakılamaz.')
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.acceptsLanguages()))
         .bail()
         .isStrongPassword({ minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 0 })
-        .withMessage('Parolanız en az 8 karakterden oluşmalı, en az bir sayı, bir büyük harf ve bir küçük harf içermelidir.')
+        .withMessage((value: any, { req }: any) => getMessage("strongPassword", req.acceptsLanguages()))
         .bail()
         .isLength({ max: 20 })
-        .withMessage("Bu değer fazla uzun, bunu içeri alamayız.")
+        .withMessage((value: any, { req }: any) => getMessage("lengthTooLong", req.acceptsLanguages()))
         .bail(),
     check('passwordRepeat')
         .custom(async (passwordRepeat, { req }) => {
             if (req.body.password !== passwordRepeat) {
-                throw new Error("Parolalar eşleşmiyor.")
+                throw new Error(getMessage("passwordsDoesntMatch", req.acceptsLanguages()))
             }
         })
         .bail(),
     check('email')
         .notEmpty()
-        .withMessage('E-mail boş bırakılamaz.')
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.acceptsLanguages(), ["Email"]))
         .bail()
         .isEmail()
-        .withMessage("E-mail geçerli değil.")
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["Email"]))
         .bail(),
     check('username')
         .notEmpty()
-        .withMessage('Kullanıcı adı boş bırakılamaz.')
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.acceptsLanguages(), ["Kullanıcı adı"]))
         .bail()
         .isLength({ min: 4, max: 18 })
-        .withMessage("Kullanıcı adı en az 4, en fazla 18 karakterden oluşmalıdır.")
+        .withMessage((value: any, { req }: any) => getMessage("usernameNotValidLength", req.acceptsLanguages()))
         .bail()
         .isAlphanumeric("tr-TR")
-        .withMessage("Kullanıcı adı geçersiz, lütfen uygun bir kullanıcı adı seçiniz.")
+        .withMessage((value: any, { req }: any) => getMessage("usernameNotValid", req.acceptsLanguages()))
         .bail(),
     check('schoolId')
         .notEmpty()
-        .withMessage('Lütfen okulunuzu seçiniz.')
+        .withMessage((value: any, { req }: any) => getMessage("schoolNotSelected", req.acceptsLanguages()))
         .bail()
         .isString()
-        .withMessage("Lütfen geçerli bir okul seçiniz.")
+        .withMessage((value: any, { req }: any) => getMessage("schoolSelectNotValid", req.acceptsLanguages()))
         .bail(),
     check('facultyId')
         .notEmpty()
-        .withMessage('Lütfen fakültenizi seçiniz.')
+        .withMessage((value: any, { req }: any) => getMessage("facultyNotSelected", req.acceptsLanguages()))
         .bail()
         .isString()
-        .withMessage("Lütfen geçerli bir fakülte seçiniz.")
+        .withMessage((value: any, { req }: any) => getMessage("facultySelectNotValid", req.acceptsLanguages()))
         .bail(),
     check('departmentId')
         .notEmpty()
-        .withMessage('Lütfen bölümünüzü seçiniz.')
+        .withMessage((value: any, { req }: any) => getMessage("departmentNotSelected", req.acceptsLanguages()))
         .bail()
         .isString()
-        .withMessage("Lütfen geçerli bir bölüm seçiniz.")
+        .withMessage((value: any, { req }: any) => getMessage("departmentSelectNotValid", req.acceptsLanguages()))
         .bail(),
     check('grade')
         .notEmpty()
-        .withMessage('Lütfen sınıfınızı seçiniz.')
+        .withMessage((value: any, { req }: any) => getMessage("gradeNotSelected", req.acceptsLanguages()))
         .bail()
         .isInt({ min: 0, max: 7 })
-        .withMessage("Lütfen geçerli bir sınıf seçiniz.")
+        .withMessage((value: any, { req }: any) => getMessage("gradeSelectNotValid", req.acceptsLanguages()))
         .bail(),
     check('firstName')
-        .optional()
-        .bail()
+        .if((value: any, { req }: any) => value)
         .isLength({ min: 1, max: 50 })
-        .withMessage("İsim geçerli değil.")
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["İsim"]))
         .bail(),
     check('lastName')
-        .optional()
-        .bail()
+        .if((value: any, { req }: any) => value)
         .isLength({ min: 1, max: 50 })
-        .withMessage("Soyisim geçerli değil.")
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["Soyisim"]))
         .bail(),
     check('phoneNumber')
-        .optional()
-        .bail()
+        .if((value: any, { req }: any) => value)
         .isMobilePhone(["tr-TR"])
         .not()
-        .withMessage("Telefon numarası geçerli değil. Lütfen belirtilen formatta giriş yapınız.")
+        .withMessage((value: any, { req }: any) => getMessage("phoneNumberNotValid", req.acceptsLanguages()))
         .bail(),
     check('profilePhotoUrl')
-        .optional()
-        .bail()
+        .if((value: any, { req }: any) => value)
         .isURL()
-        .withMessage("Geçersiz profil fotoğraf yolu."),
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["Profil fotoğraf yolu"]))
+        .bail(),
+    check('interestIds')
+        .isArray({ min: 3 })
+        .withMessage((value: any, { req }: any) => getMessage("minInterest", req.acceptsLanguages()))
+        .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
-            return Ok(res, new BaseResponse(true, errors.array(), null, "Lütfen gerekli bilgileri doldurun."));
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.acceptsLanguages())));
         next();
     },
 ];
@@ -101,19 +103,19 @@ export const validateRegister = [
 export const validateLogin = [
     check('password')
         .notEmpty()
-        .withMessage('Parola boş bırakılamaz.')
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.acceptsLanguages(), ["Parola"]))
         .bail(),
     check('email')
         .notEmpty()
-        .withMessage("Kullanıcı adı ya da email boş bırakılamaz.")
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.acceptsLanguages(), ["Kullanıcı adı ya da email"]))
         .bail()
         .isLength({ min: 4, max: 254 })
-        .withMessage("Geçersiz kullanıcı adı ya da email")
+        .withMessage((value: any, { req }: any) => getMessage("invalidUsernameOrPassword", req.acceptsLanguages()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
-            return Ok(res, new BaseResponse(true, errors.array(), null, "Lütfen gerekli bilgileri doldurun."));
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.acceptsLanguages())));
         next();
     },
 ];

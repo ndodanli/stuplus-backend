@@ -1,4 +1,5 @@
 import { check, validationResult, query } from "express-validator"
+import { getMessage } from "../../../config/responseMessages";
 import { NotificationSettings } from "../../../models/UserModel";
 import { CustomRequest } from "../../../utils/base/baseOrganizers";
 import BaseResponse from "../../../utils/base/BaseResponse";
@@ -7,27 +8,23 @@ import { noUsage } from "../customValidators";
 
 export const validateUpdateProfile = [
     check('firstName')
-        .optional()
-        .bail()
+        .if((value: any, { req }: any) => value)
         .isLength({ min: 1, max: 50 })
-        .withMessage("İsim geçerli değil.")
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["İsim"]))
         .bail(),
     check('lastName')
-        .optional()
-        .bail()
+        .if((value: any, { req }: any) => value)
         .isLength({ min: 1, max: 50 })
-        .withMessage("Soyisim geçerli değil.")
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["Soyisim"]))
         .bail(),
     check('phoneNumber')
-        .optional()
-        .bail()
+        .if((value: any, { req }: any) => value)
         .isMobilePhone(["tr-TR"])
         .not()
         .withMessage("Telefon numarası geçerli değil. Lütfen belirtilen formatta giriş yapınız.")
         .bail(),
     check('profilePhotoUrl')
-        .optional()
-        .bail()
+        .if((value: any, { req }: any) => value)
         .isURL()
         .withMessage("Geçersiz profil fotoğraf yolu.")
         .bail(),
@@ -82,7 +79,7 @@ export const validateResetPassword = [
         .withMessage("Lütfen email adresinizi giriniz.")
         .bail()
         .isEmail()
-        .withMessage("E-mail geçerli değil.")
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["E-mail"]))
         .bail(),
     check('newPassword')
         .notEmpty()
@@ -122,7 +119,7 @@ export const validateForgotPasswordCode = [
         .withMessage("Lütfen email adresinizi giriniz.")
         .bail()
         .isEmail()
-        .withMessage("E-mail geçerli değil.")
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["E-mail"]))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
@@ -138,7 +135,7 @@ export const validateForgotPassword = [
         .withMessage("Lütfen email adresinizi giriniz.")
         .bail()
         .isEmail()
-        .withMessage("E-mail geçerli değil.")
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["E-mail"]))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
@@ -150,19 +147,13 @@ export const validateForgotPassword = [
 
 export const validateUpdateInterests = [
     check('interestIds')
-        .notEmpty()
-        .withMessage("İlgi alanlarını göndermek zorunludur.")
-        .bail()
-        .isArray()
-        .withMessage("Geçersiz format[Array req]")
-        .bail()
-        .isLength({ min: 1 })
-        .withMessage("En az bir ilgi alanı göndermek zorunludur.")
+        .isArray({ min: 3 })
+        .withMessage((value: any, { req }: any) => getMessage("minInterest", req.acceptsLanguages()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
-            return Ok(res, new BaseResponse(true, errors.array(), null, "Lütfen gerekli bilgileri doldurun."));
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.acceptsLanguages())));
         next();
     },
 ];
@@ -170,20 +161,20 @@ export const validateUpdateInterests = [
 export const validateEmailConfirmation = [
     query('t')
         .notEmpty()
-        .withMessage("Hatalı bilgi.")
+        .withMessage((value: any, { req }: any) => getMessage("wrongInfo", req.acceptsLanguages()))
         .bail(),
     query("uid")
         .notEmpty()
-        .withMessage("Kullanıcı bulunamadı.")
+        .withMessage((value: any, { req }: any) => getMessage("userNotFound", req.acceptsLanguages()))
         .bail(),
     query("code")
         .notEmpty()
-        .withMessage("Kod bulunamadı.")
+        .withMessage((value: any, { req }: any) => getMessage("codeNotFound", req.acceptsLanguages()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
-            return Ok(res, new BaseResponse(true, errors.array(), null, "Lütfen gerekli bilgileri doldurun."));
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.acceptsLanguages())));
         next();
     },
 ];

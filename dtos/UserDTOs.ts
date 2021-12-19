@@ -41,6 +41,7 @@ export class RegisterUserDTO {
     facultyId: string = "";
     departmentId: string = "";
     grade: string = "";
+    interestIds: Array<string> = []
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);
