@@ -11,7 +11,7 @@ import EmailService from "../services/emailService";
 import moment from "moment";
 import { checkIfStudentEmail, checkIfValidSchool, generateCode } from "../utils/general";
 import { LoginUserDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO } from "../dtos/UserDTOs";
-import { getMessage } from "../config/responseMessages";
+import { getMessage } from "../localization/responseMessages";
 import { config } from "../config/config";
 export class UserAccess {
     public static async getUserWithFields(acceptedLanguages: Array<string>, id: string, fields?: Array<string>): Promise<UserDocument | null> {

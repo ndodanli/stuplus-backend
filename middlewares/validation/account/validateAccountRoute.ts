@@ -1,5 +1,5 @@
 import { check, validationResult, query } from "express-validator"
-import { getMessage } from "../../../config/responseMessages";
+import { getMessage } from "../../../localization/responseMessages";
 import { NotificationSettings } from "../../../models/UserModel";
 import { CustomRequest } from "../../../utils/base/baseOrganizers";
 import BaseResponse from "../../../utils/base/BaseResponse";
@@ -10,12 +10,12 @@ export const validateUpdateProfile = [
     check('firstName')
         .if((value: any, { req }: any) => value)
         .isLength({ min: 1, max: 50 })
-        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["İsim"]))
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.selectedLanguages(), ["İsim"]))
         .bail(),
     check('lastName')
         .if((value: any, { req }: any) => value)
         .isLength({ min: 1, max: 50 })
-        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["Soyisim"]))
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.selectedLanguages(), ["Soyisim"]))
         .bail(),
     check('phoneNumber')
         .if((value: any, { req }: any) => value)
@@ -79,7 +79,7 @@ export const validateResetPassword = [
         .withMessage("Lütfen email adresinizi giriniz.")
         .bail()
         .isEmail()
-        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["E-mail"]))
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.selectedLanguages(), ["E-mail"]))
         .bail(),
     check('newPassword')
         .notEmpty()
@@ -119,7 +119,7 @@ export const validateForgotPasswordCode = [
         .withMessage("Lütfen email adresinizi giriniz.")
         .bail()
         .isEmail()
-        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["E-mail"]))
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.selectedLanguages(), ["E-mail"]))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
@@ -135,7 +135,7 @@ export const validateForgotPassword = [
         .withMessage("Lütfen email adresinizi giriniz.")
         .bail()
         .isEmail()
-        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.acceptsLanguages(), ["E-mail"]))
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.selectedLanguages(), ["E-mail"]))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
@@ -148,12 +148,12 @@ export const validateForgotPassword = [
 export const validateUpdateInterests = [
     check('interestIds')
         .isArray({ min: 3 })
-        .withMessage((value: any, { req }: any) => getMessage("minInterest", req.acceptsLanguages()))
+        .withMessage((value: any, { req }: any) => getMessage("minInterest", req.selectedLanguages()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
-            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.acceptsLanguages())));
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLanguages())));
         next();
     },
 ];
@@ -161,20 +161,20 @@ export const validateUpdateInterests = [
 export const validateEmailConfirmation = [
     query('t')
         .notEmpty()
-        .withMessage((value: any, { req }: any) => getMessage("wrongInfo", req.acceptsLanguages()))
+        .withMessage((value: any, { req }: any) => getMessage("wrongInfo", req.selectedLanguages()))
         .bail(),
     query("uid")
         .notEmpty()
-        .withMessage((value: any, { req }: any) => getMessage("userNotFound", req.acceptsLanguages()))
+        .withMessage((value: any, { req }: any) => getMessage("userNotFound", req.selectedLanguages()))
         .bail(),
     query("code")
         .notEmpty()
-        .withMessage((value: any, { req }: any) => getMessage("codeNotFound", req.acceptsLanguages()))
+        .withMessage((value: any, { req }: any) => getMessage("codeNotFound", req.selectedLanguages()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
-            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.acceptsLanguages())));
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLanguages())));
         next();
     },
 ];

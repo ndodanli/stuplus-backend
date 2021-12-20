@@ -1,5 +1,5 @@
 const systemLangs: Record<string, Function> = {
-    "tr-TR": function (args?: string[]) {
+    "tr": function (args?: string[]) {
         return {
             profileUpdated: "Profiliniz başarıyla güncellendi.",
             interestsUpdated: "İlgi alanlarınız başarıyla güncellendi.",
@@ -59,7 +59,7 @@ const systemLangs: Record<string, Function> = {
             minInterest: "En az 3 ilgi alanı seçmeniz gerekli, sizi tanıyalım."
         }
     },
-    "en-US": function (args: string[] = []) {
+    "en": function (args: string[] = []) {
         return {
         }
     }
@@ -76,7 +76,7 @@ export const getMessage = (messageKey: string, languages: string[], args?: strin
         }
     }
     if (!language || !message)
-        message = systemLangs["tr-TR"](args)[messageKey] || "MESSAGE_NOT_FOUND";
+        message = systemLangs["tr"](args)[messageKey] || "MESSAGE_NOT_FOUND";
 
     return message;
 }

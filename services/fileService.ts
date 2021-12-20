@@ -3,7 +3,7 @@ import { config } from "../config/config";
 import multer from "multer"
 import multerS3 from "multer-s3"
 import path from "path";
-import { getMessage } from "../config/responseMessages";
+import { getMessage } from "../localization/responseMessages";
 
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY_ID_S3 || config.S3.ACCESS_KEY_ID_S3,
@@ -31,20 +31,20 @@ export const uploadSingleFileS3 = {
       fileFilter: function (req: any, file, callback) {
         var ext = path.extname(file.originalname);
         if (!allowedExtensions.includes(ext.toLowerCase())) {
-          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileExtError", req.acceptsLanguages(), [ext]) })
+          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileExtError", req.selectedLanguages(), [ext]) })
           callback(null, false)
           return;
         }
 
         if (file.originalname.length > 50) {
-          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileNameTooLongError", req.acceptsLanguages(), [file.originalname]) })
+          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileNameTooLongError", req.selectedLanguages(), [file.originalname]) })
           callback(null, false)
           return;
         }
 
         const fileSize = parseInt(req.headers['content-length']);
         if (fileSize > fileSizeLimit) {
-          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileSizeError", req.acceptsLanguages(), ["5 MB"]) })
+          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileSizeError", req.selectedLanguages(), ["5 MB"]) })
           callback(null, false)
           return;
         }

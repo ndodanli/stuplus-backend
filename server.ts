@@ -12,6 +12,7 @@ import swaggerRoute from "./routes/swaggerRoute";
 import path from "path";
 import { config } from "./config/config";
 import interestRoute from "./routes/interestRoute";
+import customExtensions from "./extensions/extensions";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use(
 );
 
 app.use(cookieParser());
+app.use(customExtensions())
 
 app.get("/", async (req: Request, res: Response) => {
   return res.sendFile('index.html', { root: path.join(__dirname, './public') })
