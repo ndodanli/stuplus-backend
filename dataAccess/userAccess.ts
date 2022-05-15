@@ -23,11 +23,15 @@ export class UserAccess {
         const faculty = await FacultyModel.findOne({ _id: user?.facultyId });
         const department = await DepartmentModel.findOne({ _id: user?.departmentId });
 
-        if (school && faculty && department) {
+        if (school)
             user.schoolName = school.title;
+
+        if (faculty)
             user.facultyName = faculty.title;
+
+        if (department)
             user.departmentName = department.title;
-        }
+
         return user;
     }
 
