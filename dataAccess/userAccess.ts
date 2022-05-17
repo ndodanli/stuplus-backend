@@ -19,9 +19,9 @@ export class UserAccess {
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
-        const school = await SchoolModel.findOne({ _id: user?.schoolId });
-        const faculty = await FacultyModel.findOne({ _id: user?.facultyId });
-        const department = await DepartmentModel.findOne({ _id: user?.departmentId });
+        const school = await SchoolModel.findOne({ _id: user.schoolId });
+        const faculty = await FacultyModel.findOne({ _id: user.facultyId });
+        const department = await DepartmentModel.findOne({ _id: user.departmentId });
 
         if (school)
             user.schoolName = school.title;
