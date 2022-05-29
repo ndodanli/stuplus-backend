@@ -4,7 +4,7 @@
   "description": "fakultem app-backend",
   "main": "server.ts",
   "scripts": {
-    "start": "nodemon --watch ./* ts-node ./server.ts"
+    "start": "nodemon ./server.ts"
   },
   "repository": {
     "type": "git",

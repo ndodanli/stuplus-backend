@@ -31,20 +31,20 @@ export const uploadSingleFileS3 = {
       fileFilter: function (req: any, file, callback) {
         var ext = path.extname(file.originalname);
         if (!allowedExtensions.includes(ext.toLowerCase())) {
-          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileExtError", req.selectedLanguages(), [ext]) })
+          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileExtError", req.selectedLangs(), [ext]) })
           callback(null, false)
           return;
         }
 
         if (file.originalname.length > 50) {
-          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileNameTooLongError", req.selectedLanguages(), [file.originalname]) })
+          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileNameTooLongError", req.selectedLangs(), [file.originalname]) })
           callback(null, false)
           return;
         }
 
         const fileSize = parseInt(req.headers['content-length']);
         if (fileSize > fileSizeLimit) {
-          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileSizeError", req.selectedLanguages(), ["5 MB"]) })
+          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileSizeError", req.selectedLangs(), ["5 MB"]) })
           callback(null, false)
           return;
         }

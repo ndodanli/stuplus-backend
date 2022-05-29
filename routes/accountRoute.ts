@@ -18,8 +18,7 @@ const router = Router();
 router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    const a = req.selectedLanguages()
-    const user = await UserAccess.getUserWithFields(req.selectedLanguages(), res.locals.user._id,
+    const user = await UserAccess.getUserWithFields(req.selectedLangs(), res.locals.user._id,
       ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
         "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
         "isSchoolEmailConfirmed"])
@@ -39,9 +38,9 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
 router.post("/updateProfile", authorize([Role.User, Role.Admin]), validateUpdateProfile, async (req: CustomRequest<UpdateUserProfileDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.updateProfile(req.selectedLanguages(), res.locals.user._id, new UpdateUserProfileDTO(req.body))
+    await UserAccess.updateProfile(req.selectedLangs(), res.locals.user._id, new UpdateUserProfileDTO(req.body))
 
-    response.setMessage(getMessage("profileUpdated", req.selectedLanguages()))
+    response.setMessage(getMessage("profileUpdated", req.selectedLangs()))
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -56,9 +55,9 @@ router.post("/updateProfile", authorize([Role.User, Role.Admin]), validateUpdate
 router.post("/updateInterests", authorize([Role.User, Role.Admin]), validateUpdateInterests, async (req: CustomRequest<UpdateUserInterestsDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.updateInterests(req.selectedLanguages(), res.locals.user._id, new UpdateUserInterestsDTO(req.body))
+    await UserAccess.updateInterests(req.selectedLangs(), res.locals.user._id, new UpdateUserInterestsDTO(req.body))
 
-    response.setMessage(getMessage("interestsUpdated", req.selectedLanguages()))
+    response.setMessage(getMessage("interestsUpdated", req.selectedLangs()))
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -73,9 +72,9 @@ router.post("/updateInterests", authorize([Role.User, Role.Admin]), validateUpda
 router.post("/updatePassword", authorize([Role.User, Role.Admin]), validateUpdatePassword, async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.updatePassword(req.selectedLanguages(), res.locals.user._id, req.body)
+    await UserAccess.updatePassword(req.selectedLangs(), res.locals.user._id, req.body)
 
-    response.setMessage(getMessage("passwordUpdated", req.selectedLanguages()))
+    response.setMessage(getMessage("passwordUpdated", req.selectedLangs()))
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -90,9 +89,9 @@ router.post("/updatePassword", authorize([Role.User, Role.Admin]), validateUpdat
 router.post("/forgotPassword", validateForgotPassword, async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.sendConfirmationEmailForgotPassword(req.selectedLanguages(), req.body.email)
+    await UserAccess.sendConfirmationEmailForgotPassword(req.selectedLangs(), req.body.email)
 
-    response.setMessage(getMessage("fpCodeSended", req.selectedLanguages()))
+    response.setMessage(getMessage("fpCodeSended", req.selectedLangs()))
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -107,9 +106,9 @@ router.post("/forgotPassword", validateForgotPassword, async (req: CustomRequest
 router.post("/confirmForgotPasswordCode", validateForgotPasswordCode, async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.confirmForgotPasswordCode(req.selectedLanguages(), req.body.email, req.body.code)
+    await UserAccess.confirmForgotPasswordCode(req.selectedLangs(), req.body.email, req.body.code)
 
-    response.setMessage(getMessage("fpVerified", req.selectedLanguages()))
+    response.setMessage(getMessage("fpVerified", req.selectedLangs()))
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -124,9 +123,9 @@ router.post("/confirmForgotPasswordCode", validateForgotPasswordCode, async (req
 router.post("/resetPassword", validateResetPassword, async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.resetPassword(req.selectedLanguages(), req.body.email, req.body.code, req.body.newPassword)
+    await UserAccess.resetPassword(req.selectedLangs(), req.body.email, req.body.code, req.body.newPassword)
 
-    response.setMessage(getMessage("passwordReset", req.selectedLanguages()))
+    response.setMessage(getMessage("passwordReset", req.selectedLangs()))
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -145,9 +144,9 @@ router.get("/emailConfirmation", async (req: CustomRequest<object>, res: any) =>
 router.post("/emailConfirmation", validateEmailConfirmation, async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.confirmEmail(req.selectedLanguages(), req.query.uid as string, Number(req.query.code), Number(req.query.t));
+    await UserAccess.confirmEmail(req.selectedLangs(), req.query.uid as string, Number(req.query.code), Number(req.query.t));
 
-    response.setMessage(getMessage("emailVerified", req.selectedLanguages()));
+    response.setMessage(getMessage("emailVerified", req.selectedLangs()));
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -162,9 +161,9 @@ router.post("/emailConfirmation", validateEmailConfirmation, async (req: CustomR
 router.post("/sendConfirmationEmail", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.sendConfirmationEmail(req.selectedLanguages(), res.locals.user._id as string, req.body.isStudentEmail);
+    await UserAccess.sendConfirmationEmail(req.selectedLangs(), res.locals.user._id as string, req.body.isStudentEmail);
 
-    response.setMessage(getMessage("emailVerified", req.selectedLanguages()));
+    response.setMessage(getMessage("emailVerified", req.selectedLangs()));
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -181,14 +180,14 @@ router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSin
   try {
     if (req.fileValidationErrors?.length) {
       response.validationErrors = req.fileValidationErrors;
-      throw new NotValidError(getMessage("fileError", req.selectedLanguages()))
+      throw new NotValidError(getMessage("fileError", req.selectedLangs()))
     }
 
-    await UserAccess.updateProfilePhoto(req.selectedLanguages(), res.locals.user._id, req.file?.location)
+    await UserAccess.updateProfilePhoto(req.selectedLangs(), res.locals.user._id, req.file?.location)
 
     response.data = { url: req.file?.location }
 
-    response.setMessage(getMessage("ppUpdated", req.selectedLanguages()))
+    response.setMessage(getMessage("ppUpdated", req.selectedLangs()))
 
   } catch (err: any) {
     response.setErrorMessage(err.message);

@@ -10,7 +10,7 @@ let config = {
         BUCKET_NAME_S3: "fakultembucket"
     },
     MONGODB: {
-        MONGODB_URL: "mongodb+srv://fakultemadmin:d2YLPSmYK88Xwsc@fakultemcluster.wx6fn.mongodb.net/FakultemDB?retryWrites=true&w=majority",
+        MONGODB_URL: "mongodb+srv://testDevAdmin:63i12lVGGM9li1WB@testdevcluster.zo4yj.mongodb.net/Stuplus?retryWrites=true&w=majority",
         MONGODB_URL_LOCAL: "mongodb://localhost/fakultem",
     },
     JWT_SECRET: "FAKULTEMJWT!!@#!@$!@SECRE@$@$T",

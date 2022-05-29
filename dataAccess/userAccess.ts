@@ -36,7 +36,7 @@ export class UserAccess {
     }
 
     public static async updateProfile(acceptedLanguages: Array<string>, id: string, payload: UpdateUserProfileDTO): Promise<UserDocument | null> {
-        const user = await UserModel.findOneAndUpdate({ _id: id }, payload, { new: true, lean: convertToObject });
+        const user = await UserModel.findOneAndUpdate({ _id: id }, payload, { new: true });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
