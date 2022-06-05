@@ -52,6 +52,7 @@ export class NotificationSettings {
     this.test2 = null;
   }
 }
+
 export interface UserDocument extends User, Document {
   minify(): unknown;
 }
@@ -96,7 +97,6 @@ UserSchema.pre("deleteOne", function (next) {
   //
   next()
 });
-
 
 // Add a method. In this case change the returned object
 UserSchema.methods.minify = async function (
