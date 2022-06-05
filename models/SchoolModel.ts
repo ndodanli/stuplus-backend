@@ -27,6 +27,7 @@ SchoolSchema.pre("deleteOne", function (next) {
 SchoolSchema.methods.minify = async function (
   this: SchoolDocument
 ) {
+
   const response: School & { _id: string } = {
     _id: this._id,
     emailFormat: this.emailFormat,
@@ -34,5 +35,6 @@ SchoolSchema.methods.minify = async function (
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };
+  
   return response;
 };
