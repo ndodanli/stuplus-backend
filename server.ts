@@ -18,8 +18,11 @@ dotenv.config();
 
 const app = express();
 
-initializeDatabese();
+setup();
 
+async function setup() {
+  await initializeDatabese();
+}
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
