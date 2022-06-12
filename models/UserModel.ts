@@ -113,7 +113,6 @@ UserSchema.methods.minify = async function (
     lastName: this.lastName,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
-    title: this.title,
     phoneNumber: this.phoneNumber,
     schoolId: this.schoolId,
     schoolName: null,

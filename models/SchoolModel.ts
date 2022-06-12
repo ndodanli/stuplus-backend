@@ -3,6 +3,7 @@ import BaseModel from "./BaseModel";
 
 export interface School extends BaseModel {
   emailFormat: string;
+  title: string;
 }
 
 export interface SchoolDocument extends School, Document {
@@ -11,6 +12,7 @@ export interface SchoolDocument extends School, Document {
 
 export const SchoolSchema: Schema = new Schema({
   emailFormat: { type: String, required: true },
+  title: { type: String, required: false, default: null },
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -35,6 +37,6 @@ SchoolSchema.methods.minify = async function (
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };
-  
+
   return response;
 };

@@ -4,6 +4,7 @@ import BaseModel from "./BaseModel";
 export interface Department extends BaseModel {
   facultyId: string;
   grade: Number;
+  title: string;
 }
 
 export interface DepartmentDocument extends Department, Document {
@@ -13,6 +14,7 @@ export interface DepartmentDocument extends Department, Document {
 export const DepartmentSchema: Schema = new Schema({
   facultyId: { type: String, required: true },
   grade: { type: Number, required: false, default: 4 },
+  title: { type: String, required: true, default: null },
 });
 
 // Just to prove that hooks are still functioning as expected

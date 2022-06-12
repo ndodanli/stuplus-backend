@@ -8,7 +8,6 @@ import { UserDocument, UserSchema } from "./UserModel";
 export default interface BaseModel {
   createdAt: Date;
   updatedAt: Date;
-  title: string | null;
 }
 
 const collections = ["User", "School", "Faculty", "Department", "Interest"];
@@ -17,7 +16,7 @@ const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
 
 collections.forEach((collectionName: string) => {
   baseSpreadator[collectionName] = model(collectionName + "Base", new Schema({
-    title: { type: String, required: false, default: null },
+    // title: { type: String, required: false, default: null },
   }, { collection: collectionName, timestamps: true }))
 })
 

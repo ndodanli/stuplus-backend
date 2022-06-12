@@ -3,6 +3,7 @@ import BaseModel from "./BaseModel";
 
 export interface Interest extends BaseModel {
   icon: string;
+  title: string;
 }
 
 export interface InterestDocument extends Interest, Document {
@@ -11,6 +12,7 @@ export interface InterestDocument extends Interest, Document {
 
 export const InterestSchema: Schema = new Schema({
   icon: { type: String, required: true },
+  title: { type: String, required: true, default: null },
 });
 
 InterestSchema.pre("save", function (next) {
