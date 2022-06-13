@@ -1,10 +1,8 @@
 import { check, validationResult, query } from "express-validator"
 import { getMessage } from "../../../localization/responseMessages";
-import { NotificationSettings } from "../../../models/UserModel";
 import { CustomRequest } from "../../../utils/base/baseOrganizers";
 import BaseResponse from "../../../utils/base/BaseResponse";
 import { Ok } from "../../../utils/base/ResponseObjectResults";
-import { noUsage } from "../customValidators";
 
 export const validateUpdateProfile = [
     check('firstName')
