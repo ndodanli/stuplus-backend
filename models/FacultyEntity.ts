@@ -1,7 +1,7 @@
 import { Document, Schema } from "mongoose";
-import BaseModel from "./BaseModel";
+import BaseEntity from "./BaseEntity";
 
-export interface Faculty extends BaseModel {
+export interface Faculty extends BaseEntity {
   schoolId: string;
   title: string;
 }

@@ -1,7 +1,7 @@
 import { Document, Schema } from "mongoose";
-import BaseModel from "./BaseModel";
+import BaseEntity from "./BaseEntity";
 
-export interface Interest extends BaseModel {
+export interface Interest extends BaseEntity {
   icon: string;
   title: string;
 }

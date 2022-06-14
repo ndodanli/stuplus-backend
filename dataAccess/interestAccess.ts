@@ -1,8 +1,8 @@
-import { InterestModel } from "../models/BaseModel";
-import { InterestDocument } from "../models/InterestModel";
+import { InterestEntity } from "../models/BaseEntity";
+import { InterestDocument } from "../models/InterestEntity";
 
 export class InterestAccess {
     public static async getAllInterests(fields?: Array<string>): Promise<InterestDocument[] | null> {
-        return await InterestModel.find({}, fields);
+        return await InterestEntity.find({}, fields);
     }
 }

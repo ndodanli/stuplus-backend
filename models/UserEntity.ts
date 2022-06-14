@@ -1,8 +1,8 @@
 import { Document, Schema } from "mongoose";
 import { Gender } from "../enums/enums";
-import BaseModel from "./BaseModel";
+import BaseEntity from "./BaseEntity";
 
-export interface User extends BaseModel {
+export interface User extends BaseEntity {
   email: string;
   password: string;
   username: string;

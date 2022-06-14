@@ -1,6 +1,6 @@
 import { EmailConfigurations } from "aws-sdk/clients/iotevents";
 import { Role } from "../enums/enums";
-import { EmailConfirmation } from "../models/UserModel";
+import { EmailConfirmation } from "../models/UserEntity";
 import { mapToDTO } from "../utils/general";
 
 export class UpdateUserProfileDTO {

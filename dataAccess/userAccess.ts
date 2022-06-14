@@ -1,9 +1,9 @@
 import { convertToObject } from "typescript";
 import bcrypt from "bcryptjs"
-import { DepartmentModel, UserModel } from "../models/BaseModel";
-import { FacultyModel } from "../models/BaseModel";
-import { SchoolModel } from "../models/BaseModel";
-import { UserDocument } from "../models/UserModel";
+import { DepartmentEntity, UserEntity } from "../models/BaseEntity";
+import { FacultyEntity } from "../models/BaseEntity";
+import { SchoolEntity } from "../models/BaseEntity";
+import { UserDocument } from "../models/UserEntity";
 import NotValidError from "../errors/NotValidError";
 import { Role } from "../enums/enums";
 import { getNewToken } from "../utils/token";
@@ -15,13 +15,13 @@ import { getMessage } from "../localization/responseMessages";
 import { config } from "../config/config";
 export class UserAccess {
     public static async getUserWithFields(acceptedLanguages: Array<string>, id: string, fields?: Array<string>): Promise<UserDocument | null> {
-        const user = await UserModel.findOne({ _id: id }, fields, { lean: convertToObject });
+        const user = await UserEntity.findOne({ _id: id }, fields, { lean: convertToObject });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
-        const school = await SchoolModel.findOne({ _id: user.schoolId });
-        const faculty = await FacultyModel.findOne({ _id: user.facultyId });
-        const department = await DepartmentModel.findOne({ _id: user.departmentId });
+        const school = await SchoolEntity.findOne({ _id: user.schoolId });
+        const faculty = await FacultyEntity.findOne({ _id: user.facultyId });
+        const department = await DepartmentEntity.findOne({ _id: user.departmentId });
 
         if (school)
             user.schoolName = school.title;
@@ -36,7 +36,7 @@ export class UserAccess {
     }
 
     public static async updateProfile(acceptedLanguages: Array<string>, id: string, payload: UpdateUserProfileDTO): Promise<UserDocument | null> {
-        const user = await UserModel.findOneAndUpdate({ _id: id }, payload, { new: true });
+        const user = await UserEntity.findOneAndUpdate({ _id: id }, payload, { new: true });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
@@ -44,7 +44,7 @@ export class UserAccess {
     }
 
     public static async updateInterests(acceptedLanguages: Array<string>, id: string, payload: UpdateUserInterestsDTO): Promise<UserDocument | null> {
-        const user = await UserModel.findOneAndUpdate({ _id: id }, { $set: { 'interestIds': payload.interestIds } }, { new: true });
+        const user = await UserEntity.findOneAndUpdate({ _id: id }, { $set: { 'interestIds': payload.interestIds } }, { new: true });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
@@ -55,7 +55,7 @@ export class UserAccess {
         if (!newPPUrl)
             throw new NotValidError(getMessage("photoUrlNotFound", acceptedLanguages))
 
-        const user = await UserModel.findOneAndUpdate({ _id: id }, { $set: { 'profilePhotoUrl': newPPUrl } }, { new: true });
+        const user = await UserEntity.findOneAndUpdate({ _id: id }, { $set: { 'profilePhotoUrl': newPPUrl } }, { new: true });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
@@ -63,7 +63,7 @@ export class UserAccess {
     }
 
     public static async updatePassword(acceptedLanguages: Array<string>, id: string, payload: any): Promise<UserDocument | null> {
-        const user = await UserModel.findOne({ _id: id });
+        const user = await UserEntity.findOne({ _id: id });
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
         if (!(await bcrypt.compare(payload.password, user.password)))
@@ -79,7 +79,7 @@ export class UserAccess {
     }
 
     public static async registerUser(acceptedLanguages: Array<string>, payload: RegisterUserDTO): Promise<object> {
-        const user = await UserModel.findOne({ $or: [{ email: payload.email }, { schoolEmail: payload.email }, { username: payload.username }] });
+        const user = await UserEntity.findOne({ $or: [{ email: payload.email }, { schoolEmail: payload.email }, { username: payload.username }] });
 
         if (user)
             throw new NotValidError(getMessage("userAlreadyRegistered", acceptedLanguages));
@@ -92,7 +92,7 @@ export class UserAccess {
 
         const isStudentEmail = checkIfStudentEmail(payload.email);
         if (isStudentEmail) {
-            const school = await SchoolModel.findOne({ _id: payload.schoolId })
+            const school = await SchoolEntity.findOne({ _id: payload.schoolId })
             if (!school)
                 throw new NotValidError(getMessage("schoolNotFound", acceptedLanguages));
 
@@ -107,7 +107,7 @@ export class UserAccess {
             payload.accEmailConfirmation.expiresAt = moment(now).add(30, 'm').toDate();
         }
 
-        const createdUser = await UserModel.create({
+        const createdUser = await UserEntity.create({
             ...payload
         });
 
@@ -124,7 +124,7 @@ export class UserAccess {
     }
 
     public static async sendConfirmationEmail(acceptedLanguages: Array<string>, userId: string, isStudentEmail: Boolean) {
-        const user = await UserModel.findOne({ _id: userId });
+        const user = await UserEntity.findOne({ _id: userId });
 
         if (!user)
             throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
@@ -173,7 +173,7 @@ export class UserAccess {
     }
 
     public static async confirmEmail(acceptedLanguages: Array<string>, userId: string, code: Number, isStudentEmail: Number) {
-        const user = await UserModel.findOne({ _id: userId });
+        const user = await UserEntity.findOne({ _id: userId });
 
         if (!user)
             throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
@@ -211,7 +211,7 @@ export class UserAccess {
     }
 
     public static async loginUser(acceptedLanguages: Array<string>, payload: LoginUserDTO): Promise<object> {
-        const user = await UserModel.findOne({ $or: [{ email: payload.email }, { username: payload.email }] });
+        const user = await UserEntity.findOne({ $or: [{ email: payload.email }, { username: payload.email }] });
 
         if (!user || !(await bcrypt.compare(payload.password, user.password)))
             throw new NotValidError(getMessage("userNotFoundWithEnteredInfo", acceptedLanguages));
@@ -220,7 +220,7 @@ export class UserAccess {
     }
 
     public static async sendConfirmationEmailForgotPassword(acceptedLanguages: Array<string>, email: string) {
-        const user = await UserModel.findOne({ email: email });
+        const user = await UserEntity.findOne({ email: email });
         if (!user)
             throw new NotValidError(getMessage("userNotFoundWithThisEmail", acceptedLanguages));
 
@@ -248,7 +248,7 @@ export class UserAccess {
     }
 
     public static async confirmForgotPasswordCode(acceptedLanguages: Array<string>, email: string, code: Number) {
-        const user = await UserModel.findOne({ email: email });
+        const user = await UserEntity.findOne({ email: email });
         if (!user)
             throw new NotValidError(getMessage("noUserFoundWithRelEmail", acceptedLanguages));
 
@@ -260,7 +260,7 @@ export class UserAccess {
     }
 
     public static async resetPassword(acceptedLanguages: Array<string>, email: string, code: Number, newPassword: string) {
-        const user = await UserModel.findOne({ email: email });
+        const user = await UserEntity.findOne({ email: email });
         if (!user)
             throw new NotValidError(getMessage("noUserFoundWithRelEmail", acceptedLanguages));
 
