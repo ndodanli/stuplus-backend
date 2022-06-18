@@ -4,7 +4,7 @@ import BaseResponse from "../utils/base/BaseResponse";
 import { InternalError, Ok } from "../utils/base/ResponseObjectResults";
 import { UserAccess } from "../dataAccess/userAccess";
 import { CustomRequest } from "../utils/base/baseOrganizers";
-import { LoginUserDTO, RegisterUserDTO } from "../dtos/UserDTOs";
+import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO } from "../dtos/UserDTOs";
 import { getMessage } from "../localization/responseMessages";
 const router = Router();
 
@@ -12,6 +12,21 @@ router.post("/", validateLogin, async (req: CustomRequest<LoginUserDTO>, res: an
     const response = new BaseResponse<object>();
     try {
         response.data = await UserAccess.loginUser(req.selectedLangs(), new LoginUserDTO(req.body));
+
+    } catch (err: any) {
+        response.setErrorMessage(err.message)
+
+        if (err.status != 200)
+            return InternalError(res, response);
+    }
+
+    return Ok(res, response)
+});
+
+router.post("/google",  async (req: CustomRequest<LoginUserGoogleDTO>, res: any) => {
+    const response = new BaseResponse<object>();
+    try {
+        response.data = await UserAccess.loginUserWithGoogle(req.selectedLangs(), new LoginUserGoogleDTO(req.body));
 
     } catch (err: any) {
         response.setErrorMessage(err.message)

@@ -3,16 +3,17 @@ import bcrypt from "bcryptjs"
 import { DepartmentEntity, UserEntity } from "../entities/BaseEntity";
 import { FacultyEntity } from "../entities/BaseEntity";
 import { SchoolEntity } from "../entities/BaseEntity";
-import { UserDocument } from "../entities/UserEntity";
+import { EmailConfirmation, ExternalLogin, UserDocument } from "../entities/UserEntity";
 import NotValidError from "../errors/NotValidError";
 import { Role } from "../enums/enums";
 import { getNewToken } from "../utils/token";
 import EmailService from "../services/emailService";
 import moment from "moment";
 import { checkIfStudentEmail, checkIfValidSchool, generateCode } from "../utils/general";
-import { LoginUserDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO } from "../dtos/UserDTOs";
+import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO } from "../dtos/UserDTOs";
 import { getMessage } from "../localization/responseMessages";
 import { config } from "../config/config";
+import axios from "axios";
 export class UserAccess {
     public static async getUserWithFields(acceptedLanguages: Array<string>, id: string, fields?: Array<string>): Promise<UserDocument | null> {
         const user = await UserEntity.findOne({ _id: id }, fields, { lean: convertToObject });
@@ -85,19 +86,17 @@ export class UserAccess {
             throw new NotValidError(getMessage("userAlreadyRegistered", acceptedLanguages));
 
         payload.password = await bcrypt.hash(payload.password, 10);
-        payload.role = Role.User;
 
         const now = new Date();
         const code = generateCode();
 
         const isStudentEmail = checkIfStudentEmail(payload.email);
         if (isStudentEmail) {
-            const school = await SchoolEntity.findOne({ _id: payload.schoolId })
+            const formattedEmail = payload.email?.slice(payload.email.indexOf("@") + 1, payload.email.length - 7);
+
+            const school = await SchoolEntity.findOne({ emailFormat: formattedEmail })
             if (!school)
                 throw new NotValidError(getMessage("schoolNotFound", acceptedLanguages));
-
-            if (!checkIfValidSchool(payload.email, school.emailFormat))
-                throw new NotValidError(getMessage("schoolNotValid", acceptedLanguages));
 
             payload.schoolEmail = payload.email;
             payload.schoolEmailConfirmation.code = code;
@@ -115,10 +114,10 @@ export class UserAccess {
             counter++;
         }
 
-
         const createdUser = await UserEntity.create({
             ...payload,
-            username: username
+            username: username,
+            role: Role.User,
         });
 
         const verifyLink = config.DOMAIN + `/account/emailConfirmation?uid=${createdUser._id}&code=${code}&t=${isStudentEmail ? "1" : "0"}`
@@ -220,15 +219,6 @@ export class UserAccess {
         user.save();
     }
 
-    public static async loginUser(acceptedLanguages: Array<string>, payload: LoginUserDTO): Promise<object> {
-        const user = await UserEntity.findOne({ $or: [{ email: payload.email }, { username: payload.email }] });
-
-        if (!user || !(await bcrypt.compare(payload.password, user.password)))
-            throw new NotValidError(getMessage("userNotFoundWithEnteredInfo", acceptedLanguages));
-
-        return { token: getNewToken(user) };
-    }
-
     public static async sendConfirmationEmailForgotPassword(acceptedLanguages: Array<string>, email: string) {
         const user = await UserEntity.findOne({ email: email });
         if (!user)
@@ -253,7 +243,7 @@ export class UserAccess {
             "Güvenlik kodunuz ile şifrenizi sıfırlayın.",
             `<div>Güvenlik kodunuz: <b>${code}</b></div>`,
         )
-        user.markModified("emailConfirmation")
+        user.markModified("fpEmailConfirmation")
         await user.save();
     }
 
@@ -287,8 +277,75 @@ export class UserAccess {
 
         user.fpEmailConfirmation.code = null;
 
-        user.markModified("emailConfirmation")
+        user.markModified("fpEmailConfirmation")
         await user.save();
     }
 
+    public static async loginUser(acceptedLanguages: Array<string>, payload: LoginUserDTO): Promise<object> {
+        const user = await UserEntity.findOne({ $or: [{ email: payload.email }, { username: payload.email }] });
+
+        if (!user || !(await bcrypt.compare(payload.password, user.password)))
+            throw new NotValidError(getMessage("userNotFoundWithEnteredInfo", acceptedLanguages));
+
+        return { token: getNewToken(user) };
+    }
+
+    public static async loginUserWithGoogle(acceptedLanguages: Array<string>, payload: LoginUserGoogleDTO): Promise<object> {
+        const req = await axios.get(`${config.GOOGLE_VALIDATION_URL}?id_token=${payload.AccessToken}`)
+
+        const { email, given_name, family_name, sub } = req.data;
+
+        if (!email || !given_name || !family_name || !sub)
+            throw new NotValidError(getMessage("googleUserInvalid", acceptedLanguages));
+
+        let user = await UserEntity.findOne({
+            externalLogins: {
+                $elemMatch: {
+                    providerId: sub,
+                    providerName: "google"
+                }
+            },
+        });
+
+        if (!user) {
+            user = await UserEntity.findOne({ email: email });
+            if (!user) {
+                const password = await bcrypt.hash(generateCode().toString(), 10);
+                let counter = 0;
+                let username = email.split("@")[0];
+                let userWithSearchedUsername = await UserEntity.findOne({ username: username }, { "_id": 0, "username": 1 }, { lean: convertToObject });
+                while (userWithSearchedUsername) {
+                    username = email.split("@")[0] + counter;
+                    userWithSearchedUsername = await UserEntity.findOne({ username: username }, { "_id": 0, "username": 1 }, { lean: convertToObject });
+                    counter++;
+                }
+
+                const createdUser = await UserEntity.create({
+                    email: email,
+                    password: password,
+                    isAccEmailConfirmed: true,
+                    username: username,
+                    role: Role.User,
+                    externalLogins: [{
+                        providerId: sub,
+                        providerName: "google"
+                    }]
+
+                });
+
+                return { token: getNewToken(createdUser) };
+
+            }
+            else {
+                const newExternalLogin = new ExternalLogin();
+                newExternalLogin.providerId = sub;
+                newExternalLogin.providerName = "google";
+                user.externalLogins.push(newExternalLogin);
+                user.markModified("externalLogins");
+                await user.save();
+            }
+        }
+
+        return { token: getNewToken(user) };
+    }
 }

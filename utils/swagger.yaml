@@ -37,23 +37,6 @@ paths:
       responses:
         "200":
           description: Success
-  /login/google:
-    post:
-      summary: Login.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - AccessToken
-              properties:
-                AccessToken:
-                  type: string
-      responses:
-        "200":
-          description: Success
   /login/register:
     post:
       summary: Register.

@@ -33,6 +33,21 @@ export interface User extends BaseEntity {
   friendIds: Array<string>,
   takenFriendRequestIds: Array<string>,
   sendedFriendRequestIds: Array<string>,
+  externalLogins: Array<ExternalLogin>,
+}
+
+export class ExternalLogin {
+  providerId: string | null;
+  providerName: string | null;
+  firstName: string | null;
+  lastName: string | null;
+
+  constructor() {
+    this.providerId = null;
+    this.providerName = null;
+    this.firstName = null;
+    this.lastName = null;
+  }
 }
 
 export class EmailConfirmation {
@@ -84,6 +99,14 @@ export const UserSchema: Schema = new Schema({
   friendIds: { type: Array.of(String), required: true, default: [] },
   takenFriendRequestIds: { type: Array.of(String), required: true, default: [] },
   sendedFriendRequestIds: { type: Array.of(String), required: true, default: [] },
+  externalLogins: {
+    type: Array.of(new Schema({
+      providerId: String,
+      providerName: String,
+      firstName: String,
+      lastName: String
+    })), required: true, default: []
+  },
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -136,6 +159,7 @@ UserSchema.methods.minify = async function (
     friendIds: this.friendIds,
     takenFriendRequestIds: this.takenFriendRequestIds,
     sendedFriendRequestIds: this.sendedFriendRequestIds,
+    externalLogins: this.externalLogins,
   };
   return response;
 };

@@ -14,7 +14,8 @@ let config = {
         MONGODB_URL_LOCAL: "mongodb://localhost/fakultem",
     },
     JWT_SECRET: "FAKULTEMJWT!!@#!@$!@SECRE@$@$T",
-    PORT: 25010
+    PORT: 25010,
+    GOOGLE_VALIDATION_URL: "https://www.googleapis.com/oauth2/v3/tokeninfo"
 }
 
 export {

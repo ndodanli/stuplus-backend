@@ -56,7 +56,8 @@ const systemLangs: Record<string, Function> = {
             codeNotFound: "Kod bulunamadı.",
             wrongInfo: "Hatalı bilgi.",
             invalidFormat: `Geçersiz format${args ? args[0] : ""}.`,
-            minInterest: "En az 3 ilgi alanı seçmeniz gerekli, sizi tanıyalım."
+            minInterest: "En az 3 ilgi alanı seçmeniz gerekli, sizi tanıyalım.",
+            googleUserInvalid: "Google kullanıcısı geçersiz. Hesabınıza bir göz atın isterseniz.",
         }
     },
     "en": function (args: string[] = []) {

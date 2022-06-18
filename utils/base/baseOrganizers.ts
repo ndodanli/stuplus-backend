@@ -5,6 +5,7 @@ export interface CustomRequest<T> extends Omit<Request, 'body' | 'user'> {
     user: any;
     fileValidationErrors: [];
     selectedLangs: Function;
+    file: any;
 }
 export interface CustomResponse extends Response {
 }

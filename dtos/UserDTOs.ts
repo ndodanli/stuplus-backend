@@ -31,17 +31,6 @@ export class RegisterUserDTO {
     schoolEmailConfirmation: EmailConfirmation = new EmailConfirmation();
     password: string = "";
     passwordRepeat: string = "";
-    username: string = "";
-    role: Role = Role.User;
-    firstName: string | undefined;
-    lastName: string | undefined;
-    phoneNumber: string | undefined;
-    profilePhotoUrl: string | undefined;
-    schoolId: string = "";
-    facultyId: string = "";
-    departmentId: string = "";
-    grade: string = "";
-    interestIds: Array<string> = []
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);
@@ -52,6 +41,15 @@ export class RegisterUserDTO {
 export class LoginUserDTO {
     email: string = "";
     password: string = "";
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class LoginUserGoogleDTO {
+    AccessToken: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

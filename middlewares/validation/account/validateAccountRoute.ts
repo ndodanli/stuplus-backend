@@ -45,7 +45,7 @@ export const validateUpdatePassword = [
         .notEmpty()
         .withMessage("Lütfen yeni parolanızı giriniz.")
         .bail()
-        .isStrongPassword({ minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1 })
+        .isStrongPassword({ minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 0 })
         .withMessage('Yeni parolanız en az 8 karakterden oluşmalı, en az bir sayı, bir büyük harf ve bir küçük harf içermelidir.')
         .bail(),
     check('newPasswordRepeat')
@@ -68,7 +68,7 @@ export const validateResetPassword = [
         .notEmpty()
         .withMessage("Lütfen doğrulama kodunu gönderin.")
         .bail()
-        .isInt({ min: 1000, max: 9999 })
+        .isInt({ min: 10000, max: 99999 })
         .withMessage("Doğrulama kodu geçersiz(Sadece sayı [1000-9999]).")
         .bail()
         .isLength({ min: 4 })
@@ -85,7 +85,7 @@ export const validateResetPassword = [
         .notEmpty()
         .withMessage("Lütfen yeni parolanızı giriniz.")
         .bail()
-        .isStrongPassword({ minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1 })
+        .isStrongPassword({ minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 0 })
         .withMessage('Yeni parolanız en az 8 karakterden oluşmalı, en az bir sayı, bir büyük harf ve bir küçük harf içermelidir.')
         .bail(),
     check('newPasswordRepeat')
@@ -108,7 +108,7 @@ export const validateForgotPasswordCode = [
         .notEmpty()
         .withMessage("Lütfen doğrulama kodunu gönderin.")
         .bail()
-        .isInt({ min: 1000, max: 9999 })
+        .isInt({ min: 10000, max: 99999 })
         .withMessage("Doğrulama kodu geçersiz(Sadece sayı [1000-9999]).")
         .bail()
         .isLength({ min: 4 })
@@ -147,7 +147,7 @@ export const validateForgotPassword = [
 
 export const validateUpdateInterests = [
     check('interestIds')
-        .isArray({ min: 3 })
+        .isArray({ min: 0 })
         .withMessage((value: any, { req }: any) => getMessage("minInterest", req.selectedLangs()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
