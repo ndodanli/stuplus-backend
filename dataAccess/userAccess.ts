@@ -1,9 +1,9 @@
 import { convertToObject } from "typescript";
 import bcrypt from "bcryptjs"
-import { DepartmentEntity, UserEntity } from "../models/BaseEntity";
-import { FacultyEntity } from "../models/BaseEntity";
-import { SchoolEntity } from "../models/BaseEntity";
-import { UserDocument } from "../models/UserEntity";
+import { DepartmentEntity, UserEntity } from "../entities/BaseEntity";
+import { FacultyEntity } from "../entities/BaseEntity";
+import { SchoolEntity } from "../entities/BaseEntity";
+import { UserDocument } from "../entities/UserEntity";
 import NotValidError from "../errors/NotValidError";
 import { Role } from "../enums/enums";
 import { getNewToken } from "../utils/token";
@@ -79,7 +79,7 @@ export class UserAccess {
     }
 
     public static async registerUser(acceptedLanguages: Array<string>, payload: RegisterUserDTO): Promise<object> {
-        const user = await UserEntity.findOne({ $or: [{ email: payload.email }, { schoolEmail: payload.email }, { username: payload.username }] });
+        const user = await UserEntity.findOne({ $or: [{ email: payload.email }, { schoolEmail: payload.email }] });
 
         if (user)
             throw new NotValidError(getMessage("userAlreadyRegistered", acceptedLanguages));
@@ -106,9 +106,19 @@ export class UserAccess {
             payload.accEmailConfirmation.code = code;
             payload.accEmailConfirmation.expiresAt = moment(now).add(30, 'm').toDate();
         }
+        let counter = 0;
+        let username = payload.email.split("@")[0];
+        let userWithSearchedUsername = await UserEntity.findOne({ username: username }, { "_id": 0, "username": 1 }, { lean: convertToObject });
+        while (userWithSearchedUsername) {
+            username = payload.email.split("@")[0] + counter;
+            userWithSearchedUsername = await UserEntity.findOne({ username: username }, { "_id": 0, "username": 1 }, { lean: convertToObject });
+            counter++;
+        }
+
 
         const createdUser = await UserEntity.create({
-            ...payload
+            ...payload,
+            username: username
         });
 
         const verifyLink = config.DOMAIN + `/account/emailConfirmation?uid=${createdUser._id}&code=${code}&t=${isStudentEmail ? "1" : "0"}`
@@ -117,7 +127,7 @@ export class UserAccess {
             payload.email,
             "Hesabınızı onaylayın",
             "Hesabınızı onaylamak için linkiniz hazır.",
-            `<div>Linke tıklayarak hesabınızı onaylayın: <a href="${verifyLink}" style="text-decoration:underline;">Onaylayın</a></div>`,
+            `<div>Linke tıklayarak hesabınızı onaylayın: <a href="${verifyLink}" style="text-decoration:underline;">Onaylayın</a></br><span>Kod: ${code}</span></div>`,
         )
 
         return { token: getNewToken(createdUser) };
@@ -168,7 +178,7 @@ export class UserAccess {
             validEmail,
             "Hesabınızı onaylayın",
             "Hesabınızı onaylamak için linkiniz hazır.",
-            `<div>Linke tıklayarak hesabınızı onaylayın: <a href="${verifyLink}" style="text-decoration:underline;">Onaylayın</a></div>`,
+            `<div>Linke tıklayarak hesabınızı onaylayın: <a href="${verifyLink}" style="text-decoration:underline;">Onaylayın</a></br><span>Kod: ${code}</span></div>`,
         )
     }
 

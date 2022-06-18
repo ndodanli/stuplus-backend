@@ -5,8 +5,8 @@ export default class EmailService {
     private static emailTransporter = nodemailer.createTransport({
         service: "Gmail",
         auth: {
-            user: process.env.HOST_EMAIL || config.EMAIL_SERVICE.HOST_EMAIL,
-            pass: process.env.HOST_EMAIL_PASSWORD || config.EMAIL_SERVICE.HOST_EMAIL_PASSWORD
+            user: "fakultemdestek@gmail.com",
+            pass: "yqplxujmtvszkwmx"
         },
     });
 

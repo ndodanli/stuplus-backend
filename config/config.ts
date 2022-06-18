@@ -1,8 +1,8 @@
 let config = {
-    DOMAIN: process.env.DOMAIN || "http://165.227.153.191",
+    DOMAIN: process.env.DOMAIN || "http://46.101.160.93",
     EMAIL_SERVICE: {
         HOST_EMAIL: "fakultemdestekmail@gmail.com",
-        HOST_EMAIL_PASSWORD: "denemE1@"
+        HOST_EMAIL_PASSWORD: "yqplxujmtvszkwmx"
     },
     S3: {
         ACCESS_KEY_ID_S3: "AKIAZSLROSSN45L3NX63",

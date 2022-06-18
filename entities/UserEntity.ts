@@ -52,7 +52,6 @@ export class NotificationSettings {
     this.test2 = null;
   }
 }
-
 export interface UserDocument extends User, Document {
   minify(): unknown;
 }
@@ -63,10 +62,10 @@ export const UserSchema: Schema = new Schema({
   password: { type: String, required: true },
   username: { type: String, required: true },
   role: { type: Number, required: true },
-  schoolId: { type: String, required: true },
-  facultyId: { type: String, required: true },
-  departmentId: { type: String, required: true },
-  grade: { type: Number, required: true },
+  schoolId: { type: String, required: false, default: null },
+  facultyId: { type: String, required: false, default: null },
+  departmentId: { type: String, required: false, default: null },
+  grade: { type: Number, required: false, default: null },
   firstName: { type: String, required: false, default: null },
   lastName: { type: String, required: false, default: null },
   phoneNumber: { type: String, required: false, default: null },
@@ -97,6 +96,7 @@ UserSchema.pre("deleteOne", function (next) {
   //
   next()
 });
+
 
 // Add a method. In this case change the returned object
 UserSchema.methods.minify = async function (

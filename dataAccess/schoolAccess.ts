@@ -1,7 +1,7 @@
-import { DepartmentEntity, FacultyEntity, SchoolEntity } from "../models/BaseEntity";
-import { DepartmentDocument } from "../models/DepartmentEntity";
-import { FacultyDocument } from "../models/FacultyEntity";
-import { SchoolDocument } from "../models/SchoolEntity";
+import { DepartmentEntity, FacultyEntity, SchoolEntity } from "../entities/BaseEntity";
+import { DepartmentDocument } from "../entities/DepartmentEntity";
+import { FacultyDocument } from "../entities/FacultyEntity";
+import { SchoolDocument } from "../entities/SchoolEntity";
 
 export class SchoolAccess {
     public static async getAllSchools(fields?: Array<string>): Promise<SchoolDocument[] | null> {

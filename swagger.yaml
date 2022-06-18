@@ -4,7 +4,7 @@ info:
   description: Fakultem uygulaması api.
   version: 0.1.9
 servers:
-  - url: http://165.227.153.191:25010/
+  - url: http://46.101.160.93:25010/
     description: Canlı api
   - url: http://localhost:25010/
     description: Local test için.
@@ -50,11 +50,6 @@ paths:
                 - email
                 - password
                 - passwordRepeat
-                - username
-                - schoolId
-                - facultyId
-                - departmentId
-                - grade
                 - gender
               properties:
                 email:
@@ -63,33 +58,9 @@ paths:
                   type: string
                 passwordRepeat:
                   type: string
-                username:
-                  type: string
-                firstName:
-                  type: string
-                lastName:
-                  type: string
-                phoneNumber:
-                  type: string
-                  example: 5073959353
-                profilePhotoUrl:
-                  type: string
-                schoolId:
-                  type: string
-                facultyId:
-                  type: string
-                departmentId:
-                  type: string
-                grade:
-                  type: number
                 gender:
                   type: number
                   description: 0(NotSpecified), 1(Male), 2(Female)
-                interestIds:
-                  type: array
-                  description: min 3
-                  items:
-                    type: string
       responses:
         "200":
           description: Success
