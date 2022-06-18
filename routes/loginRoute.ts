@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { validateLogin, validateRegister } from "../middlewares/validation/login/validateLoginRoute"
+import { validateGoogleLogin, validateLogin, validateRegister } from "../middlewares/validation/login/validateLoginRoute"
 import BaseResponse from "../utils/base/BaseResponse";
 import { InternalError, Ok } from "../utils/base/ResponseObjectResults";
 import { UserAccess } from "../dataAccess/userAccess";
@@ -23,7 +23,7 @@ router.post("/", validateLogin, async (req: CustomRequest<LoginUserDTO>, res: an
     return Ok(res, response)
 });
 
-router.post("/google",  async (req: CustomRequest<LoginUserGoogleDTO>, res: any) => {
+router.post("/google", validateGoogleLogin, async (req: CustomRequest<LoginUserGoogleDTO>, res: any) => {
     const response = new BaseResponse<object>();
     try {
         response.data = await UserAccess.loginUserWithGoogle(req.selectedLangs(), new LoginUserGoogleDTO(req.body));
