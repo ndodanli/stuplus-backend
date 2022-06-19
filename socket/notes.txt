@@ -1,0 +1,2 @@
+-group members can be wrong, and user may be null according to this(no user id control)
+-send notification even user connected to the socket
