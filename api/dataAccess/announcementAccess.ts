@@ -99,6 +99,7 @@ export class AnnouncementAccess {
             });
 
             // let announcementReqSchoolIds = [...new Set(Array.prototype.concat.apply([], announcements.map(x => x.relatedSchoolIds)))];
+            //TODO: cache schools. *redis acquired
             let schools = await SchoolEntity.find({}, ["_id", "title"], { lean: true });
             announcements.forEach(x => {
                 x.relatedSchools = schools.filter(y => x.relatedSchoolIds.includes(y._id.toString()))

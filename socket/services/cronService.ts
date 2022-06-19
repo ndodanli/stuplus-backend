@@ -11,7 +11,6 @@ export default class CronService {
     static init(redisClient: RedisClientType): void {
         cron.schedule(`*/5 * * * * *`, async () => {
             lock.acquire("redis-db-operations", async function (done: any) {
-                // console.log("cron job")
                 const requiredKeys = await redisClient.scan(0, { MATCH: "*", COUNT: 10 });
                 for (let i = 0; i < requiredKeys.keys.length; i++) {
                     const currentKey = requiredKeys.keys[i];
