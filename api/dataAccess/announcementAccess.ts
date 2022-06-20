@@ -1,8 +1,10 @@
-import { AnnouncementEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { AnnouncementCommentEntity, AnnouncementEntity, AnnouncementLikeEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { AnnouncementDocument } from "../../stuplus-lib/entities/AnnouncementEntity";
 import { AddAnnouncementDTO, GetAnnouncementsForUserDTO } from "../dtos/AnnouncementDTOs";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
+import RedisService from "../../stuplus-lib/services/redisService";
+import { SchoolDocument } from "../../stuplus-lib/entities/SchoolEntity";
 
 export class AnnouncementAccess {
     public static async addAnnouncement(acceptedLanguages: Array<string>, payload: AddAnnouncementDTO, currentUserId: string): Promise<Boolean> {
@@ -92,26 +94,26 @@ export class AnnouncementAccess {
 
         if (announcements.length) {
             let announcementUserIds = announcements.map(x => x.ownerId);
-            let announcementUsers = await UserEntity.find({ _id: { $in: announcementUserIds } }, { "_id": 1, "username": 1 }, { lean: true });
-
-            announcements.forEach(x => {
-                x.owner = announcementUsers.find(y => y._id.toString() === x.ownerId);
-            });
-
-            // let announcementReqSchoolIds = [...new Set(Array.prototype.concat.apply([], announcements.map(x => x.relatedSchoolIds)))];
+            let announcementUsers = await UserEntity.customFind({ _id: { $in: announcementUserIds } }, { "_id": 1, "username": 1 }, { lean: true });
+            let a = new AnnouncementEntity({
+                likeCount: 22
+            })
             //TODO: cache schools. *redis acquired
-            let schools = await SchoolEntity.find({}, ["_id", "title"], { lean: true });
-            announcements.forEach(x => {
-                x.relatedSchools = schools.filter(y => x.relatedSchoolIds.includes(y._id.toString()))
+            let schools = await RedisService.acquire<SchoolDocument[]>("schools", 5, async () => await SchoolEntity.find({}, ["_id", "title"], { lean: true }));
+            for (let i = 0; i < announcements.length; i++) {
+                const announcement = announcements[i];
+                announcement.likeCount = await RedisService.acquire<number>(`announcement:${announcement._id}:likeCount`, 10, async () => await AnnouncementLikeEntity.countDocuments({ announcementId: announcement._id }));
+                announcement.commentCount = await RedisService.acquire<number>(`announcement:${announcement._id}:commentCount`, 10, async () => await AnnouncementCommentEntity.countDocuments({ announcementId: announcement._id }));
+                announcement.owner = announcementUsers.find(y => y._id.toString() === announcement.ownerId);
+                announcement.relatedSchools = schools.filter(y => announcement.relatedSchoolIds.includes(y._id.toString()))
                     .map(x => {
                         return {
                             title: x.title,
                             schoolId: x._id.toString()
                         }
                     });
-            });
+            }
         }
-
         return announcements;
     }
 }

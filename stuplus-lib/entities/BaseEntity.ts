@@ -25,9 +25,14 @@ const collections = ["User", "School", "Faculty", "Department", "Interest", "Ann
 const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
 
 collections.forEach((collectionName: string) => {
-  baseSpreadator[collectionName] = model(collectionName + "Base", new Schema({
-    // title: { type: String, required: false, default: null },
-  }, { collection: collectionName, timestamps: true }))
+  let m = model(collectionName + "Base", new Schema({
+    recordStatus: { type: Number, required: false, default: 1 },
+  }, { collection: collectionName, timestamps: true }));
+  m.customFind = function (q: any, callback: any) {
+    q.recordStatus = q.recordStatus || { "$ne": 0 };
+    return this.find(q, callback);
+  }
+  baseSpreadator[collectionName] = m;
 })
 
 export const SchoolEntity = baseSpreadator["School"].discriminator<

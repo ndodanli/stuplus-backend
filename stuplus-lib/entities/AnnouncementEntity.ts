@@ -11,13 +11,30 @@ export interface Announcement extends BaseEntity {
   isActive: boolean;
   fromDate: Date | null;
   toDate: Date | null;
+  //ignore
+  owner?: User | null; // ignore
+  relatedSchools: object[] | null; // ignore
+  likeCount: number; // ignore
+  commentCount: number; // ignore
 }
 
 export interface AnnouncementDocument extends Announcement, Document {
-  owner: User | undefined; // ignore
-  relatedSchools: object[]; // ignore
   minify(): unknown;
 }
+
+// export class AnnouncementEntityDTO implements Announcement {
+//   ownerId: string;
+//   coverImageUrl: string;
+//   title: string;
+//   relatedSchoolIds: string[];
+//   text: string;
+//   isActive: boolean;
+//   fromDate: Date | null;
+//   toDate: Date | null;
+//   createdAt: Date;
+//   updatedAt: Date;
+
+// }
 
 export const AnnouncementSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
@@ -57,6 +74,12 @@ AnnouncementSchema.methods.minify = async function (
     toDate: this.toDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
+    //ignore
+    owner: null, // ignore
+    relatedSchools: null, // ignore
+    likeCount: 0, // ignore
+    commentCount: 0, // ignore
+
   };
   return response;
 };

@@ -13,6 +13,7 @@ import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsD
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { config } from "../config/config";
 import axios from "axios";
+import { convertToObject } from "typescript";
 export class UserAccess {
     public static async getUserWithFields(acceptedLanguages: Array<string>, id: string, fields?: Array<string>): Promise<UserDocument | null> {
         const user = await UserEntity.findOne({ _id: id }, fields, { lean: true });
