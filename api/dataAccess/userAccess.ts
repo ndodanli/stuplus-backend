@@ -292,9 +292,9 @@ export class UserAccess {
     public static async loginUserWithGoogle(acceptedLanguages: Array<string>, payload: LoginUserGoogleDTO): Promise<object> {
         const req = await axios.get(`${config.GOOGLE_VALIDATION_URL}?id_token=${payload.AccessToken}`)
 
-        const { email, given_name, family_name, sub } = req.data;
+        let { email, given_name, family_name, sub } = req.data;
 
-        if (!email || !given_name || !family_name || !sub)
+        if (!email || !sub)
             throw new NotValidError(getMessage("googleUserInvalid", acceptedLanguages));
 
         let user = await UserEntity.findOne({
@@ -319,12 +319,19 @@ export class UserAccess {
                     counter++;
                 }
 
+                if (!given_name)
+                    given_name = username;
+                if (!family_name)
+                    family_name = "";
+
                 const createdUser = await UserEntity.create({
                     email: email,
                     password: password,
                     isAccEmailConfirmed: true,
                     username: username,
                     role: Role.User,
+                    firstName: given_name,
+                    lastName: family_name,
                     externalLogins: [{
                         providerId: sub,
                         providerName: "google"
