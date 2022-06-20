@@ -94,7 +94,7 @@ export class AnnouncementAccess {
 
         if (announcements.length) {
             let announcementUserIds = announcements.map(x => x.ownerId);
-            let announcementUsers = await UserEntity.customFind({ _id: { $in: announcementUserIds } }, { "_id": 1, "username": 1 }, { lean: true });
+            let announcementUsers = await UserEntity.find({ _id: { $in: announcementUserIds } }, { "_id": 1, "username": 1 }, { lean: true });
             let a = new AnnouncementEntity({
                 likeCount: 22
             })
