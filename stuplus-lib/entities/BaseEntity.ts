@@ -1,9 +1,7 @@
 import { AcceptsDiscriminator, Model, model, Schema } from "mongoose";
 import { RecordStatus } from "../enums/enums";
-import { AnnouncementCommentDislikeDocument, AnnouncementCommentDislikeSchema } from "./AnnouncementCommentDislikeEntity";
 import { AnnouncementCommentDocument, AnnouncementCommentSchema } from "./AnnouncementCommentEntity";
 import { AnnouncementCommentLikeDocument, AnnouncementCommentLikeSchema } from "./AnnouncementCommentLikeEntity";
-import { AnnouncementDislikeDocument, AnnouncementDislikeSchema } from "./AnnouncementDislikeEntity";
 import { AnnouncementDocument, AnnouncementSchema } from "./AnnouncementEntity";
 import { AnnouncementLikeDocument, AnnouncementLikeSchema } from "./AnnouncementLikeEntity";
 import { ChatDocument, ChatSchema } from "./ChatEntity";
@@ -26,7 +24,7 @@ export default interface BaseEntity {
 
 const collections = ["User", "School", "Faculty", "Department", "Interest", "Announcement", "AnnouncementLike",
   "AnnouncementComment", "GroupChat", "GroupChatUser", "GroupMessage", "GroupMessageForward", "GroupMessageRead",
-  "Message", "Chat", "AnnouncementCommentLike", "AnnouncementCommentDislike", "AnnouncementDislike"
+  "Message", "Chat", "AnnouncementCommentLike", 
 ];
 
 const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
@@ -74,11 +72,6 @@ export const AnnouncementLikeEntity = baseSpreadator["AnnouncementLike"].discrim
   Model<AnnouncementLikeDocument>
 >("AnnouncementLike", AnnouncementLikeSchema);
 
-export const AnnouncementDislikeEntity = baseSpreadator["AnnouncementDislike"].discriminator<
-  AnnouncementDislikeDocument,
-  Model<AnnouncementDislikeDocument>
->("AnnouncementDislike", AnnouncementDislikeSchema);
-
 export const AnnouncementCommentEntity = baseSpreadator["AnnouncementComment"].discriminator<
   AnnouncementCommentDocument,
   Model<AnnouncementCommentDocument>
@@ -88,11 +81,6 @@ export const AnnouncementCommentLikeEntity = baseSpreadator["AnnouncementComment
   AnnouncementCommentLikeDocument,
   Model<AnnouncementCommentLikeDocument>
 >("AnnouncementCommentLike", AnnouncementCommentLikeSchema);
-
-export const AnnouncementCommentDislikeEntity = baseSpreadator["AnnouncementCommentDislike"].discriminator<
-  AnnouncementCommentDislikeDocument,
-  Model<AnnouncementCommentDislikeDocument>
->("AnnouncementCommentDislike", AnnouncementCommentDislikeSchema);
 
 export const ChatEntity = baseSpreadator["Chat"].discriminator<
   ChatDocument,
@@ -130,18 +118,6 @@ export const GroupChatEntity = baseSpreadator["GroupChat"].discriminator<
 >("GroupChat", GroupChatSchema);
 
 function registerHooks(): void {
-  AnnouncementDislikeSchema.pre("find", function (next) {
-    this.where({ recordStatus: RecordStatus.Active });
-    next()
-  })
-  AnnouncementDislikeSchema.pre("findOne", function (next) {
-    this.where({ recordStatus: RecordStatus.Active });
-    next()
-  })
-  AnnouncementDislikeSchema.pre("findOneAndUpdate", function (next) {
-    this.where({ recordStatus: RecordStatus.Active });
-    next()
-  });
   AnnouncementCommentLikeSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
@@ -151,18 +127,6 @@ function registerHooks(): void {
     next()
   })
   AnnouncementCommentLikeSchema.pre("findOneAndUpdate", function (next) {
-    this.where({ recordStatus: RecordStatus.Active });
-    next()
-  });
-  AnnouncementCommentDislikeSchema.pre("find", function (next) {
-    this.where({ recordStatus: RecordStatus.Active });
-    next()
-  })
-  AnnouncementCommentDislikeSchema.pre("findOne", function (next) {
-    this.where({ recordStatus: RecordStatus.Active });
-    next()
-  })
-  AnnouncementCommentDislikeSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });

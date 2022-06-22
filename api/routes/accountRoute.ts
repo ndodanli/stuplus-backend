@@ -21,7 +21,7 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
     const user = await UserAccess.getUserWithFields(req.selectedLangs(), res.locals.user._id,
       ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
         "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
-        "isSchoolEmailConfirmed"])
+        "isSchoolEmailConfirmed", "interestIds"])
 
     response.data = user;
 

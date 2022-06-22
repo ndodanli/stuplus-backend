@@ -26,17 +26,10 @@ export const validateAddAnnouncement = [
     },
 ];
 
-export const validateLogin = [
-    check('password')
+export const validateLikeDislikeAnnouncement = [
+    check('announcementId')
         .notEmpty()
-        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs(), ["Parola"]))
-        .bail(),
-    check('email')
-        .notEmpty()
-        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs(), ["Kullanıcı adı ya da email"]))
-        .bail()
-        .isLength({ min: 4, max: 254 })
-        .withMessage((value: any, { req }: any) => getMessage("invalidUsernameOrPassword", req.selectedLangs()))
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
@@ -46,10 +39,18 @@ export const validateLogin = [
     },
 ];
 
-export const validateGoogleLogin = [
-    check('AccessToken')
+export const validateCommentAnnouncement = [
+    check('announcementId')
         .notEmpty()
-        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs(), ["AccessToken"]))
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    check('ownerId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    check('comment')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);

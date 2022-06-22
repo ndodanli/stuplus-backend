@@ -20,7 +20,7 @@ import { CustomRequest } from "../stuplus-lib/utils/base/baseOrganizers";
 import { CreateGroupDTO, WatchUsersDTO } from "./dtos/Chat";
 import { getMessage } from "../stuplus-lib/localization/responseMessages";
 import bodyParser from "body-parser";
-import { groupChatName, userWatchRoomName } from "./utils/namespaceCreators";
+import { groupChatName, userWatchRoomName } from "../stuplus-lib/utils/namespaceCreators";
 
 const app = require("express")();
 const httpServer = require("http").createServer(app);

@@ -1,10 +1,11 @@
 import { AnnouncementCommentEntity, AnnouncementEntity, AnnouncementLikeEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { AnnouncementDocument } from "../../stuplus-lib/entities/AnnouncementEntity";
-import { AddAnnouncementDTO, GetAnnouncementsForUserDTO } from "../dtos/AnnouncementDTOs";
+import { AddAnnouncementDTO, AnnouncementCommentDTO, AnnouncementLikeDislikeDTO, GetAnnouncementsForUserDTO } from "../dtos/AnnouncementDTOs";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { SchoolDocument } from "../../stuplus-lib/entities/SchoolEntity";
+import { RedisOperationType } from "../../stuplus-lib/enums/enums_socket";
 
 export class AnnouncementAccess {
     public static async addAnnouncement(acceptedLanguages: Array<string>, payload: AddAnnouncementDTO, currentUserId: string): Promise<Boolean> {
@@ -27,7 +28,6 @@ export class AnnouncementAccess {
     }
 
     public static async getAnnouncementsForUser(acceptedLanguages: Array<string>, payload: GetAnnouncementsForUserDTO, currentUserId: string): Promise<AnnouncementDocument[] | null> {
-
         let now = new Date();
         let announcements: AnnouncementDocument[] = [];
         if (payload.schoolIds && payload.schoolIds.length) {
@@ -113,7 +113,23 @@ export class AnnouncementAccess {
         return announcements;
     }
 
-    public static async likeAnnouncement(acceptedLanguages: Array<string>, announcementId: string, currentUserId: string): Promise<Boolean> {
+    public static async likeDislikeAnnouncement(acceptedLanguages: Array<string>, payload: AnnouncementLikeDislikeDTO, currentUserId: string): Promise<Boolean> {
+        const announcementLikeDislikeEntity = new AnnouncementLikeEntity({});
+        const announcementLikeDislikeData: object = {
+            e: { _id: announcementLikeDislikeEntity.id, ownerId: currentUserId, announcementId: payload.announcementId, type: payload.type },
+        }
+        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, announcementLikeDislikeData.toJSONString());
+        return true;
+    }
+
+    public static async commentAnnouncement(acceptedLanguages: Array<string>, payload: AnnouncementCommentDTO, currentUserId: string): Promise<Boolean> {
+        const announcementCommentEntity = new AnnouncementCommentEntity({});
+        const announcementCommentData: object = {
+            e: {
+                 _id: announcementCommentEntity.id,
+                  ownerId: currentUserId, announcementId: payload.announcementId, comment: payload.comment },
+        }
+        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, announcementCommentData.toJSONString());
         
         return true;
     }

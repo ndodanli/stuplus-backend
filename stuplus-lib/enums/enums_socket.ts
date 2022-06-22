@@ -10,11 +10,6 @@ export enum Gender {
    NotDefined
 }
 
-export const ChatType = {
-   GroupChat :"gc",
-   PrivateChat : "pc"
-}
-
 export enum GroupChatType {
    Public = 0,
    Private = 1
@@ -35,6 +30,7 @@ export enum RedisGMOperationType {
 export const RedisOperationType ={
    PrivateMessage: "0",
    GroupMessage: "1",
+   AnnouncementLikeDislike: "3",
 }
 
 export const SocketRoomTypes ={

@@ -15,3 +15,8 @@ export enum Gender {
    Female = 2,
    NotDefined = 3
 }
+
+export enum LikeType {
+   Dislike = 0,
+   Like = 1
+}
