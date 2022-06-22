@@ -1,3 +1,8 @@
+export enum RecordStatus {
+   Deleted = 0,
+   Active = 1,
+}
+
 export enum Role {
    Admin = 0,
    User = 1,

@@ -29,87 +29,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 let onlineUsers: Map<string, string>;
 setup();
-async function generate() {
-    // array = array.concat([new MessageEntity({ from: "x", message: "das0", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das0", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "dsa1", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das2", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // new MessageEntity({ from: "x", message: "das3", chatId: "dasds" }),
-    // ]);
-    // i++;
-    // if (i === 8000) {
-    //     let a = 5;
-    //     await MessageEntity.insertMany(array);
-
-    // }
-
-}
-
-async function run() {
-    const data = await redisClient.lPush("list1", JSON.stringify({ t1: "111", t2: 2323, t3: "test3", t4: 423423 }))
-    console.log("data: ", data)
-}
-
-async function run3() {
-    let data;
-    // for (let i = 0; i < 1000; i++) {
-    // await redisClient.lPush("list1", JSON.stringify({ dsa: "32" }))
-    if (Math.random() > 0.8) {
-
-        data = await redisClient.lRange("list1", 0, -1);
-        await redisClient.lTrim("list1", data.length, -1)
-        data = await redisClient.lRange("list1", 0, -1);
-    }
-    // }
-}
-
-function runWorkers() {
-    const worker1 = new Worker("./worker1.js");
-    const worker2 = new Worker("./worker2.js");
-    const worker3 = new Worker("./worker3.js");
-    const worker4 = new Worker("./worker4.js");
-    const worker5 = new Worker("./worker5.js");
-
-    worker1.on("message", async (message) => {
-        run();
-    });
-    worker2.on("message", async (message) => {
-        run();
-    });
-    worker3.on("message", async (message) => {
-        run();
-    });
-    worker4.on("message", async (message) => {
-        run();
-    });
-    worker5.on("message", async (message) => {
-        run();
-    });
-}
 
 async function setup() {
-    //#region Tests
-    //runWorkers();
-    //#endregion
-
-
     await initializeDatabese();
     await redisClient.connect();
 

@@ -22,20 +22,6 @@ export interface AnnouncementDocument extends Announcement, Document {
   minify(): unknown;
 }
 
-// export class AnnouncementEntityDTO implements Announcement {
-//   ownerId: string;
-//   coverImageUrl: string;
-//   title: string;
-//   relatedSchoolIds: string[];
-//   text: string;
-//   isActive: boolean;
-//   fromDate: Date | null;
-//   toDate: Date | null;
-//   createdAt: Date;
-//   updatedAt: Date;
-
-// }
-
 export const AnnouncementSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
   coverImageUrl: { type: String, required: false, default: null },
@@ -48,10 +34,16 @@ export const AnnouncementSchema: Schema = new Schema({
 
 });
 
-// Just to prove that hooks are still functioning as expected
 AnnouncementSchema.pre("save", function (next) {
   //
   next()
+})
+
+AnnouncementSchema.pre("findOne", function (next) {
+  console.log("pre findOne");
+  next()
+
+  
 })
 
 AnnouncementSchema.pre("deleteOne", function (next) {

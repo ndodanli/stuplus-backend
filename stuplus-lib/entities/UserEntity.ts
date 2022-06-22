@@ -1,8 +1,9 @@
 import { Document, Schema } from "mongoose";
-import { Gender } from "../enums/enums";
+import { Gender, RecordStatus } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 
 export interface User extends BaseEntity {
+  recordStatus: RecordStatus;
   email: string;
   password: string;
   username: string;
@@ -12,11 +13,8 @@ export interface User extends BaseEntity {
   lastName: string;
   phoneNumber: string;
   schoolId: string;
-  schoolName: string | null; //ignore
   facultyId: string;
-  facultyName: string | null; //ignore
   departmentId: string;
-  departmentName: string | null; //ignore
   isAccEmailConfirmed: Boolean;
   isSchoolEmailConfirmed: Boolean;
   accEmailConfirmation: EmailConfirmation;
@@ -35,6 +33,10 @@ export interface User extends BaseEntity {
   sendedFriendRequestIds: Array<string>,
   externalLogins: Array<ExternalLogin>,
   relatedSchoolIds: Array<string>,
+  //ignore
+  schoolName: string | null; //ignore
+  facultyName: string | null; //ignore
+  departmentName: string | null; //ignore
 }
 
 export class ExternalLogin {
@@ -144,6 +146,7 @@ UserSchema.methods.minify = async function (
 ) {
   const response: User & { _id: string } = {
     _id: this._id,
+    recordStatus: this.recordStatus,
     email: this.email,
     password: this.password,
     username: this.username,
