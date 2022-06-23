@@ -40,6 +40,11 @@ app.use(
 app.use(cookieParser());
 app.use(customExtensions())
 
+app.use(function(error: any, req: any, res: any, next: any) {
+    /* #swagger.security = [{
+      "bearerAuth": []
+}] */
+});
 app.get("/", async (req: Request, res: Response) => {
   return res.sendFile('index.html', { root: path.join(__dirname, './public') })
 });

@@ -16,6 +16,8 @@ import NotValidError from "../../stuplus-lib/errors/NotValidError";
 const router = Router();
 
 router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['Account']
+          #swagger.description = 'Get user.' */
   const response = new BaseResponse<object>();
   try {
     const user = await UserAccess.getUserWithFields(req.selectedLangs(), res.locals.user._id,
@@ -32,10 +34,29 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
       return InternalError(res, response);
   }
 
+  /* #swagger.responses[200] = {
+    "description": "Success",
+    "schema": {
+      "$ref": "#/definitions/GetAccountUserResponse"
+    }
+  } */
+
   return Ok(res, response);
 });
 
 router.post("/updateProfile", authorize([Role.User, Role.Admin]), validateUpdateProfile, async (req: CustomRequest<UpdateUserProfileDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+         #swagger.description = 'Get user.' */
+  /*	#swagger.requestBody = {
+     required: true,
+     schema: { $ref: "#/definitions/AccountUpdateProfileRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/AccountUpdateProfileResponse"
+   }
+ } */
   const response = new BaseResponse<object>();
   try {
     await UserAccess.updateProfile(req.selectedLangs(), res.locals.user._id, new UpdateUserProfileDTO(req.body))
@@ -48,11 +69,22 @@ router.post("/updateProfile", authorize([Role.User, Role.Admin]), validateUpdate
     if (err.status != 200)
       return InternalError(res, response);
   }
-
   return Ok(res, response);
 });
 
 router.post("/updateInterests", authorize([Role.User, Role.Admin]), validateUpdateInterests, async (req: CustomRequest<UpdateUserInterestsDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+         #swagger.description = 'Get user.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountUpdateInterestsRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/AccountUpdateInterestsResponse"
+   }
+ } */
   const response = new BaseResponse<object>();
   try {
     await UserAccess.updateInterests(req.selectedLangs(), res.locals.user._id, new UpdateUserInterestsDTO(req.body))
@@ -70,6 +102,18 @@ router.post("/updateInterests", authorize([Role.User, Role.Admin]), validateUpda
 });
 
 router.post("/updatePassword", authorize([Role.User, Role.Admin]), validateUpdatePassword, async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['Account']
+         #swagger.description = 'Get user.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountUpdatePasswordRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/AccountUpdatePasswordResponse"
+   }
+ } */
   const response = new BaseResponse<object>();
   try {
     await UserAccess.updatePassword(req.selectedLangs(), res.locals.user._id, req.body)
@@ -87,6 +131,18 @@ router.post("/updatePassword", authorize([Role.User, Role.Admin]), validateUpdat
 });
 
 router.post("/forgotPassword", validateForgotPassword, async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['Account']
+         #swagger.description = 'Get user.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountForgotPasswordRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/AccountForgotPasswordResponse"
+   }
+ } */
   const response = new BaseResponse<object>();
   try {
     await UserAccess.sendConfirmationEmailForgotPassword(req.selectedLangs(), req.body.email)
@@ -104,6 +160,18 @@ router.post("/forgotPassword", validateForgotPassword, async (req: CustomRequest
 });
 
 router.post("/confirmForgotPasswordCode", validateForgotPasswordCode, async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['Account']
+         #swagger.description = 'Get user.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountConfirmForgotPasswordCodeRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/AccountConfirmForgotPasswordCodeResponse"
+   }
+ } */
   const response = new BaseResponse<object>();
   try {
     await UserAccess.confirmForgotPasswordCode(req.selectedLangs(), req.body.email, req.body.code)
@@ -121,6 +189,18 @@ router.post("/confirmForgotPasswordCode", validateForgotPasswordCode, async (req
 });
 
 router.post("/resetPassword", validateResetPassword, async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['Account']
+       #swagger.description = 'Get user.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountResetPasswordCodeRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/AccountResetPasswordCodeResponse"
+   }
+ } */
   const response = new BaseResponse<object>();
   try {
     await UserAccess.resetPassword(req.selectedLangs(), req.body.email, req.body.code, req.body.newPassword)
@@ -138,10 +218,12 @@ router.post("/resetPassword", validateResetPassword, async (req: CustomRequest<o
 });
 
 router.get("/emailConfirmation", async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.ignore = true */
   return res.sendFile('email_confirmation.html', { root: path.join(__dirname, '../public') })
 });
 
 router.post("/emailConfirmation", validateEmailConfirmation, async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.ignore = true */
   const response = new BaseResponse<object>();
   try {
     await UserAccess.confirmEmail(req.selectedLangs(), req.query.uid as string, Number(req.query.code), Number(req.query.t));
@@ -159,6 +241,18 @@ router.post("/emailConfirmation", validateEmailConfirmation, async (req: CustomR
 });
 
 router.post("/sendConfirmationEmail", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['Account']
+     #swagger.description = 'Get user.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountSendConfirmationEmailRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/AccountSendConfirmationEmailResponse"
+   }
+ } */
   const response = new BaseResponse<object>();
   try {
     await UserAccess.sendConfirmationEmail(req.selectedLangs(), res.locals.user._id as string, req.body.isStudentEmail);
@@ -176,6 +270,31 @@ router.post("/sendConfirmationEmail", authorize([Role.User, Role.Admin]), async 
 });
 
 router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSingleFileS3.single("profilePhoto", [".png", ".jpg", ".jpeg", ".svg"], "public/profile_photos/", 5242880), async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['Account']
+         #swagger.description = 'Get user.' */
+  /*	#swagger.requestBody = {
+  required: true,
+ "@content": {
+                "multipart/form-data": {
+                    schema: {
+                        type: "object",
+                        properties: {
+                            profilePhoto: {
+                                type: "string",
+                                format: "binary"
+                            }
+                        },
+                        required: ["profilePhoto"]
+                    }
+                }
+            } 
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/AccountUpdateProfilePhotoResponse"
+   }
+ } */
   const response = new BaseResponse<object>();
   try {
     if (req.fileValidationErrors?.length) {

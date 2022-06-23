@@ -4,9 +4,11 @@ import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import jwt from "jsonwebtoken";
+import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 
 export const authorize = (roles: Role[]) => {
     return (req: CustomRequest<object>, res: any, next: any) => {
+        // #swagger.ignore = true
         const token = req.headers.authorization;
         if (token) {
             const onlyToken = token.slice(7, token.length);
@@ -19,7 +21,7 @@ export const authorize = (roles: Role[]) => {
                 return;
             });
         } else {
-            return Ok(res, new BaseResponse<null>(true, [], null, "Kullanıcı Bulunamadı"));
+            return Ok(res, new BaseResponse<null>(true, [], null, getMessage("unauthorized", req.selectedLangs())));
         }
     };
 }

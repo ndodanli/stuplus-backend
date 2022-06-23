@@ -482,6 +482,7 @@ paths:
               type: object
               required:
                 - announcementId
+                -
               properties:
                 announcementId:
                   type: string
