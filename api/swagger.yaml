@@ -286,6 +286,10 @@ paths:
                     type: boolean
                   isSchoolEmailConfirmed:
                     type: boolean
+                  interestIds:
+                    type: array
+                    items:
+                      type: string
   /school/getAllSchools:
     get:
       summary: Get all schools.
@@ -405,7 +409,7 @@ paths:
                 properties:
                   url:
                     type: string
-  /announcement/getAnnouncementsForUser:
+  /announcement/getAnnouncements:
     post:
       summary: Get announcements for user.
       requestBody:
@@ -463,3 +467,63 @@ paths:
                         type: string
                       title:
                         type: string
+  /announcement/likeDislikeAnnouncement:
+    post:
+      summary: Like or dislike announcement based on sended type.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - announcementId
+              properties:
+                announcementId:
+                  type: string
+      responses:
+        "200":
+          description: Success
+  /announcement/commentAnnouncement:
+    post:
+      summary: Like or dislike announcement based on sended type.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - announcementId
+                - comment
+              properties:
+                announcementId:
+                  type: string
+                comment:
+                  type: string
+      responses:
+        "200":
+          description: Success
+  /announcement/commentLikeDislikeAnnouncement:
+    post:
+      summary: Like or dislike announcement based on sended type.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - announcementId
+                - commentId
+                - type
+              properties:
+                announcementId:
+                  type: string
+                comment:
+                  type: string
+                type:
+                  type: string
+      responses:
+        "200":
+          description: Success

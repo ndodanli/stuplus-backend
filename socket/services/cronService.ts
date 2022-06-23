@@ -1,34 +1,37 @@
 import cron from "node-cron"
 import { RedisPMOperationType, RedisOperationType, RedisGMOperationType } from "../../stuplus-lib/enums/enums_socket";
 import { GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, MessageEntity } from "../../stuplus-lib/entities/BaseEntity";
-import { RedisClientType } from "../server";
 import AsyncLock from "async-lock"
 import { RedisMessageReceiptUpdateDTO } from "../dtos/RedisChat";
 import { config } from "../config/config";
-var lock = new AsyncLock();
-
+import RedisService from "../../stuplus-lib/services/redisService";
+var lock = new AsyncLock({ timeout: 5000 });
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export default class CronService {
-    static init(redisClient: RedisClientType): void {
+    static init(): void {
         cron.schedule(`*/5 * * * * *`, async () => {
             lock.acquire("redis-db-operations", async function (done: any) {
-                const requiredKeys = await redisClient.scan(0, { MATCH: "*", COUNT: 10 });
-                for (let i = 0; i < requiredKeys.keys.length; i++) {
-                    const currentKey = requiredKeys.keys[i];
+                console.log("Cron job started");
+                const { keys, cursor } = await RedisService.client.scan(0, { MATCH: "*", COUNT: 100 });
+                for (let i = 0; i < keys.length; i++) {
+                    const currentKey = keys[i];
                     if (currentKey.startsWith(RedisOperationType.PrivateMessage)) {
-                        await handlePMOperations(redisClient, currentKey);
+                        await handlePMOperations(currentKey);
                     } else if (currentKey.startsWith(RedisOperationType.GroupMessage)) {
-                        await handleGroupMessageOperations(redisClient, currentKey);
+                        await handleGroupMessageOperations(currentKey);
                     }
                 }
-                done();
+                // await wait(12000).then(() => done());
+                console.log("Cron job finished");
+                // done();
             }, function (err, ret) {
                 if (err) console.log(err)
             });
         });
 
-        async function handlePMOperations(redisClient: RedisClientType, currentKey: string) {
+        async function handlePMOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await redisClient.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.lRange(currentKey, 0, -1);
                 const privateMessageBatches: Array<Array<object>> = [];
                 const readedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
                 const forwardedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
@@ -114,14 +117,14 @@ export default class CronService {
                     }
                 }
 
-                await redisClient.lTrim(currentKey, data.length, -1);
+                await RedisService.client.lTrim(currentKey, data.length, -1);
                 resolve(true);
             });
 
         }
-        async function handleGroupMessageOperations(redisClient: RedisClientType, currentKey: string) {
+        async function handleGroupMessageOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await redisClient.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.lRange(currentKey, 0, -1);
                 const groupMessageBatches: Array<Array<object>> = [];
                 const readedBatches: Array<Array<object>> = [];
                 const forwardedBatches: Array<Array<object>> = [];
@@ -180,7 +183,7 @@ export default class CronService {
                     }
                 }
 
-                await redisClient.lTrim(currentKey, data.length, -1);
+                await RedisService.client.lTrim(currentKey, data.length, -1);
                 resolve(true);
             });
         }

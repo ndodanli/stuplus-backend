@@ -6,8 +6,6 @@ import { MessageDocument } from "../stuplus-lib/entities/MessageEntity";
 import "../stuplus-lib/extensions/extensionMethods"
 require("dotenv").config();
 import cors from 'cors';
-import { createClient } from 'redis';
-const redisClient = createClient();
 import { initializeDatabese } from "./config/database";
 import { RedisGroupMessageDTO, RedisGroupMessageForwardReadDTO, RedisMessageDTO, RedisMessageForwardReadDTO } from "./dtos/RedisChat";
 import { RedisPMOperationType, RedisOperationType, RedisGMOperationType, Role, WatchRoomTypes } from "../stuplus-lib/enums/enums_socket";
@@ -21,6 +19,7 @@ import { CreateGroupDTO, WatchUsersDTO } from "./dtos/Chat";
 import { getMessage } from "../stuplus-lib/localization/responseMessages";
 import bodyParser from "body-parser";
 import { groupChatName, userWatchRoomName } from "../stuplus-lib/utils/namespaceCreators";
+import RedisService from "../stuplus-lib/services/redisService";
 
 const app = require("express")();
 const httpServer = require("http").createServer(app);
@@ -32,12 +31,10 @@ setup();
 
 async function setup() {
     await initializeDatabese();
-    await redisClient.connect();
 
     onlineUsers = new Map<string, string>();
 
-    CronService.init(redisClient);
-
+    CronService.init();
 };
 
 app.use(cors());
@@ -124,7 +121,7 @@ io.on("connection", async (socket: ISocket) => {
 
             responseData["mi"] = messageEntity.id;
 
-            await redisClient.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toJSONString());
+            await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toJSONString());
 
             io.to(data.to).emit("c-pm-send", { m: data.m, mi: messageEntity.id, ci: data.ci });
 
@@ -145,7 +142,7 @@ io.on("connection", async (socket: ISocket) => {
             for (let i = 0; i < data.mids.length; i++) {
                 const mi = data.mids[i];
                 const chatData: object = { e: { _id: mi }, t: RedisPMOperationType.UpdateForwarded };
-                await redisClient.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toJSONString());
+                await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toJSONString());
             }
 
             io.to(data.to).emit("c-pm-forwarded", { mids: data.mids, ci: data.ci });
@@ -169,7 +166,7 @@ io.on("connection", async (socket: ISocket) => {
 
                 const chatData: object = { e: { _id: mi }, t: RedisPMOperationType.UpdateReaded }
 
-                await redisClient.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toJSONString());
+                await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toJSONString());
             }
 
             io.to(data.to).emit("c-pm-readed", { mids: data.mids, ci: data.ci });
@@ -193,7 +190,7 @@ io.on("connection", async (socket: ISocket) => {
                 t: RedisGMOperationType.InsertMessage
             }
 
-            await redisClient.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toJSONString());
+            await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toJSONString());
 
             io.to(groupChatName(data.gCi)).emit("c-gm-send", { m: data.m, mi: gMessageEntity.id, gCi: data.gCi, fId: socket.data.user.id });
 
@@ -218,7 +215,7 @@ io.on("connection", async (socket: ISocket) => {
                     e: { _id: gMessageForwardEntity.id, messageId: mi, forwardedTo: socket.data.user.id },
                     t: RedisGMOperationType.InsertForwarded
                 }
-                await redisClient.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toJSONString());
+                await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toJSONString());
             }
 
             io.to(groupChatName(data.gCi)).emit("c-gm-forwarded",
@@ -255,7 +252,7 @@ io.on("connection", async (socket: ISocket) => {
                     e: { _id: gMessageReadEntity.id, messageId: mi, readedBy: socket.data.user.id },
                     t: RedisGMOperationType.InsertReaded
                 }
-                await redisClient.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toJSONString());
+                await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toJSONString());
             }
 
             io.to(groupChatName(data.gCi)).emit("c-gm-readed",
@@ -378,4 +375,3 @@ httpServer.listen(process.env.PORT, () => {
     console.log("Listening on ", process.env.PORT);
 });
 
-export type RedisClientType = ReturnType<typeof createClient>;

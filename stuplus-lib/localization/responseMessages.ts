@@ -62,6 +62,7 @@ const systemLangs: Record<string, Function> = {
             userNotAuthorized: "Bu işlem için yetkiniz yok. Ne yapmaya çalışıyorsunuz?",
             unknown: "Bilinmiyor",
             everyone: "Herkes",
+            loginSuccess: "Başarıyla giriş yaptınız :)",
         }
     },
     "en": function (args: string[] = []) {

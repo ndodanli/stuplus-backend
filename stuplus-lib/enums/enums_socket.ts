@@ -27,17 +27,19 @@ export enum RedisGMOperationType {
    InsertForwarded = 2
 }
 
-export const RedisOperationType ={
+export const RedisOperationType = {
    PrivateMessage: "0",
    GroupMessage: "1",
    AnnouncementLikeDislike: "3",
+   AnnouncementComment: "4",
+   AnnouncementCommentLikeDislike: "5",
 }
 
-export const SocketRoomTypes ={
-   WatchRoom : "w",
+export const SocketRoomTypes = {
+   WatchRoom: "w",
 }
 
-export enum WatchRoomTypes{
+export enum WatchRoomTypes {
    UserOnline = 0,
    UserOffline = 1
 }

@@ -27,9 +27,8 @@ export class GetAnnouncementsForUserDTO extends BaseFilter {
 }
 
 export class AnnouncementLikeDislikeDTO extends BaseFilter {
-    ownerId: string = ""; //user id
     announcementId: string = "";
-    type: LikeType = LikeType.Like
+    type: LikeType = LikeType.Like;
     constructor(obj: any) {
         super(obj);
         if (obj) {
@@ -39,9 +38,20 @@ export class AnnouncementLikeDislikeDTO extends BaseFilter {
 }
 
 export class AnnouncementCommentDTO extends BaseFilter {
-    ownerId: string = ""; //user id
     announcementId: string = "";
     comment: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class AnnouncementCommenLikeDisliketDTO extends BaseFilter {
+    commentId: string = "";
+    announcementId: string = "";
+    type: LikeType = LikeType.Like;
     constructor(obj: any) {
         super(obj);
         if (obj) {

@@ -1,10 +1,12 @@
 import { Document, Schema } from "mongoose";
+import { LikeType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 
 export interface AnnouncementCommentLike extends BaseEntity {
   ownerId: string; //user id
   commentId: string;
   announcementId: string;
+  type: LikeType;
 }
 
 export interface AnnouncementCommentLikeDocument extends AnnouncementCommentLike, Document {
@@ -15,6 +17,7 @@ export const AnnouncementCommentLikeSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
   commentId: { type: String, required: true },
   announcementId: { type: String, required: true },
+  type: {type: Number, required: true}
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -36,6 +39,7 @@ AnnouncementCommentLikeSchema.methods.minify = async function (
     ownerId: this.ownerId,
     commentId: this.commentId,
     announcementId: this.announcementId,
+    type: this.type,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

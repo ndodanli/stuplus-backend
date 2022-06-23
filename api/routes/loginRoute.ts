@@ -13,6 +13,7 @@ router.post("/", validateLogin, async (req: CustomRequest<LoginUserDTO>, res: an
     try {
         response.data = await UserAccess.loginUser(req.selectedLangs(), new LoginUserDTO(req.body));
 
+        response.setMessage(getMessage("loginSuccess", req.selectedLangs()));
     } catch (err: any) {
         response.setErrorMessage(err.message)
 
@@ -28,6 +29,7 @@ router.post("/google", validateGoogleLogin, async (req: CustomRequest<LoginUserG
     try {
         response.data = await UserAccess.loginUserWithGoogle(req.selectedLangs(), new LoginUserGoogleDTO(req.body));
 
+        response.setMessage(getMessage("loginSuccess", req.selectedLangs()));
     } catch (err: any) {
         response.setErrorMessage(err.message)
 

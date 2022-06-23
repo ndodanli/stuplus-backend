@@ -3,12 +3,12 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
-import { validateAddAnnouncement, validateCommentAnnouncement, validateLikeDislikeAnnouncement } from "../middlewares/validation/announcement/validateAnnouncementRoute";
+import { validateAddAnnouncement, validateCommentAnnouncement, validateCommentLikeDislikeAnnouncement, validateLikeDislikeAnnouncement } from "../middlewares/validation/announcement/validateAnnouncementRoute";
 import { authorize } from "../middlewares/auth";
 import { Role } from "../../stuplus-lib/enums/enums";
 import { uploadSingleFileS3 } from "../../stuplus-lib/services/fileService";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
-import { AddAnnouncementDTO, AnnouncementCommentDTO, AnnouncementLikeDislikeDTO, GetAnnouncementsForUserDTO } from "../dtos/AnnouncementDTOs";
+import { AddAnnouncementDTO, AnnouncementCommenLikeDisliketDTO, AnnouncementCommentDTO, AnnouncementLikeDislikeDTO, GetAnnouncementsForUserDTO } from "../dtos/AnnouncementDTOs";
 import { AnnouncementAccess } from "../dataAccess/announcementAccess";
 const router = Router();
 
@@ -68,10 +68,24 @@ router.post("/likeDislikeAnnouncement", authorize([Role.ContentCreator, Role.Use
     return Ok(res, response)
 });
 
-router.post("/likeDislikeAnnouncement", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentAnnouncement, async (req: CustomRequest<AnnouncementCommentDTO>, res: any) => {
+router.post("/commentAnnouncement", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentAnnouncement, async (req: CustomRequest<AnnouncementCommentDTO>, res: any) => {
     const response = new BaseResponse<object>();
     try {
         response.data = await AnnouncementAccess.commentAnnouncement(req.selectedLangs(), new AnnouncementCommentDTO(req.body), res.locals.user._id);
+    } catch (err: any) {
+        response.setErrorMessage(err.message)
+
+        if (err.status != 200)
+            return InternalError(res, response);
+    }
+
+    return Ok(res, response)
+});
+
+router.post("/commentLikeDislikeAnnouncement", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementCommenLikeDisliketDTO>, res: any) => {
+    const response = new BaseResponse<object>();
+    try {
+        response.data = await AnnouncementAccess.commentLikeDislikeAnnouncement(req.selectedLangs(), new AnnouncementCommenLikeDisliketDTO(req.body), res.locals.user._id);
     } catch (err: any) {
         response.setErrorMessage(err.message)
 
