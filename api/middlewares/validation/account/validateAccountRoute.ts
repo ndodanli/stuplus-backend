@@ -23,6 +23,12 @@ export const validateUpdateProfile = [
         .not()
         .withMessage("Telefon numarası geçerli değil. Lütfen belirtilen formatta giriş yapınız.")
         .bail(),
+    check('avatarKey')
+        .if((value: any, { req }: any) => value)
+        .isString()
+        .not()
+        .withMessage("avatarKey string olmalidir.")
+        .bail(),
     // check('profilePhotoUrl')
     //     .if((value: any, { req }: any) => value)
     //     .isURL()
@@ -148,7 +154,7 @@ export const validateForgotPassword = [
 export const validateUpdateInterests = [
     check('interestIds')
         .isArray({ min: 0 })
-        .withMessage((value: any, { req }: any) => getMessage("minInterest", req.selectedLangs()))
+        .withMessage((value: any, { req }: any) => getMessage("mustBeArray", req.selectedLangs()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);

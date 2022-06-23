@@ -4,10 +4,10 @@ import { EmailConfirmation } from "../../stuplus-lib/entities/UserEntity";
 import { mapToDTO } from "../../stuplus-lib/utils/general";
 
 export class UpdateUserProfileDTO {
-    firstName: string | undefined;
-    lastName: string | undefined;
-    phoneNumber: string | undefined;
-    profilePhotoUrl: string | undefined;
+    firstName: string = "";
+    lastName: string = "";
+    phoneNumber: string = "";
+    avatarKey: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

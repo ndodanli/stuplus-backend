@@ -109,7 +109,7 @@ io.on("connection", async (socket: ISocket) => {
 
             responseData["mi"] = messageEntity.id;
 
-            await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toJSONString());
+            await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toString());
 
             io.to(data.to).emit("c-pm-send", { m: data.m, mi: messageEntity.id, ci: data.ci });
 
@@ -130,7 +130,7 @@ io.on("connection", async (socket: ISocket) => {
             for (let i = 0; i < data.mids.length; i++) {
                 const mi = data.mids[i];
                 const chatData: object = { e: { _id: mi }, t: RedisPMOperationType.UpdateForwarded };
-                await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toJSONString());
+                await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toString());
             }
 
             io.to(data.to).emit("c-pm-forwarded", { mids: data.mids, ci: data.ci });
@@ -154,7 +154,7 @@ io.on("connection", async (socket: ISocket) => {
 
                 const chatData: object = { e: { _id: mi }, t: RedisPMOperationType.UpdateReaded }
 
-                await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toJSONString());
+                await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, chatData.toString());
             }
 
             io.to(data.to).emit("c-pm-readed", { mids: data.mids, ci: data.ci });
@@ -178,7 +178,7 @@ io.on("connection", async (socket: ISocket) => {
                 t: RedisGMOperationType.InsertMessage
             }
 
-            await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toJSONString());
+            await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toString());
 
             io.to(groupChatName(data.gCi)).emit("c-gm-send", { m: data.m, mi: gMessageEntity.id, gCi: data.gCi, fId: socket.data.user.id });
 
@@ -203,7 +203,7 @@ io.on("connection", async (socket: ISocket) => {
                     e: { _id: gMessageForwardEntity.id, messageId: mi, forwardedTo: socket.data.user.id },
                     t: RedisGMOperationType.InsertForwarded
                 }
-                await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toJSONString());
+                await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toString());
             }
 
             io.to(groupChatName(data.gCi)).emit("c-gm-forwarded",
@@ -240,7 +240,7 @@ io.on("connection", async (socket: ISocket) => {
                     e: { _id: gMessageReadEntity.id, messageId: mi, readedBy: socket.data.user.id },
                     t: RedisGMOperationType.InsertReaded
                 }
-                await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toJSONString());
+                await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, chatData.toString());
             }
 
             io.to(groupChatName(data.gCi)).emit("c-gm-readed",

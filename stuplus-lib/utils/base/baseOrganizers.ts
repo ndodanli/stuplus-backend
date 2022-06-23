@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
-
+import { } from "multer-s3"
+import { SFile } from "./multer";
 export interface CustomRequest<T> extends Omit<Request, 'body' | 'user'> {
     body: T | any;
     user: any;
     fileValidationErrors: [];
     selectedLangs: Function;
+    file: SFile
 }
 export interface CustomResponse extends Response {
 }

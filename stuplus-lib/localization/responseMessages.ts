@@ -63,6 +63,7 @@ const systemLangs: Record<string, Function> = {
             unknown: "Bilinmiyor",
             everyone: "Herkes",
             loginSuccess: "Başarıyla giriş yaptınız :)",
+            mustBeArray: "Bu alan bir dizi olmalıdır.",
         }
     },
     "en": function (args: string[] = []) {

@@ -33,6 +33,7 @@ export interface User extends BaseEntity {
   sendedFriendRequestIds: Array<string>,
   externalLogins: Array<ExternalLogin>,
   relatedSchoolIds: Array<string>,
+  avatarKey: string,
   //ignore
   schoolName: string | null; //ignore
   facultyName: string | null; //ignore
@@ -126,6 +127,7 @@ export const UserSchema: Schema = new Schema({
     })), required: false, default: []
   },
   relatedSchoolIds: { type: Array.of(String), required: false, default: [] },
+  avatarKey: { type: String, required: false, default: null },
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -158,11 +160,8 @@ UserSchema.methods.minify = async function (
     updatedAt: this.updatedAt,
     phoneNumber: this.phoneNumber,
     schoolId: this.schoolId,
-    schoolName: null,
     facultyId: this.facultyId,
-    facultyName: null,
     departmentId: this.departmentId,
-    departmentName: null,
     isAccEmailConfirmed: this.isAccEmailConfirmed,
     isSchoolEmailConfirmed: this.isSchoolEmailConfirmed,
     fpEmailConfirmation: this.fpEmailConfirmation,
@@ -181,6 +180,11 @@ UserSchema.methods.minify = async function (
     sendedFriendRequestIds: this.sendedFriendRequestIds,
     externalLogins: this.externalLogins,
     relatedSchoolIds: this.relatedSchoolIds,
+    avatarKey: this.avatarKey,
+    //ignore
+    schoolName: null, //ignore
+    facultyName: null, //ignore
+    departmentName: null, //ignore
   };
   return response;
 };

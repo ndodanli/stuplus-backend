@@ -21,7 +21,7 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
     const user = await UserAccess.getUserWithFields(req.selectedLangs(), res.locals.user._id,
       ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
         "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
-        "isSchoolEmailConfirmed", "interestIds"])
+        "isSchoolEmailConfirmed", "interestIds", "avatarKey"])
 
     response.data = user;
 
@@ -175,7 +175,7 @@ router.post("/sendConfirmationEmail", authorize([Role.User, Role.Admin]), async 
   return Ok(res, response);
 });
 
-router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSingleFileS3.single("photo", [".png", ".jpg", ".jpeg", ".svg"], "public/profile_photos/", 5242880), async (req: CustomRequest<object>, res: any) => {
+router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSingleFileS3.single("profilePhoto", [".png", ".jpg", ".jpeg", ".svg"], "public/profile_photos/", 5242880), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     if (req.fileValidationErrors?.length) {
@@ -183,7 +183,7 @@ router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSin
       throw new NotValidError(getMessage("fileError", req.selectedLangs()))
     }
 
-    await UserAccess.updateProfilePhoto(req.selectedLangs(), res.locals.user._id, req.file?.location)
+    await UserAccess.updateProfilePhoto(req.selectedLangs(), res.locals.user._id, req.file.location)
 
     response.data = { url: req.file?.location }
 

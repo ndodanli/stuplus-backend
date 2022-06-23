@@ -1,3 +1,4 @@
+import "../stuplus-lib/extensions/extensionMethods"
 import express, { Request, Response, } from "express";
 import { initializeDatabese } from "./config/database";
 import dotenv from "dotenv";
@@ -8,7 +9,6 @@ import loginRoute from "./routes/loginRoute";
 import accountRoute from "./routes/accountRoute";
 import schoolRoute from "./routes/schoolRoute";
 import announcementRoute from "./routes/announcementRoute";
-import "../stuplus-lib/extensions/extensionMethods"
 import swaggerRoute from "./routes/swaggerRoute";
 import path from "path";
 import { config } from "./config/config";

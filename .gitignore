@@ -39,11 +39,6 @@ build/Release
 
 # Dependency directories
 node_modules/*
-!node_modules/multer/
-!node_modules/multer-s3/
-!node_modules/@types/
-!node_modules/@types/multer/
-!node_modules/@types/multer-s3/
 jspm_packages/
 
 # TypeScript v1 declaration files

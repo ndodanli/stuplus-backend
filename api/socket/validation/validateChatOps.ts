@@ -7,7 +7,7 @@ import { Ok } from "../../../stuplus-lib/utils/base/ResponseObjectResults";
 export const validateUpdateInterests = [
     check('interestIds')
         .isArray()
-        .withMessage((value: any, { req }: any) => getMessage("minInterest", req.selectedLangs()))
+        .withMessage((value: any, { req }: any) => getMessage("mustBeArray", req.selectedLangs()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);

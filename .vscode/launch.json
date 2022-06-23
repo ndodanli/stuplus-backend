@@ -17,18 +17,18 @@
             ],
             "type": "pwa-node"
         },
-        {
-            "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen",
-            "name": "socket",
-            "program": "${workspaceFolder}/socket/server.ts",
-            "request": "launch",
-            "restart": true,
-            "runtimeExecutable": "ts-node",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "pwa-node"
-        }
+        // {
+        //     "console": "integratedTerminal",
+        //     "internalConsoleOptions": "neverOpen",
+        //     "name": "socket",
+        //     "program": "${workspaceFolder}/socket/server.ts",
+        //     "request": "launch",
+        //     "restart": true,
+        //     "runtimeExecutable": "ts-node",
+        //     "skipFiles": [
+        //         "<node_internals>/**"
+        //     ],
+        //     "type": "pwa-node"
+        // }
     ]
 }

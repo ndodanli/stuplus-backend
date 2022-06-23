@@ -123,7 +123,7 @@ export class AnnouncementAccess {
                 type: payload.type
             },
         }
-        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, announcementLikeDislikeData.toJSONString());
+        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, announcementLikeDislikeData.toString());
         return true;
     }
 
@@ -137,7 +137,7 @@ export class AnnouncementAccess {
                 comment: payload.comment
             },
         }
-        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, announcementCommentData.toJSONString());
+        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, announcementCommentData.toString());
 
         return true;
     }
@@ -153,7 +153,7 @@ export class AnnouncementAccess {
                 type: payload.type
             },
         }
-        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, announcementCommentData.toJSONString());
+        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, announcementCommentData.toString());
 
         return true;
     }

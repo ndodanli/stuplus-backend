@@ -98,6 +98,8 @@ paths:
                 phoneNumber:
                   type: string
                   example: 5073959353
+                avatarKey:
+                  type: string
       responses:
         "200":
           description: Success
@@ -290,6 +292,8 @@ paths:
                     type: array
                     items:
                       type: string
+                  avatarKey:
+                    type: string
   /school/getAllSchools:
     get:
       summary: Get all schools.
