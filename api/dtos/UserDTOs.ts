@@ -31,6 +31,7 @@ export class RegisterUserDTO {
     schoolEmailConfirmation: EmailConfirmation = new EmailConfirmation();
     password: string = "";
     passwordRepeat: string = "";
+    gender: number = 0;
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

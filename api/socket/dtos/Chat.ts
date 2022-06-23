@@ -1,5 +1,5 @@
-import { GroupChatType } from "../../stuplus-lib/enums/enums_socket";
-import { mapToDTO } from "../../stuplus-lib/utils/general";
+import { GroupChatType } from "../../../stuplus-lib/enums/enums_socket";
+import { mapToDTO } from "../../../stuplus-lib/utils/general";
 
 export class CreateGroupDTO {
     userIds: string[] = [];

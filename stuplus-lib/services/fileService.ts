@@ -4,6 +4,7 @@ import multer from "multer"
 import multerS3 from "multer-s3"
 import path from "path";
 import { getMessage } from "../localization/responseMessages";
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 AWS.config.update({
   accessKeyId: process.env.ACCESS_KEY_ID_S3 || config.S3.ACCESS_KEY_ID_S3,

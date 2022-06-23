@@ -1,4 +1,4 @@
-import { mapToDTO } from "../../stuplus-lib/utils/general";
+import { mapToDTO } from "../../../stuplus-lib/utils/general";
 
 export class UserDTO {
     _id: string = "";

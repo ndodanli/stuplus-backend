@@ -2,28 +2,32 @@ import cron from "node-cron"
 import { RedisPMOperationType, RedisOperationType, RedisGMOperationType } from "../../stuplus-lib/enums/enums_socket";
 import { GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, MessageEntity } from "../../stuplus-lib/entities/BaseEntity";
 import AsyncLock from "async-lock"
-import { RedisMessageReceiptUpdateDTO } from "../dtos/RedisChat";
-import { config } from "../config/config";
+import { RedisMessageReceiptUpdateDTO } from "../socket/dtos/RedisChat";
+import { config } from "../socket/config/config";
 import RedisService from "../../stuplus-lib/services/redisService";
 var lock = new AsyncLock({ timeout: 5000 });
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export default class CronService {
+    private static currentCursor: number = 0;
     static init(): void {
-        cron.schedule(`*/5 * * * * *`, async () => {
+        cron.schedule(`*/30 * * * * *`, async () => {
             lock.acquire("redis-db-operations", async function (done: any) {
                 console.log("Cron job started");
-                const { keys, cursor } = await RedisService.client.scan(0, { MATCH: "*", COUNT: 100 });
-                for (let i = 0; i < keys.length; i++) {
-                    const currentKey = keys[i];
-                    if (currentKey.startsWith(RedisOperationType.PrivateMessage)) {
-                        await handlePMOperations(currentKey);
-                    } else if (currentKey.startsWith(RedisOperationType.GroupMessage)) {
-                        await handleGroupMessageOperations(currentKey);
+                do {
+                    const { keys, cursor } = await RedisService.client.scan(CronService.currentCursor, { MATCH: "*", COUNT: 100 });
+                    CronService.currentCursor = cursor;
+                    for (let i = 0; i < keys.length; i++) {
+                        const currentKey = keys[i];
+                        if (currentKey.startsWith(RedisOperationType.PrivateMessage)) {
+                            await handlePMOperations(currentKey);
+                        } else if (currentKey.startsWith(RedisOperationType.GroupMessage)) {
+                            await handleGroupMessageOperations(currentKey);
+                        }
                     }
-                }
-                // await wait(12000).then(() => done());
-                console.log("Cron job finished");
-                // done();
+                    // await wait(12000).then(() => done());
+                    console.log("Cron job finished");
+                } while (CronService.currentCursor != 0);
+                done();
             }, function (err, ret) {
                 if (err) console.log(err)
             });
@@ -187,5 +191,6 @@ export default class CronService {
                 resolve(true);
             });
         }
+        
     }
 }

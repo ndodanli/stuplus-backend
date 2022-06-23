@@ -37,10 +37,10 @@
         integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh"
         crossorigin="anonymous"></script>
     <script>
-        const host = "http://localhost:3010";
+        const host = "http://localhost:25010";
 
         const socket = io(host, {
-            auth: { token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MjhhOWUzOWI0ODNmNDI4YTc0ZTc1YzEiLCJyb2xlIjoxLCJpYXQiOjE2NTUwNTI1NzUsImV4cCI6MTY1NzY0NDU3NX0.XlFb0hC3xds8M1hSJpz5N08RxFFg3vYkC6sAp24Algo" },
+            auth: { token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmI0NDUyZDY1YjBkMWUwZjY0ZTA4ODEiLCJyb2xlIjoxLCJpYXQiOjE2NTU5ODE0MjMsImV4cCI6MTY1ODU3MzQyM30.bRERvbMl_0q_dVdQIJ3k_hbcSUCmClPQJPOmM5DOTb8" },
             // query: { token: "dweqfweq" },
             transports: ["websocket", "polling"], // use WebSocket first, if available
             upgrade: true,

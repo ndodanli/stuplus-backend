@@ -1,9 +1,13 @@
 import { config } from "../config/config";
 import nodemailer from "nodemailer";
+import path from "path";
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 export default class EmailService {
     private static emailTransporter = nodemailer.createTransport({
-        service: "Gmail",
+        service: 'gmail',
+        port: 465,
+        secure: true,
         auth: {
             user: "fakultemdestek@gmail.com",
             pass: "yqplxujmtvszkwmx"

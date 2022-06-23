@@ -7,7 +7,7 @@ $(document).ready(function () {
     const PERSON_IMG = "https://image.shutterstock.com/image-photo/image-serious-confident-dark-skinned-260nw-1417352750.jpg";
     const BOT_NAME = "Person 1";
     const PERSON_NAME = "Person 2";
-    const USER_ID = "628a9e39b483f428a74e75c1";
+    const USER_ID = "62b4452d65b0d1e0f64e0881";
 
     msgerForm.addEventListener("submit", event => {
         event.preventDefault();
@@ -20,7 +20,7 @@ $(document).ready(function () {
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
-        for (let u = 0; u < 1; u++) {
+        for (let u = 0; u < 10000; u++) {
             socket.emit("pm-send", {
                 to: USER_ID,
                 m: msgText,
@@ -44,7 +44,7 @@ $(document).ready(function () {
                     console.log("response: ", res);
                 });
             });
-            sleep(1);
+            sleep(5);
         }
         for (let u = 0; u < 1; u++) {
             socket.emit("gm-send", {
@@ -142,7 +142,7 @@ $(document).ready(function () {
 
 });
 
-const baseUrl = "http://localhost:3010";
+const baseUrl = "http://localhost:25010";
 axios.defaults.baseURL = baseUrl;
 axios.defaults.headers.common["Authorization"] = "Bearer " +
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MjhhOWUzOWI0ODNmNDI4YTc0ZTc1YzEiLCJyb2xlIjoxLCJpYXQiOjE2NTUwNTI1NzUsImV4cCI6MTY1NzY0NDU3NX0.XlFb0hC3xds8M1hSJpz5N08RxFFg3vYkC6sAp24Algo";

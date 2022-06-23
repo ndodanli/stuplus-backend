@@ -1,8 +1,8 @@
 import { check, validationResult, query } from "express-validator"
-import { getMessage } from "../../stuplus-lib/localization/responseMessages";
-import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
-import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
-import { Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
+import { getMessage } from "../../../stuplus-lib/localization/responseMessages";
+import { CustomRequest } from "../../../stuplus-lib/utils/base/baseOrganizers";
+import BaseResponse from "../../../stuplus-lib/utils/base/BaseResponse";
+import { Ok } from "../../../stuplus-lib/utils/base/ResponseObjectResults";
 
 export const validateUpdateInterests = [
     check('interestIds')

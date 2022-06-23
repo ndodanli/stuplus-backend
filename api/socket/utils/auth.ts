@@ -1,9 +1,8 @@
-import { Role } from "../../stuplus-lib/enums/enums_socket";
+import { Role } from "../../../stuplus-lib/enums/enums_socket";
 import jwt from "jsonwebtoken";
-import { UserDTO } from "../dtos/User";
-import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
-import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
-import { Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
+import { CustomRequest } from "../../../stuplus-lib/utils/base/baseOrganizers";
+import BaseResponse from "../../../stuplus-lib/utils/base/BaseResponse";
+import { Ok } from "../../../stuplus-lib/utils/base/ResponseObjectResults";
 
 export const authorizeSocket = (token: string) => {
     let decode;

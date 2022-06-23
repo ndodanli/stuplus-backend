@@ -1,28 +1,22 @@
-import { convertToObject } from "typescript";
 import ISocket from "./interfaces/socket";
-import { ChatEntity, GroupMessageForwardEntity, GroupMessageEntity, GroupMessageReadEntity, MessageEntity, UserEntity, GroupChatEntity, GroupChatUserEntity } from "../stuplus-lib/entities/BaseEntity";
-import { Worker } from "worker_threads";
-import { MessageDocument } from "../stuplus-lib/entities/MessageEntity";
-import "../stuplus-lib/extensions/extensionMethods"
+import { ChatEntity, GroupMessageForwardEntity, GroupMessageEntity, GroupMessageReadEntity, MessageEntity, UserEntity, GroupChatEntity, GroupChatUserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import "../../stuplus-lib/extensions/extensionMethods"
 require("dotenv").config();
 import cors from 'cors';
-import { initializeDatabese } from "./config/database";
 import { RedisGroupMessageDTO, RedisGroupMessageForwardReadDTO, RedisMessageDTO, RedisMessageForwardReadDTO } from "./dtos/RedisChat";
-import { RedisPMOperationType, RedisOperationType, RedisGMOperationType, Role, WatchRoomTypes } from "../stuplus-lib/enums/enums_socket";
-import CronService from "./services/cronService";
+import { RedisPMOperationType, RedisOperationType, RedisGMOperationType, Role, WatchRoomTypes } from "../../stuplus-lib/enums/enums_socket";
+import CronService from "../services/cronService";
 import { authorize, authorizeSocket } from "./utils/auth";
-import BaseResponse from "../stuplus-lib/utils/base/BaseResponse";
-import { InternalError, Ok } from "../stuplus-lib/utils/base/ResponseObjectResults";
-import customExtensions from "../stuplus-lib/extensions/extensions";
-import { CustomRequest } from "../stuplus-lib/utils/base/baseOrganizers";
+import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
+import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
+import customExtensions from "../../stuplus-lib/extensions/extensions";
+import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { CreateGroupDTO, WatchUsersDTO } from "./dtos/Chat";
-import { getMessage } from "../stuplus-lib/localization/responseMessages";
+import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import bodyParser from "body-parser";
-import { groupChatName, userWatchRoomName } from "../stuplus-lib/utils/namespaceCreators";
-import RedisService from "../stuplus-lib/services/redisService";
-
-const app = require("express")();
-const httpServer = require("http").createServer(app);
+import { groupChatName, userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
+import RedisService from "../../stuplus-lib/services/redisService";
+import { httpServer, app } from "../server";
 app.use(customExtensions())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -30,14 +24,8 @@ let onlineUsers: Map<string, string>;
 setup();
 
 async function setup() {
-    await initializeDatabese();
-
     onlineUsers = new Map<string, string>();
-
-    CronService.init();
 };
-
-app.use(cors());
 
 const io = require("socket.io")(httpServer, {
     pingTimeout: 30000,
@@ -371,7 +359,6 @@ app.post("/chat/createGroup", authorize([Role.User, Role.Admin]), async (req: Cu
 //     return Ok(res, response);
 // });
 
-httpServer.listen(process.env.PORT, () => {
-    console.log("Listening on ", process.env.PORT);
-});
-
+export {
+    io
+}
