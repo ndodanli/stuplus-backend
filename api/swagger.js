@@ -41,6 +41,7 @@ const doc = {
         }
     },
     definitions: {
+        //Requests
         NullResponse: {
             hasError: {
                 type: "boolean",
@@ -124,7 +125,7 @@ const doc = {
             }
         },
         AccountUpdateInterestsRequest: {
-            interestIds: ["insterestId1", "insterestId2"],
+            $interestIds: ["insterestId1", "insterestId2"],
         },
         AccountUpdateInterestsResponse: {
             hasError: {
@@ -144,9 +145,9 @@ const doc = {
             }
         },
         AccountUpdatePasswordRequest: {
-            password: "oldPassword",
-            newPassword: "newPassword",
-            newPasswordRepeat: "newPassword",
+            $password: "oldPassword",
+            $newPassword: "newPassword",
+            $newPasswordRepeat: "newPassword",
         },
         AccountUpdatePasswordResponse: {
             hasError: {
@@ -166,7 +167,7 @@ const doc = {
             }
         },
         AccountForgotPasswordRequest: {
-            email: "stuplus@gmail.com",
+            $email: "stuplus@gmail.com",
         },
         AccountForgotPasswordResponse: {
             hasError: {
@@ -186,8 +187,8 @@ const doc = {
             }
         },
         AccountConfirmForgotPasswordCodeRequest: {
-            code: "12345",
-            email: "stuplus@gmail.com"
+            $code: "12345",
+            $email: "stuplus@gmail.com"
         },
         AccountConfirmForgotPasswordCodeResponse: {
             hasError: {
@@ -207,10 +208,10 @@ const doc = {
             }
         },
         AccountResetPasswordCodeRequest: {
-            code: "12345",
-            email: "stuplus@gmail.com",
-            newPassword: "newPassword",
-            newPasswordRepeat: "newPassword",
+            $code: "12345",
+            $email: "stuplus@gmail.com",
+            $newPassword: "newPassword",
+            $newPasswordRepeat: "newPassword",
         },
         AccountResetPasswordCodeResponse: {
             hasError: {
@@ -230,7 +231,7 @@ const doc = {
             }
         },
         AccountSendConfirmationEmailRequest: {
-            isStudentEmail: false
+            $isStudentEmail: false
         },
         AccountSendConfirmationEmailResponse: {
             hasError: {
@@ -272,6 +273,125 @@ const doc = {
                     },
                 }
             }
+        },
+        //Announcement
+        AnnouncementGetAnnouncementsRequest: {
+            $schoolIds: ["schoolId1", "schoolId2"],
+        },
+        AnnouncementGetAnnouncementsResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: {
+                "_id": "62af8aade035eb1764400d30",
+                "ownerId": "62ab8a204166fd1eaebbb3fa",
+                "coverImageUrl": null,
+                "title": "das",
+                "relatedSchoolIds": [
+                    "string1",
+                    "string2"
+                ],
+                "text": "dasdsa",
+                "isActive": true,
+                "fromDate": null,
+                "toDate": null,
+                "__t": "Announcement",
+                "createdAt": "2022-06-19T20:44:29.536Z",
+                "updatedAt": "2022-06-19T20:44:29.536Z",
+                "__v": 0,
+                "recordStatus": 1,
+                "likeCount": 0,
+                "commentCount": 0,
+                "owner": {
+                    "_id": "62ab8a204166fd1eaebbb3fa",
+                    "username": "ndodanli14",
+                    "__t": "User"
+                },
+                "relatedSchools": []
+            },
+        },
+        AnnouncementLikeDislikeRequest: {
+            $announcementId: "announcementId",
+            $type: {
+                type: "enum",
+                values: {
+                    Dislike: 0,
+                    Like: 1
+                }
+            }
+        },
+        AnnouncementCommentRequest: {
+            $announcementId: "announcementId",
+            $comment: "some comment."
+        },
+        AnnouncementCommentLikeDislikeRequest: {
+            $commentId: "commentId",
+            $announcementId: "announcementId",
+            $type: {
+                type: "enum",
+                values: {
+                    Dislike: 0,
+                    Like: 1
+                }
+            }
+        },
+        InterestGetAllInterestsResponse: {
+            "_id": "interestId",
+            "url": "url",
+            "title": "interestTitle",
+        },
+        LoginRequest: {
+            $email: "stuplus@gmail.com",
+            $password: "tesTtesT@33"
+        },
+        LoginResponse: {
+            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFiOGEyMDQxNjZmZDFlYWViYmIzZmEiLCJyb2xlIjowLCJpYXQiOjE2NTYwNjA0MzAsImV4cCI6MTY1ODY1MjQzMH0.ZwB2RiwHwRx_-HkU1ziIwWeXQucaPQFBDQH5QVjjvdE"
+        },
+        LoginGoogleRequest: {
+            $AccessToken: "string",
+        },
+        LoginGoogleResponse: {
+            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFiOGEyMDQxNjZmZDFlYWViYmIzZmEiLCJyb2xlIjowLCJpYXQiOjE2NTYwNjA0MzAsImV4cCI6MTY1ODY1MjQzMH0.ZwB2RiwHwRx_-HkU1ziIwWeXQucaPQFBDQH5QVjjvdE"
+        },
+        LoginRegisterRequest: {
+            $email: "stuplus@gmail.com",
+            $password: "tesTtesT@33",
+            $gender: {
+                type: "enum",
+                values: {
+                    NotSpecified: 0,
+                    Male: 1,
+                    Female: 2,
+                    NotDefined: 3
+                }
+            }
+        },
+        LoginRegisterResponse: {
+            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFiOGEyMDQxNjZmZDFlYWViYmIzZmEiLCJyb2xlIjowLCJpYXQiOjE2NTYwNjA0MzAsImV4cCI6MTY1ODY1MjQzMH0.ZwB2RiwHwRx_-HkU1ziIwWeXQucaPQFBDQH5QVjjvdE"
+        },
+        SchoolGetAllSchoolsResponse: {
+            "_id": "interestId",
+            "title": "interestTitle",
+        },
+        SchoolGetFacultiesResponse: {
+            "_id": "interestId",
+            "title": "interestTitle",
+            "schoolId": "schoolId",
+        },
+        SchoolGetDepartmentsResponse: {
+            "_id": "interestId",
+            "title": "interestTitle",
+            "facultyId": "facultyId",
+            "grade": 0,
         },
     }
 };

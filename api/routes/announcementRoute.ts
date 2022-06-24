@@ -12,7 +12,41 @@ import { AddAnnouncementDTO, AnnouncementCommenLikeDisliketDTO, AnnouncementComm
 import { AnnouncementAccess } from "../dataAccess/announcementAccess";
 const router = Router();
 
-router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadSingleFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "public/announcement/cover_photos/", 5242880), validateAddAnnouncement, async (req: CustomRequest<AddAnnouncementDTO>, res: any) => {
+router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadSingleFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "public/announcement/cover_images/", 5242880), validateAddAnnouncement, async (req: CustomRequest<AddAnnouncementDTO>, res: any) => {
+    /* #swagger.tags = ['Announcement']
+       #swagger.description = 'Add an announcement.' */
+    /*	#swagger.requestBody = {
+   required: true,
+  "@content": {
+                 "multipart/form-data": {
+                     schema: {
+                         type: "object",
+                         properties: {
+                             profilePhoto: {
+                                 type: "string",
+                                 format: "binary"
+                             },
+                             title: {
+                                 type: "string",
+                             },
+                             text: {
+                                 type: "string",
+                             },
+                             relatedSchoolIds: {
+                                 type: "array",
+                             }
+                         },
+                         required: ["title", "text", "relatedSchoolIds"]
+                     }
+                 }
+             } 
+ } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/NullResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
         if (req.fileValidationErrors?.length) {
@@ -26,8 +60,6 @@ router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadSingleFi
 
         response.setMessage(getMessage("announcementAdded", req.selectedLangs()));
 
-
-
     } catch (err: any) {
         response.setErrorMessage(err.message)
 
@@ -39,11 +71,21 @@ router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadSingleFi
 });
 
 router.post("/getAnnouncements", authorize([Role.ContentCreator, Role.User, Role.Admin]), async (req: CustomRequest<GetAnnouncementsForUserDTO>, res: any) => {
+    /* #swagger.tags = ['Announcement']
+        #swagger.description = 'Get announcements.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/AnnouncementGetAnnouncementsRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/AnnouncementGetAnnouncementsResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
         response.data = await AnnouncementAccess.getAnnouncementsForUser(req.selectedLangs(), new GetAnnouncementsForUserDTO(req.body), res.locals.user._id);
-
-
     } catch (err: any) {
         response.setErrorMessage(err.message)
 
@@ -54,10 +96,22 @@ router.post("/getAnnouncements", authorize([Role.ContentCreator, Role.User, Role
     return Ok(res, response)
 });
 
-router.post("/likeDislikeAnnouncement", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementLikeDislikeDTO>, res: any) => {
+router.post("/likeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementLikeDislikeDTO>, res: any) => {
+    /* #swagger.tags = ['Announcement']
+    #swagger.description = 'Like or dislike an announcement.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/AnnouncementLikeDislikeRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/NullResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
-        response.data = await AnnouncementAccess.likeDislikeAnnouncement(req.selectedLangs(), new AnnouncementLikeDislikeDTO(req.body), res.locals.user._id);
+        //
     } catch (err: any) {
         response.setErrorMessage(err.message)
 
@@ -68,10 +122,22 @@ router.post("/likeDislikeAnnouncement", authorize([Role.ContentCreator, Role.Use
     return Ok(res, response)
 });
 
-router.post("/commentAnnouncement", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentAnnouncement, async (req: CustomRequest<AnnouncementCommentDTO>, res: any) => {
+router.post("/comment", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentAnnouncement, async (req: CustomRequest<AnnouncementCommentDTO>, res: any) => {
+    /* #swagger.tags = ['Announcement']
+#swagger.description = 'Comment to an announcement.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/AnnouncementCommentRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/NullResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
-        response.data = await AnnouncementAccess.commentAnnouncement(req.selectedLangs(), new AnnouncementCommentDTO(req.body), res.locals.user._id);
+        //
     } catch (err: any) {
         response.setErrorMessage(err.message)
 
@@ -82,7 +148,19 @@ router.post("/commentAnnouncement", authorize([Role.ContentCreator, Role.User, R
     return Ok(res, response)
 });
 
-router.post("/commentLikeDislikeAnnouncement", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementCommenLikeDisliketDTO>, res: any) => {
+router.post("/commentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementCommenLikeDisliketDTO>, res: any) => {
+    /* #swagger.tags = ['Announcement']
+#swagger.description = 'Like or dislike a anouncement's comment.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/AnnouncementCommentLikeDislikeRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/NullResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
         response.data = await AnnouncementAccess.commentLikeDislikeAnnouncement(req.selectedLangs(), new AnnouncementCommenLikeDisliketDTO(req.body), res.locals.user._id);

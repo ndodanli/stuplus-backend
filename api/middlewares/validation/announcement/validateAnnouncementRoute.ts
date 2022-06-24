@@ -13,11 +13,10 @@ export const validateAddAnnouncement = [
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail(),
-    // check('coverImageUrl')
-    //     .if((value: any, { req }: any) => value)
-    //     .isURL()
-    //     .withMessage("Geçersiz profil fotoğraf yolu.")
-    //     .bail(),
+    check('relatedSchoolIds')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())

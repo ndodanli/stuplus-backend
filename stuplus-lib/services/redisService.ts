@@ -3,7 +3,7 @@ import { createClient } from 'redis';
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 // const url = process.env.REDIS_URL
-const client = createClient({url: process.env.REDIS_URL});
+const client = createClient({ url: process.env.REDIS_URL });
 setup()
 
 async function setup() {
@@ -12,6 +12,7 @@ async function setup() {
         await client.connect();
     } catch (error) {
         console.log("redis error: ", error)
+        process.exit(1);
     }
 }
 

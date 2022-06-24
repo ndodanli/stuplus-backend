@@ -2,6 +2,7 @@ import { EmailConfigurations } from "aws-sdk/clients/iotevents";
 import { Role } from "../../stuplus-lib/enums/enums";
 import { EmailConfirmation } from "../../stuplus-lib/entities/UserEntity";
 import { mapToDTO } from "../../stuplus-lib/utils/general";
+import { Gender } from "../../stuplus-lib/enums/enums_socket";
 
 export class UpdateUserProfileDTO {
     firstName: string = "";
@@ -31,7 +32,7 @@ export class RegisterUserDTO {
     schoolEmailConfirmation: EmailConfirmation = new EmailConfirmation();
     password: string = "";
     passwordRepeat: string = "";
-    gender: number = 0;
+    gender: Gender = 0;
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

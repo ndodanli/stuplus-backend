@@ -9,6 +9,18 @@ import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 const router = Router();
 
 router.post("/", validateLogin, async (req: CustomRequest<LoginUserDTO>, res: any) => {
+    /* #swagger.tags = ['Login']
+   #swagger.description = 'Login.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/LoginRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/LoginResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
         response.data = await UserAccess.loginUser(req.selectedLangs(), new LoginUserDTO(req.body));
@@ -25,6 +37,18 @@ router.post("/", validateLogin, async (req: CustomRequest<LoginUserDTO>, res: an
 });
 
 router.post("/google", validateGoogleLogin, async (req: CustomRequest<LoginUserGoogleDTO>, res: any) => {
+    /* #swagger.tags = ['Login']
+#swagger.description = 'Login with google(also registers if user not exist).' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/LoginGoogleRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/LoginGoogleResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
         response.data = await UserAccess.loginUserWithGoogle(req.selectedLangs(), new LoginUserGoogleDTO(req.body));
@@ -41,6 +65,18 @@ router.post("/google", validateGoogleLogin, async (req: CustomRequest<LoginUserG
 });
 
 router.post("/register", validateRegister, async (req: CustomRequest<RegisterUserDTO>, res: any) => {
+    /* #swagger.tags = ['Login']
+#swagger.description = 'Register.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/LoginRegisterRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/LoginRegisterResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
         response.data = await UserAccess.registerUser(req.selectedLangs(), new RegisterUserDTO(req.body))

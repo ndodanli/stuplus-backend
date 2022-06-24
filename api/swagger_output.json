@@ -54,7 +54,7 @@
         "tags": [
           "Account"
         ],
-        "description": "Get user.",
+        "description": "Get user info.",
         "parameters": [],
         "responses": {
           "200": {
@@ -85,7 +85,7 @@
         "tags": [
           "Account"
         ],
-        "description": "Get user.",
+        "description": "Update user",
         "parameters": [],
         "responses": {
           "200": {
@@ -131,7 +131,7 @@
         "tags": [
           "Account"
         ],
-        "description": "Get user.",
+        "description": "Update user",
         "parameters": [],
         "responses": {
           "200": {
@@ -177,7 +177,7 @@
         "tags": [
           "Account"
         ],
-        "description": "Get user.",
+        "description": "Update user password.",
         "parameters": [],
         "responses": {
           "200": {
@@ -223,7 +223,7 @@
         "tags": [
           "Account"
         ],
-        "description": "Get user.",
+        "description": "Forgot password(Code will be sended to the email).",
         "parameters": [],
         "responses": {
           "200": {
@@ -269,7 +269,7 @@
         "tags": [
           "Account"
         ],
-        "description": "Get user.",
+        "description": "Confirm forgot password code.",
         "parameters": [],
         "responses": {
           "200": {
@@ -315,7 +315,7 @@
         "tags": [
           "Account"
         ],
-        "description": "Get user.",
+        "description": "Reset password.",
         "parameters": [],
         "responses": {
           "200": {
@@ -361,7 +361,7 @@
         "tags": [
           "Account"
         ],
-        "description": "Get user.",
+        "description": "This is only for user to send email confirmation after logged in if email confirmation some way failed(e.g. mail send failed, confirmation code expired).",
         "parameters": [],
         "responses": {
           "200": {
@@ -407,7 +407,7 @@
         "tags": [
           "Account"
         ],
-        "description": "Get user.",
+        "description": "Update user",
         "parameters": [],
         "responses": {
           "200": {
@@ -454,48 +454,136 @@
     },
     "/login/": {
       "post": {
-        "description": "",
+        "tags": [
+          "Login"
+        ],
+        "description": "Login.",
         "parameters": [],
-        "responses": {},
-        "security": [
-          {
-            "bearerAuth": []
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
           }
-        ]
-      }
-    },
-    "/login/google": {
-      "post": {
-        "description": "",
-        "parameters": [],
-        "responses": {},
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/login/register": {
-      "post": {
-        "description": "",
-        "parameters": [],
-        "responses": {},
+        },
         "security": [
           {
             "bearerAuth": []
           }
         ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "password": {
-                    "example": "any"
-                  }
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/google": {
+      "post": {
+        "tags": [
+          "Login"
+        ],
+        "description": "Login with google(also registers if user not exist).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginGoogleResponse"
                 }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginGoogleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginGoogleRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginGoogleRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/register": {
+      "post": {
+        "tags": [
+          "Login"
+        ],
+        "description": "Register.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginRegisterResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginRegisterResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRegisterRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRegisterRequest"
               }
             }
           }
@@ -504,9 +592,28 @@
     },
     "/school/getAllSchools": {
       "get": {
-        "description": "",
+        "tags": [
+          "School"
+        ],
+        "description": "Get all schools.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolGetAllSchoolsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolGetAllSchoolsResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
@@ -516,7 +623,10 @@
     },
     "/school/getFaculties/{schoolId}": {
       "get": {
-        "description": "",
+        "tags": [
+          "School"
+        ],
+        "description": "Get faculties by school id",
         "parameters": [
           {
             "name": "schoolId",
@@ -527,7 +637,23 @@
             }
           }
         ],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolGetFacultiesResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolGetFacultiesResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
@@ -537,7 +663,10 @@
     },
     "/school/getDepartments/{facultyId}": {
       "get": {
-        "description": "",
+        "tags": [
+          "School"
+        ],
+        "description": "Get departments by faculty id",
         "parameters": [
           {
             "name": "facultyId",
@@ -548,7 +677,23 @@
             }
           }
         ],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolGetDepartmentsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolGetDepartmentsResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
@@ -558,9 +703,28 @@
     },
     "/interest/getAllInterests": {
       "get": {
-        "description": "",
+        "tags": [
+          "Interest"
+        ],
+        "description": "Like or dislike a anouncement",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterestGetAllInterestsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterestGetAllInterestsResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
@@ -570,24 +734,59 @@
     },
     "/announcement/add": {
       "post": {
-        "description": "",
+        "tags": [
+          "Announcement"
+        ],
+        "description": "Add an announcement.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
         ],
         "requestBody": {
+          "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "coverImageUrl": {
-                    "example": "any"
+                  "profilePhoto": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "relatedSchoolIds": {
+                    "type": "array"
                   }
-                }
+                },
+                "required": [
+                  "title",
+                  "text",
+                  "relatedSchoolIds"
+                ]
               }
             }
           }
@@ -596,50 +795,186 @@
     },
     "/announcement/getAnnouncements": {
       "post": {
-        "description": "",
+        "tags": [
+          "Announcement"
+        ],
+        "description": "Get announcements.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementGetAnnouncementsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementGetAnnouncementsResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementGetAnnouncementsRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementGetAnnouncementsRequest"
+              }
+            }
+          }
+        }
       }
     },
-    "/announcement/likeDislikeAnnouncement": {
+    "/announcement/likeDislike": {
       "post": {
-        "description": "",
+        "tags": [
+          "Announcement"
+        ],
+        "description": "Like or dislike an announcement.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementLikeDislikeRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementLikeDislikeRequest"
+              }
+            }
+          }
+        }
       }
     },
-    "/announcement/commentAnnouncement": {
+    "/announcement/comment": {
       "post": {
-        "description": "",
+        "tags": [
+          "Announcement"
+        ],
+        "description": "Comment to an announcement.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementCommentRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementCommentRequest"
+              }
+            }
+          }
+        }
       }
     },
-    "/announcement/commentLikeDislikeAnnouncement": {
+    "/announcement/commentLikeDislike": {
       "post": {
-        "description": "",
+        "tags": [
+          "Announcement"
+        ],
+        "description": "Like or dislike a anouncement",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementCommentLikeDislikeRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementCommentLikeDislikeRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/doc/": {
@@ -936,6 +1271,9 @@
             }
           }
         },
+        "required": [
+          "interestIds"
+        ],
         "xml": {
           "name": "AccountUpdateInterestsRequest"
         }
@@ -1012,6 +1350,11 @@
             "example": "newPassword"
           }
         },
+        "required": [
+          "password",
+          "newPassword",
+          "newPasswordRepeat"
+        ],
         "xml": {
           "name": "AccountUpdatePasswordRequest"
         }
@@ -1080,6 +1423,9 @@
             "example": "stuplus@gmail.com"
           }
         },
+        "required": [
+          "email"
+        ],
         "xml": {
           "name": "AccountForgotPasswordRequest"
         }
@@ -1152,6 +1498,10 @@
             "example": "stuplus@gmail.com"
           }
         },
+        "required": [
+          "code",
+          "email"
+        ],
         "xml": {
           "name": "AccountConfirmForgotPasswordCodeRequest"
         }
@@ -1232,6 +1582,12 @@
             "example": "newPassword"
           }
         },
+        "required": [
+          "code",
+          "email",
+          "newPassword",
+          "newPasswordRepeat"
+        ],
         "xml": {
           "name": "AccountResetPasswordCodeRequest"
         }
@@ -1300,6 +1656,9 @@
             "example": false
           }
         },
+        "required": [
+          "isStudentEmail"
+        ],
         "xml": {
           "name": "AccountSendConfirmationEmailRequest"
         }
@@ -1436,6 +1795,465 @@
         },
         "xml": {
           "name": "AccountUpdateProfilePhotoResponse"
+        }
+      },
+      "AnnouncementGetAnnouncementsRequest": {
+        "type": "object",
+        "properties": {
+          "schoolIds": {
+            "type": "array",
+            "example": [
+              "schoolId1",
+              "schoolId2"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "schoolIds"
+        ],
+        "xml": {
+          "name": "AnnouncementGetAnnouncementsRequest"
+        }
+      },
+      "AnnouncementGetAnnouncementsResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "example": "62af8aade035eb1764400d30"
+              },
+              "ownerId": {
+                "type": "string",
+                "example": "62ab8a204166fd1eaebbb3fa"
+              },
+              "coverImageUrl": {},
+              "title": {
+                "type": "string",
+                "example": "das"
+              },
+              "relatedSchoolIds": {
+                "type": "array",
+                "example": [
+                  "string1",
+                  "string2"
+                ],
+                "items": {
+                  "type": "string"
+                }
+              },
+              "text": {
+                "type": "string",
+                "example": "dasdsa"
+              },
+              "isActive": {
+                "type": "boolean",
+                "example": true
+              },
+              "fromDate": {},
+              "toDate": {},
+              "__t": {
+                "type": "string",
+                "example": "Announcement"
+              },
+              "createdAt": {
+                "type": "string",
+                "example": "2022-06-19T20:44:29.536Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "example": "2022-06-19T20:44:29.536Z"
+              },
+              "__v": {
+                "type": "number",
+                "example": 0
+              },
+              "recordStatus": {
+                "type": "number",
+                "example": 1
+              },
+              "likeCount": {
+                "type": "number",
+                "example": 0
+              },
+              "commentCount": {
+                "type": "number",
+                "example": 0
+              },
+              "owner": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string",
+                    "example": "62ab8a204166fd1eaebbb3fa"
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "ndodanli14"
+                  },
+                  "__t": {
+                    "type": "string",
+                    "example": "User"
+                  }
+                }
+              },
+              "relatedSchools": {
+                "type": "array",
+                "example": [],
+                "items": {}
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "AnnouncementGetAnnouncementsResponse"
+        }
+      },
+      "AnnouncementLikeDislikeRequest": {
+        "type": "object",
+        "properties": {
+          "announcementId": {
+            "type": "string",
+            "example": "announcementId"
+          },
+          "type": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "announcementId",
+          "type"
+        ],
+        "xml": {
+          "name": "AnnouncementLikeDislikeRequest"
+        }
+      },
+      "AnnouncementCommentRequest": {
+        "type": "object",
+        "properties": {
+          "announcementId": {
+            "type": "string",
+            "example": "announcementId"
+          },
+          "comment": {
+            "type": "string",
+            "example": "some comment."
+          }
+        },
+        "required": [
+          "announcementId",
+          "comment"
+        ],
+        "xml": {
+          "name": "AnnouncementCommentRequest"
+        }
+      },
+      "AnnouncementCommentLikeDislikeRequest": {
+        "type": "object",
+        "properties": {
+          "commentId": {
+            "type": "string",
+            "example": "commentId"
+          },
+          "announcementId": {
+            "type": "string",
+            "example": "announcementId"
+          },
+          "type": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "commentId",
+          "announcementId",
+          "type"
+        ],
+        "xml": {
+          "name": "AnnouncementCommentLikeDislikeRequest"
+        }
+      },
+      "InterestGetAllInterestsResponse": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "interestId"
+          },
+          "url": {
+            "type": "string",
+            "example": "url"
+          },
+          "title": {
+            "type": "string",
+            "example": "interestTitle"
+          }
+        },
+        "xml": {
+          "name": "InterestGetAllInterestsResponse"
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "stuplus@gmail.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "tesTtesT@33"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "xml": {
+          "name": "LoginRequest"
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFiOGEyMDQxNjZmZDFlYWViYmIzZmEiLCJyb2xlIjowLCJpYXQiOjE2NTYwNjA0MzAsImV4cCI6MTY1ODY1MjQzMH0.ZwB2RiwHwRx_-HkU1ziIwWeXQucaPQFBDQH5QVjjvdE"
+          }
+        },
+        "xml": {
+          "name": "LoginResponse"
+        }
+      },
+      "LoginGoogleRequest": {
+        "type": "object",
+        "properties": {
+          "AccessToken": {
+            "type": "string",
+            "example": "string"
+          }
+        },
+        "required": [
+          "AccessToken"
+        ],
+        "xml": {
+          "name": "LoginGoogleRequest"
+        }
+      },
+      "LoginGoogleResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFiOGEyMDQxNjZmZDFlYWViYmIzZmEiLCJyb2xlIjowLCJpYXQiOjE2NTYwNjA0MzAsImV4cCI6MTY1ODY1MjQzMH0.ZwB2RiwHwRx_-HkU1ziIwWeXQucaPQFBDQH5QVjjvdE"
+          }
+        },
+        "xml": {
+          "name": "LoginGoogleResponse"
+        }
+      },
+      "LoginRegisterRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "stuplus@gmail.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "tesTtesT@33"
+          },
+          "gender": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "NotSpecified": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Male": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "Female": {
+                    "type": "number",
+                    "example": 2
+                  },
+                  "NotDefined": {
+                    "type": "number",
+                    "example": 3
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "gender"
+        ],
+        "xml": {
+          "name": "LoginRegisterRequest"
+        }
+      },
+      "LoginRegisterResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFiOGEyMDQxNjZmZDFlYWViYmIzZmEiLCJyb2xlIjowLCJpYXQiOjE2NTYwNjA0MzAsImV4cCI6MTY1ODY1MjQzMH0.ZwB2RiwHwRx_-HkU1ziIwWeXQucaPQFBDQH5QVjjvdE"
+          }
+        },
+        "xml": {
+          "name": "LoginRegisterResponse"
+        }
+      },
+      "SchoolGetAllSchoolsResponse": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "interestId"
+          },
+          "title": {
+            "type": "string",
+            "example": "interestTitle"
+          }
+        },
+        "xml": {
+          "name": "SchoolGetAllSchoolsResponse"
+        }
+      },
+      "SchoolGetFacultiesResponse": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "interestId"
+          },
+          "title": {
+            "type": "string",
+            "example": "interestTitle"
+          },
+          "schoolId": {
+            "type": "string",
+            "example": "schoolId"
+          }
+        },
+        "xml": {
+          "name": "SchoolGetFacultiesResponse"
+        }
+      },
+      "SchoolGetDepartmentsResponse": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "interestId"
+          },
+          "title": {
+            "type": "string",
+            "example": "interestTitle"
+          },
+          "facultyId": {
+            "type": "string",
+            "example": "facultyId"
+          },
+          "grade": {
+            "type": "number",
+            "example": 0
+          }
+        },
+        "xml": {
+          "name": "SchoolGetDepartmentsResponse"
         }
       }
     },

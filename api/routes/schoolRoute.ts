@@ -7,6 +7,14 @@ import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 const router = Router();
 
 router.get("/getAllSchools", async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['School']
+#swagger.description = 'Get all schools.' */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/SchoolGetAllSchoolsResponse"
+   }
+ } */
   const response = new BaseResponse<object>();
   try {
     response.data = await SchoolAccess.getAllSchools(["_id", "title"]);
@@ -22,9 +30,17 @@ router.get("/getAllSchools", async (req: CustomRequest<object>, res: any) => {
 });
 
 router.get("/getFaculties/:schoolId", validategetFaculties, async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['School']
+#swagger.description = 'Get faculties by school id' */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/SchoolGetFacultiesResponse"
+   }
+ } */
   const response = new BaseResponse<object>();
   try {
-    response.data = await SchoolAccess.getFaculties(req.params.schoolId, ["_id", "title","schoolId"]);
+    response.data = await SchoolAccess.getFaculties(req.params.schoolId, ["_id", "title", "schoolId"]);
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -37,9 +53,17 @@ router.get("/getFaculties/:schoolId", validategetFaculties, async (req: CustomRe
 });
 
 router.get("/getDepartments/:facultyId", validategetDepartments, async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['School']
+#swagger.description = 'Get departments by faculty id' */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/SchoolGetDepartmentsResponse"
+   }
+ } */
   const response = new BaseResponse<object>();
   try {
-    response.data = await SchoolAccess.getDepartments(req.params.facultyId, ["_id", "title","facultyId","grade"]);
+    response.data = await SchoolAccess.getDepartments(req.params.facultyId, ["_id", "title", "facultyId", "grade"]);
 
   } catch (err: any) {
     response.setErrorMessage(err.message);

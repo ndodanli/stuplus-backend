@@ -4,10 +4,10 @@ export enum Role {
 }
 
 export enum Gender {
-   NotSpecified,
-   Male,
-   Female,
-   NotDefined
+   NotSpecified = 0,
+   Male = 1,
+   Female = 2,
+   NotDefined = 3
 }
 
 export enum GroupChatType {

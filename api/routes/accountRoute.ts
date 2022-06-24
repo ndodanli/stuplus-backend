@@ -17,7 +17,13 @@ const router = Router();
 
 router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
-          #swagger.description = 'Get user.' */
+          #swagger.description = 'Get user info.' */
+  /* #swagger.responses[200] = {
+"description": "Success",
+"schema": {
+"$ref": "#/definitions/GetAccountUserResponse"
+}
+} */
   const response = new BaseResponse<object>();
   try {
     const user = await UserAccess.getUserWithFields(req.selectedLangs(), res.locals.user._id,
@@ -34,19 +40,12 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
       return InternalError(res, response);
   }
 
-  /* #swagger.responses[200] = {
-    "description": "Success",
-    "schema": {
-      "$ref": "#/definitions/GetAccountUserResponse"
-    }
-  } */
-
   return Ok(res, response);
 });
 
 router.post("/updateProfile", authorize([Role.User, Role.Admin]), validateUpdateProfile, async (req: CustomRequest<UpdateUserProfileDTO>, res: any) => {
   /* #swagger.tags = ['Account']
-         #swagger.description = 'Get user.' */
+         #swagger.description = 'Update user's profile.' */
   /*	#swagger.requestBody = {
      required: true,
      schema: { $ref: "#/definitions/AccountUpdateProfileRequest" }
@@ -74,7 +73,7 @@ router.post("/updateProfile", authorize([Role.User, Role.Admin]), validateUpdate
 
 router.post("/updateInterests", authorize([Role.User, Role.Admin]), validateUpdateInterests, async (req: CustomRequest<UpdateUserInterestsDTO>, res: any) => {
   /* #swagger.tags = ['Account']
-         #swagger.description = 'Get user.' */
+         #swagger.description = 'Update user's interests.' */
   /*	#swagger.requestBody = {
 required: true,
 schema: { $ref: "#/definitions/AccountUpdateInterestsRequest" }
@@ -103,7 +102,7 @@ schema: { $ref: "#/definitions/AccountUpdateInterestsRequest" }
 
 router.post("/updatePassword", authorize([Role.User, Role.Admin]), validateUpdatePassword, async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
-         #swagger.description = 'Get user.' */
+         #swagger.description = 'Update user password.' */
   /*	#swagger.requestBody = {
 required: true,
 schema: { $ref: "#/definitions/AccountUpdatePasswordRequest" }
@@ -132,7 +131,7 @@ schema: { $ref: "#/definitions/AccountUpdatePasswordRequest" }
 
 router.post("/forgotPassword", validateForgotPassword, async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
-         #swagger.description = 'Get user.' */
+         #swagger.description = 'Forgot password(Code will be sended to the email).' */
   /*	#swagger.requestBody = {
 required: true,
 schema: { $ref: "#/definitions/AccountForgotPasswordRequest" }
@@ -161,7 +160,7 @@ schema: { $ref: "#/definitions/AccountForgotPasswordRequest" }
 
 router.post("/confirmForgotPasswordCode", validateForgotPasswordCode, async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
-         #swagger.description = 'Get user.' */
+         #swagger.description = 'Confirm forgot password code.' */
   /*	#swagger.requestBody = {
 required: true,
 schema: { $ref: "#/definitions/AccountConfirmForgotPasswordCodeRequest" }
@@ -190,7 +189,7 @@ schema: { $ref: "#/definitions/AccountConfirmForgotPasswordCodeRequest" }
 
 router.post("/resetPassword", validateResetPassword, async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
-       #swagger.description = 'Get user.' */
+       #swagger.description = 'Reset password.' */
   /*	#swagger.requestBody = {
 required: true,
 schema: { $ref: "#/definitions/AccountResetPasswordCodeRequest" }
@@ -242,7 +241,7 @@ router.post("/emailConfirmation", validateEmailConfirmation, async (req: CustomR
 
 router.post("/sendConfirmationEmail", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
-     #swagger.description = 'Get user.' */
+     #swagger.description = 'This is only for user to send email confirmation after logged in if email confirmation some way failed(e.g. mail send failed, confirmation code expired).' */
   /*	#swagger.requestBody = {
 required: true,
 schema: { $ref: "#/definitions/AccountSendConfirmationEmailRequest" }
@@ -269,9 +268,9 @@ schema: { $ref: "#/definitions/AccountSendConfirmationEmailRequest" }
   return Ok(res, response);
 });
 
-router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSingleFileS3.single("profilePhoto", [".png", ".jpg", ".jpeg", ".svg"], "public/profile_photos/", 5242880), async (req: CustomRequest<object>, res: any) => {
+router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSingleFileS3.single("profilePhoto", [".png", ".jpg", ".jpeg", ".svg"], "public/profile_images/", 5242880), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
-         #swagger.description = 'Get user.' */
+         #swagger.description = 'Update user's profile photo(accepts only with one of ".png", ".jpg", ".jpeg", ".svg" extensions and 5MB size limit).' */
   /*	#swagger.requestBody = {
   required: true,
  "@content": {
