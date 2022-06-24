@@ -48,7 +48,7 @@ export class AnnouncementAccess {
                         ],
                     }
                 ]
-            }, {}, { lean: true, sort: { createdAt: -1 }, skip: payload.skip, limit: payload.take });
+            }, {}, { lean: true, sort: { score: -1 }, skip: payload.skip, limit: payload.take });
         } else {
             var user = await UserEntity.findOne({ _id: currentUserId }, {}, { lean: true });
             if (user?.schoolId) {
@@ -69,7 +69,7 @@ export class AnnouncementAccess {
                             ],
                         }
                     ]
-                }, {}, { lean: true, sort: { createdAt: -1 }, skip: payload.skip, limit: payload.take });
+                }, {}, { lean: true, sort: { score: -1 }, skip: payload.skip, limit: payload.take });
             }
             else {
                 announcements = await AnnouncementEntity.find({
@@ -88,7 +88,7 @@ export class AnnouncementAccess {
                             ],
                         }
                     ]
-                }, {}, { lean: true, sort: { createdAt: -1 }, skip: payload.skip, limit: payload.take });
+                }, {}, { lean: true, sort: { score: -1 }, skip: payload.skip, limit: payload.take });
             }
         };
 

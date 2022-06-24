@@ -11,6 +11,7 @@ export interface Announcement extends BaseEntity {
   isActive: boolean;
   fromDate: Date | null;
   toDate: Date | null;
+  score: number;
   //ignore
   owner?: User | null; // ignore
   relatedSchools: object[] | null; // ignore
@@ -31,7 +32,7 @@ export const AnnouncementSchema: Schema = new Schema({
   isActive: { type: Boolean, required: false, default: true },
   fromDate: { type: Date, required: false, default: null },
   toDate: { type: Date, required: false, default: null },
-
+  score: { type: Number, required: false, default: 0 },
 });
 
 AnnouncementSchema.pre("save", function (next) {
@@ -43,7 +44,7 @@ AnnouncementSchema.pre("findOne", function (next) {
   console.log("pre findOne");
   next()
 
-  
+
 })
 
 AnnouncementSchema.pre("deleteOne", function (next) {
@@ -64,6 +65,7 @@ AnnouncementSchema.methods.minify = async function (
     isActive: this.isActive,
     fromDate: this.fromDate,
     toDate: this.toDate,
+    score: this.score,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     //ignore

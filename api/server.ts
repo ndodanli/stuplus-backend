@@ -64,4 +64,4 @@ export {
 }
 
 import "./socket/index";
-import CronService from "./services/cronService";
+import CronService from "../cron/cronService";

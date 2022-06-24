@@ -15,7 +15,9 @@ let config = {
     },
     JWT_SECRET: "FAKULTEMJWT!!@#!@$!@SECRE@$@$T",
     PORT: 25010,
-    GOOGLE_VALIDATION_URL: "https://www.googleapis.com/oauth2/v3/tokeninfo"
+    GOOGLE_VALIDATION_URL: "https://www.googleapis.com/oauth2/v3/tokeninfo",
+    pmBatchSize: 1500,
+    gmBatchSize: 1500,
 }
 
 export {

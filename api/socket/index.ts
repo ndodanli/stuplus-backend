@@ -5,7 +5,7 @@ require("dotenv").config();
 import cors from 'cors';
 import { RedisGroupMessageDTO, RedisGroupMessageForwardReadDTO, RedisMessageDTO, RedisMessageForwardReadDTO } from "./dtos/RedisChat";
 import { RedisPMOperationType, RedisOperationType, RedisGMOperationType, Role, WatchRoomTypes } from "../../stuplus-lib/enums/enums_socket";
-import CronService from "../services/cronService";
+import CronService from "../../cron/cronService";
 import { authorize, authorizeSocket } from "./utils/auth";
 import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
