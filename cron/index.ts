@@ -14,8 +14,8 @@ setup()
 
 function setup() {
     import("./config/logger");
-    jobs.push(new RedisDatabaseJob({ cronExpression: cronTimes.everyThirtySeconds, title: "RedisDatabaseJob", description: "Job for database operations recorded in redis." }));
-    jobs.push(new UpdateAnnouncementScoresJob({ cronExpression: cronTimes.everyMinute, title: "UpdateAnnouncementScoresJob", description: "Job for update active announcement scores(based on only likes right now)." }));
+    jobs.push(new RedisDatabaseJob({ customLockKey: "1", cronExpression: cronTimes.everyThirtySeconds, title: "RedisDatabaseJob", description: "Job for database operations recorded in redis." }));
+    jobs.push(new UpdateAnnouncementScoresJob({ customLockKey: "1", cronExpression: cronTimes.everyMinute, title: "UpdateAnnouncementScoresJob", description: "Job for update active announcement scores(based on only likes right now)." }));
 
     CronService.init(jobs);
 }

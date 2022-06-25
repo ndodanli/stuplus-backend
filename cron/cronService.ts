@@ -16,24 +16,25 @@ export default class CronService {
             } else {
                 jobLock = CronService.lock;
             }
-            const lockKey = job.constructor.name;
-            cron.schedule(job.cronExpression, async () => {
+            const lockKey = job.customLockKey ? job.customLockKey : job.constructor.name;
+            const cronJob = cron.schedule(job.cronExpression, async () => {
                 jobLock.acquire(lockKey, async function (done: any) {
                     try {
                         await job.run();
                     } catch (error: any) {
-                        logger.error(`Job ${job.title} failed. {Error}`, stringify({ ErorMessage: error.message, ErrorStack: error.stack, ErrorName: error.name, ErrorCode: error.code, ErrorData: error.data }));
+                        logger.error({ err: error }, `Job ${job.title} failed. {Data}`, stringify({ ErorMessage: error.message }));
                         console.log(`Job ${job.title} failed. Error: `, error);
                     } finally {
                         done();
                     }
                 }, function (error: any, ret: any) {
                     if (error) {
-                        logger.error(`Job ${job.title} failed. {Error}`, stringify({ ErorMessage: error.message, ErrorStack: error.stack, ErrorName: error.name, ErrorCode: error.code, ErrorData: error.data }));
+                        logger.error({ err: error }, `Job ${job.title} failed. {Data}`, stringify({ ErorMessage: error.message }));
                         console.log(`Job ${job.title} failed. Error: `, error);
                     }
                 });
             });
+            cronJob.start();
         }
     }
 }

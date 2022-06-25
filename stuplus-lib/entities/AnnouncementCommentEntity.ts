@@ -1,10 +1,20 @@
 import { Document, Schema } from "mongoose";
+import { AnnouncementUserMM } from "../../api/dtos/AnnouncementDTOs";
 import BaseEntity from "./BaseEntity";
+import { School } from "./SchoolEntity";
+import { User } from "./UserEntity";
 
 export interface AnnouncementComment extends BaseEntity {
   ownerId: string; //user id
   announcementId: string;
   comment: string;
+  score: number;
+  //ignore
+  owner?: User | null; // ignore
+  ownerSchool?: School | null; //ignore
+  likeCount: number; // ignore
+  liked: boolean; // ignore
+
 }
 
 export interface AnnouncementCommentDocument extends AnnouncementComment, Document {
@@ -15,6 +25,7 @@ export const AnnouncementCommentSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
   announcementId: { type: String, required: true },
   comment: { type: String, required: true },
+  score: { type: Number, required: false, default: 0 },
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -36,6 +47,11 @@ AnnouncementCommentSchema.methods.minify = async function (
     ownerId: this.ownerId,
     announcementId: this.announcementId,
     comment: this.comment,
+    score: this.score,
+    owner: this.owner,
+    likeCount: this.likeCount,
+    ownerSchool: this.ownerSchool,
+    liked: this.liked,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

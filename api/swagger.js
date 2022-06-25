@@ -276,6 +276,8 @@ const doc = {
         },
         //Announcement
         AnnouncementGetAnnouncementsRequest: {
+            $page: 1,
+            $pageSize: 20,
             $schoolIds: ["schoolId1", "schoolId2"],
         },
         AnnouncementGetAnnouncementsResponse: {
@@ -294,11 +296,29 @@ const doc = {
             data: {
                 "_id": "62af8aade035eb1764400d30",
                 "ownerId": "62ab8a204166fd1eaebbb3fa",
+                "owner": {
+                    "_id": "62ab8a204166fd1eaebbb3fa",
+                    "username": "ndodanli14",
+                    "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                    "__t": "User"
+                },
                 "coverImageUrl": null,
                 "title": "das",
                 "relatedSchoolIds": [
                     "string1",
                     "string2"
+                ],
+                "relatedSchools": [
+                    {
+                        "title": "test",
+                        "schoolId": "62b0c8d63721b9b60d3585db",
+                        "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
+                    },
+                    {
+                        "title": "test",
+                        "schoolId": "62b0c8f91faac470de48b820",
+                        "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
+                    }
                 ],
                 "text": "dasdsa",
                 "isActive": true,
@@ -311,12 +331,147 @@ const doc = {
                 "recordStatus": 1,
                 "likeCount": 0,
                 "commentCount": 0,
+            },
+        },
+        AnnouncementGetCommentsRequest: {
+            $page: 1,
+            $pageSize: 20,
+            $announcementId: "announcementId",
+        },
+        AnnouncementGetCommentsResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: [
+                {
+                    "_id": "62b6f0b662245f6dc443a9ad",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "announcementId": "62af8aade035eb1764400d36",
+                    "comment": "some comment.",
+                    "score": 15,
+                    "recordStatus": 1,
+                    "__t": "AnnouncementComment",
+                    "__v": 0,
+                    "createdAt": "2022-06-25T11:26:00.538Z",
+                    "updatedAt": "2022-06-25T13:22:02.391Z",
+                    "owner": {
+                        "_id": "62ab8a204166fd1eaebbb3fa",
+                        "username": "ndodanli14",
+                        "schoolId": null,
+                        "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
+                        "__t": "User"
+                    },
+                    "likeCount": 22
+                },
+                {
+                    "_id": "62b6f0b662245f6dc443a9ae",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "announcementId": "62af8aade035eb1764400d36",
+                    "comment": "some comment.",
+                    "score": 0,
+                    "recordStatus": 1,
+                    "__t": "AnnouncementComment",
+                    "__v": 0,
+                    "createdAt": "2022-06-25T11:26:00.539Z",
+                    "updatedAt": "2022-06-25T13:22:02.391Z",
+                    "owner": {
+                        "_id": "62ab8a204166fd1eaebbb3fa",
+                        "username": "ndodanli14",
+                        "schoolId": null,
+                        "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
+                        "__t": "User"
+                    },
+                    "likeCount": 22
+                },
+            ]
+        },
+        AnnouncementGetAnnouncementResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: {
+                "_id": "62af8aade035eb1764400d36",
+                "ownerId": "62ab8a204166fd1eaebbb3fa",
+                "coverImageUrl": null,
+                "title": "das",
+                "relatedSchoolIds": [
+                    "string1",
+                    "string2"
+                ],
+                "text": "dasdsa",
+                "isActive": true,
+                "fromDate": null,
+                "toDate": null,
+                "__t": "Announcement",
+                "createdAt": "2022-06-19T20:44:29.908Z",
+                "updatedAt": "2022-06-25T11:18:01.665Z",
+                "__v": 0,
+                "recordStatus": 1,
+                "score": 47,
                 "owner": {
                     "_id": "62ab8a204166fd1eaebbb3fa",
                     "username": "ndodanli14",
+                    "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                     "__t": "User"
                 },
-                "relatedSchools": []
+                "likeCount": 22,
+                "relatedSchools": [
+                    {
+                        "title": "test",
+                        "schoolId": "62b0c8d63721b9b60d3585db",
+                        "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
+                    },
+                    {
+                        "title": "test",
+                        "schoolId": "62b0c8f91faac470de48b820",
+                        "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
+                    }
+                ],
+                "comments": [
+                    {
+                        "_id": "62b6f0b662245f6dc443a9ad",
+                        "ownerId": "62ab8a204166fd1eaebbb3fa",
+                        "comment": "some comment.",
+                        "__t": "AnnouncementComment",
+                        "owner": {
+                            "_id": "62ab8a204166fd1eaebbb3fa",
+                            "username": "ndodanli14",
+                            "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                            "__t": "User"
+                        },
+                        "likeCount": 22
+                    },
+                    {
+                        "_id": "62b6f0b662245f6dc443a9ae",
+                        "ownerId": "62ab8a204166fd1eaebbb3fa",
+                        "comment": "some comment.",
+                        "__t": "AnnouncementComment",
+                        "owner": {
+                            "_id": "62ab8a204166fd1eaebbb3fa",
+                            "username": "ndodanli14",
+                            "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                            "__t": "User"
+                        },
+                        "likeCount": 22
+                    },]
             },
         },
         AnnouncementLikeDislikeRequest: {

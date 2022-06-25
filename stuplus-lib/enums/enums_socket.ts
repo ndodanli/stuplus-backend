@@ -27,12 +27,21 @@ export enum RedisGMOperationType {
    InsertForwarded = 2
 }
 
-export const RedisOperationType = {
-   PrivateMessage: "0",
-   GroupMessage: "1",
-   AnnouncementLikeDislike: "3",
-   AnnouncementComment: "4",
-   AnnouncementCommentLikeDislike: "5",
+export const RedisKeyType = {
+   DBPrivateMessage: "0:",
+   DBGroupMessage: "1:",
+   DBAnnouncementLike: "2:",
+   DBAnnouncementDislike: "3:",
+   DBAnnouncementComment: "4:",
+   DBAnnouncementCommentLike: "5:",
+   DBAnnouncementCommentDislike: "6:",
+   User: "7:",
+   Schools: "8:",
+   AnnouncementCommentLikeCount: "9:",
+   AnnouncementCommentDislikeCount: "10:",
+   AnnouncementLikeCount: "11:",
+   AnnouncementDislikeCount: "12:",
+   AnnouncementCommentCount: "13:",
 }
 
 export const SocketRoomTypes = {

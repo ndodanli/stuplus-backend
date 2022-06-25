@@ -839,6 +839,46 @@
         }
       }
     },
+    "/announcement/getAnnouncement/{id}": {
+      "get": {
+        "tags": [
+          "Announcement"
+        ],
+        "description": "Get announcement by id.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementGetAnnouncementResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementGetAnnouncementResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/announcement/likeDislike": {
       "post": {
         "tags": [
@@ -879,6 +919,52 @@
             "application/xml": {
               "schema": {
                 "$ref": "#/components/schemas/AnnouncementLikeDislikeRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/announcement/getComments": {
+      "post": {
+        "tags": [
+          "Announcement"
+        ],
+        "description": "Get comments of an announcement.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementGetCommentsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementGetCommentsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementGetCommentsRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementGetCommentsRequest"
               }
             }
           }
@@ -1800,6 +1886,14 @@
       "AnnouncementGetAnnouncementsRequest": {
         "type": "object",
         "properties": {
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          },
           "schoolIds": {
             "type": "array",
             "example": [
@@ -1812,6 +1906,8 @@
           }
         },
         "required": [
+          "page",
+          "pageSize",
           "schoolIds"
         ],
         "xml": {
@@ -1871,6 +1967,27 @@
                 "type": "string",
                 "example": "62ab8a204166fd1eaebbb3fa"
               },
+              "owner": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string",
+                    "example": "62ab8a204166fd1eaebbb3fa"
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "ndodanli14"
+                  },
+                  "profilePhotoUrl": {
+                    "type": "string",
+                    "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                  },
+                  "__t": {
+                    "type": "string",
+                    "example": "User"
+                  }
+                }
+              },
               "coverImageUrl": {},
               "title": {
                 "type": "string",
@@ -1884,6 +2001,26 @@
                 ],
                 "items": {
                   "type": "string"
+                }
+              },
+              "relatedSchools": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "example": "test"
+                    },
+                    "schoolId": {
+                      "type": "string",
+                      "example": "62b0c8f91faac470de48b820"
+                    },
+                    "coverImageUrl": {
+                      "type": "string",
+                      "example": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg"
+                    }
+                  }
                 }
               },
               "text": {
@@ -1923,6 +2060,91 @@
               "commentCount": {
                 "type": "number",
                 "example": 0
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "AnnouncementGetAnnouncementsResponse"
+        }
+      },
+      "AnnouncementGetCommentsRequest": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          },
+          "announcementId": {
+            "type": "string",
+            "example": "announcementId"
+          }
+        },
+        "required": [
+          "page",
+          "pageSize",
+          "announcementId"
+        ],
+        "xml": {
+          "name": "AnnouncementGetCommentsRequest"
+        }
+      },
+      "AnnouncementGetCommentsResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "example": "62af8aade035eb1764400d30"
+              },
+              "ownerId": {
+                "type": "string",
+                "example": "62ab8a204166fd1eaebbb3fa"
               },
               "owner": {
                 "type": "object",
@@ -1935,22 +2157,297 @@
                     "type": "string",
                     "example": "ndodanli14"
                   },
+                  "profilePhotoUrl": {
+                    "type": "string",
+                    "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                  },
                   "__t": {
                     "type": "string",
                     "example": "User"
                   }
                 }
               },
+              "coverImageUrl": {},
+              "title": {
+                "type": "string",
+                "example": "das"
+              },
+              "relatedSchoolIds": {
+                "type": "array",
+                "example": [
+                  "string1",
+                  "string2"
+                ],
+                "items": {
+                  "type": "string"
+                }
+              },
               "relatedSchools": {
                 "type": "array",
-                "example": [],
-                "items": {}
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "example": "test"
+                    },
+                    "schoolId": {
+                      "type": "string",
+                      "example": "62b0c8f91faac470de48b820"
+                    },
+                    "coverImageUrl": {
+                      "type": "string",
+                      "example": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg"
+                    }
+                  }
+                }
+              },
+              "text": {
+                "type": "string",
+                "example": "dasdsa"
+              },
+              "isActive": {
+                "type": "boolean",
+                "example": true
+              },
+              "fromDate": {},
+              "toDate": {},
+              "__t": {
+                "type": "string",
+                "example": "Announcement"
+              },
+              "createdAt": {
+                "type": "string",
+                "example": "2022-06-19T20:44:29.536Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "example": "2022-06-19T20:44:29.536Z"
+              },
+              "__v": {
+                "type": "number",
+                "example": 0
+              },
+              "recordStatus": {
+                "type": "number",
+                "example": 1
+              },
+              "likeCount": {
+                "type": "number",
+                "example": 0
+              },
+              "commentCount": {
+                "type": "number",
+                "example": 0
               }
             }
           }
         },
         "xml": {
-          "name": "AnnouncementGetAnnouncementsResponse"
+          "name": "AnnouncementGetCommentsResponse"
+        }
+      },
+      "AnnouncementGetAnnouncementResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "example": "62af8aade035eb1764400d36"
+              },
+              "ownerId": {
+                "type": "string",
+                "example": "62ab8a204166fd1eaebbb3fa"
+              },
+              "coverImageUrl": {},
+              "title": {
+                "type": "string",
+                "example": "das"
+              },
+              "relatedSchoolIds": {
+                "type": "array",
+                "example": [
+                  "string1",
+                  "string2"
+                ],
+                "items": {
+                  "type": "string"
+                }
+              },
+              "text": {
+                "type": "string",
+                "example": "dasdsa"
+              },
+              "isActive": {
+                "type": "boolean",
+                "example": true
+              },
+              "fromDate": {},
+              "toDate": {},
+              "__t": {
+                "type": "string",
+                "example": "Announcement"
+              },
+              "createdAt": {
+                "type": "string",
+                "example": "2022-06-19T20:44:29.908Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "example": "2022-06-25T11:18:01.665Z"
+              },
+              "__v": {
+                "type": "number",
+                "example": 0
+              },
+              "recordStatus": {
+                "type": "number",
+                "example": 1
+              },
+              "score": {
+                "type": "number",
+                "example": 47
+              },
+              "owner": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string",
+                    "example": "62ab8a204166fd1eaebbb3fa"
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "ndodanli14"
+                  },
+                  "profilePhotoUrl": {
+                    "type": "string",
+                    "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                  },
+                  "__t": {
+                    "type": "string",
+                    "example": "User"
+                  }
+                }
+              },
+              "likeCount": {
+                "type": "number",
+                "example": 22
+              },
+              "relatedSchools": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "example": "test"
+                    },
+                    "schoolId": {
+                      "type": "string",
+                      "example": "62b0c8f91faac470de48b820"
+                    },
+                    "coverImageUrl": {
+                      "type": "string",
+                      "example": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg"
+                    }
+                  }
+                }
+              },
+              "comments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62b6f0b662245f6dc443a9ae"
+                    },
+                    "ownerId": {
+                      "type": "string",
+                      "example": "62ab8a204166fd1eaebbb3fa"
+                    },
+                    "comment": {
+                      "type": "string",
+                      "example": "some comment."
+                    },
+                    "__t": {
+                      "type": "string",
+                      "example": "AnnouncementComment"
+                    },
+                    "owner": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "example": "62ab8a204166fd1eaebbb3fa"
+                        },
+                        "username": {
+                          "type": "string",
+                          "example": "ndodanli14"
+                        },
+                        "profilePhotoUrl": {
+                          "type": "string",
+                          "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                        },
+                        "__t": {
+                          "type": "string",
+                          "example": "User"
+                        }
+                      }
+                    },
+                    "likeCount": {
+                      "type": "number",
+                      "example": 22
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "AnnouncementGetAnnouncementResponse"
         }
       },
       "AnnouncementLikeDislikeRequest": {

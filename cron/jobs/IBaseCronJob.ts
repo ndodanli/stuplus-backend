@@ -5,5 +5,6 @@ export default interface IBaseCronJob {
     description: string;
     cronExpression: string;
     customLock?: AsyncLock;
+    customLockKey?: string;
     run(): Promise<void>;
 }

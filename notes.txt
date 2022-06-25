@@ -1,0 +1,10 @@
+-group members can be wrong, and user may be null according to this(no user id control)
+-send notification even user connected to the socket
+
+
+
+
+
++like ve dislike ayir(redis)
++like'larin acquire(caching) edildigi sorguyu degistir(redisi de kat)
+-acquireEntity'i access icerisine al ve scoreu redisten say

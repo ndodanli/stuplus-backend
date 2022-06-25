@@ -4,7 +4,7 @@ import "../../stuplus-lib/extensions/extensionMethods"
 require("dotenv").config();
 import cors from 'cors';
 import { RedisGroupMessageDTO, RedisGroupMessageForwardReadDTO, RedisMessageDTO, RedisMessageForwardReadDTO } from "./dtos/RedisChat";
-import { RedisPMOperationType, RedisOperationType, RedisGMOperationType, Role, WatchRoomTypes } from "../../stuplus-lib/enums/enums_socket";
+import { RedisPMOperationType, RedisKeyType, RedisGMOperationType, Role, WatchRoomTypes } from "../../stuplus-lib/enums/enums_socket";
 import CronService from "../../cron/cronService";
 import { authorize, authorizeSocket } from "./utils/auth";
 import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
@@ -110,7 +110,7 @@ io.on("connection", async (socket: ISocket) => {
 
             responseData["mi"] = messageEntity.id;
 
-            await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, stringify(chatData));
+            await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + data.ci, stringify(chatData));
 
             io.to(data.to).emit("c-pm-send", { m: data.m, mi: messageEntity.id, ci: data.ci });
 
@@ -131,7 +131,7 @@ io.on("connection", async (socket: ISocket) => {
             for (let i = 0; i < data.mids.length; i++) {
                 const mi = data.mids[i];
                 const chatData: object = { e: { _id: mi }, t: RedisPMOperationType.UpdateForwarded };
-                await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, stringify(chatData));
+                await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + data.ci, stringify(chatData));
             }
 
             io.to(data.to).emit("c-pm-forwarded", { mids: data.mids, ci: data.ci });
@@ -155,7 +155,7 @@ io.on("connection", async (socket: ISocket) => {
 
                 const chatData: object = { e: { _id: mi }, t: RedisPMOperationType.UpdateReaded }
 
-                await RedisService.client.rPush(RedisOperationType.PrivateMessage + data.ci, stringify(chatData));
+                await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + data.ci, stringify(chatData));
             }
 
             io.to(data.to).emit("c-pm-readed", { mids: data.mids, ci: data.ci });
@@ -179,7 +179,7 @@ io.on("connection", async (socket: ISocket) => {
                 t: RedisGMOperationType.InsertMessage
             }
 
-            await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, stringify(chatData));
+            await RedisService.client.rPush(RedisKeyType.DBGroupMessage + data.gCi, stringify(chatData));
 
             io.to(groupChatName(data.gCi)).emit("c-gm-send", { m: data.m, mi: gMessageEntity.id, gCi: data.gCi, fId: socket.data.user.id });
 
@@ -204,7 +204,7 @@ io.on("connection", async (socket: ISocket) => {
                     e: { _id: gMessageForwardEntity.id, messageId: mi, forwardedTo: socket.data.user.id },
                     t: RedisGMOperationType.InsertForwarded
                 }
-                await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, stringify(chatData));
+                await RedisService.client.rPush(RedisKeyType.DBGroupMessage + data.gCi, stringify(chatData));
             }
 
             io.to(groupChatName(data.gCi)).emit("c-gm-forwarded",
@@ -241,7 +241,7 @@ io.on("connection", async (socket: ISocket) => {
                     e: { _id: gMessageReadEntity.id, messageId: mi, readedBy: socket.data.user.id },
                     t: RedisGMOperationType.InsertReaded
                 }
-                await RedisService.client.rPush(RedisOperationType.GroupMessage + data.gCi, stringify(chatData));
+                await RedisService.client.rPush(RedisKeyType.DBGroupMessage + data.gCi, stringify(chatData));
             }
 
             io.to(groupChatName(data.gCi)).emit("c-gm-readed",

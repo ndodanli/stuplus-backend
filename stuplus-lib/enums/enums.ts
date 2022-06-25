@@ -20,3 +20,8 @@ export enum LikeType {
    Dislike = 0,
    Like = 1
 }
+
+export enum RedisAcquireEntityFilterOrder {
+   ASC = 1,
+   DESC = -1
+}

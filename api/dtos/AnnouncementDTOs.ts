@@ -4,7 +4,7 @@ import { EmailConfirmation } from "../../stuplus-lib/entities/UserEntity";
 import { mapToDTO } from "../../stuplus-lib/utils/general";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 
-export class AddAnnouncementDTO {
+export class AnnouncementAddDTO {
     coverImageUrl: string = "";
     title: string = "";
     relatedSchoolIds: string[] | string = [];
@@ -16,8 +16,18 @@ export class AddAnnouncementDTO {
     }
 }
 
-export class GetAnnouncementsForUserDTO extends BaseFilter {
-    schoolIds: string[] | undefined;
+export class AnnouncementGetMultipleDTO extends BaseFilter {
+    schoolIds: string[] = [];
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class AnnouncementGetSingleDTO extends BaseFilter {
+    id: string[] | undefined;
     constructor(obj: any) {
         super(obj);
         if (obj) {
@@ -59,3 +69,26 @@ export class AnnouncementCommenLikeDisliketDTO extends BaseFilter {
         }
     }
 }
+
+export class AnnouncementGetCommentsDTO extends BaseFilter {
+    announcementId: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+//#region AnnouncementEntity DTOs
+export class AnnouncementUserMM extends BaseFilter {
+    _id: string = "";
+    username: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+//#endregion

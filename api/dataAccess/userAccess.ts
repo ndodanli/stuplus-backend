@@ -13,24 +13,10 @@ import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsD
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { config } from "../config/config";
 import axios from "axios";
+import RedisService from "../../stuplus-lib/services/redisService";
 export class UserAccess {
     public static async getUserWithFields(acceptedLanguages: Array<string>, id: string, fields?: Array<string>): Promise<UserDocument | null> {
-        const user = await UserEntity.findOne({ _id: id }, fields, { lean: true });
-
-        if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
-
-        const school = await SchoolEntity.findOne({ _id: user.schoolId });
-        const faculty = await FacultyEntity.findOne({ _id: user.facultyId });
-        const department = await DepartmentEntity.findOne({ _id: user.departmentId });
-
-        if (school)
-            user.schoolName = school.title;
-
-        if (faculty)
-            user.facultyName = faculty.title;
-
-        if (department)
-            user.departmentName = department.title;
+        const user = await RedisService.acquireUser(id);
 
         return user;
     }
@@ -40,6 +26,8 @@ export class UserAccess {
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
+        await RedisService.updateUser(user);
+
         return user;
     }
 
@@ -47,6 +35,8 @@ export class UserAccess {
         const user = await UserEntity.findOneAndUpdate({ _id: id }, { $set: { 'interestIds': payload.interestIds } }, { new: true });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
+
+        await RedisService.updateUser(user);
 
         return user;
     }
@@ -58,6 +48,8 @@ export class UserAccess {
         const user = await UserEntity.findOneAndUpdate({ _id: id }, { $set: { 'profilePhotoUrl': newPPUrl } }, { new: true });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
+
+        await RedisService.updateUser(user);
 
         return user;
     }
@@ -74,6 +66,8 @@ export class UserAccess {
 
         user.password = await bcrypt.hash(payload.newPassword, 10);
         await user.save();
+
+        await RedisService.updateUser(user);
 
         return user;
     }
@@ -168,6 +162,8 @@ export class UserAccess {
 
         user.save();
 
+        await RedisService.updateUser(user);
+
         const verifyLink = config.DOMAIN + `/account/emailConfirmation?uid=${user._id}&code=${code}&t=${isStudentEmail ? "1" : "0"}`
         const validEmail = isStudentEmail ? user.schoolEmail : user.email
         if (!validEmail)
@@ -216,6 +212,8 @@ export class UserAccess {
         }
 
         user.save();
+
+        await RedisService.updateUser(user);
     }
 
     public static async sendConfirmationEmailForgotPassword(acceptedLanguages: Array<string>, email: string) {
@@ -244,6 +242,8 @@ export class UserAccess {
         )
         user.markModified("fpEmailConfirmation")
         await user.save();
+
+        await RedisService.updateUser(user);
     }
 
     public static async confirmForgotPasswordCode(acceptedLanguages: Array<string>, email: string, code: Number) {
@@ -278,6 +278,8 @@ export class UserAccess {
 
         user.markModified("fpEmailConfirmation")
         await user.save();
+
+        await RedisService.updateUser(user);
     }
 
     public static async loginUser(acceptedLanguages: Array<string>, payload: LoginUserDTO): Promise<object> {
