@@ -64,9 +64,10 @@ export class AnnouncementAccess {
             let schools = await RedisService.acquire<SchoolDocument[]>(RedisKeyType.Schools + "schools", 60 * 60 * 2, async () => await SchoolEntity.find({}, ["_id", "title"], { lean: true }));
             for (let i = 0; i < announcements.length; i++) {
                 const announcement = announcements[i];
-                announcement.likeCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementLikeCount + announcement._id, 10, async () => {
+                const redisAnnouncementLikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementLike + announcement._id.toString(), 0, -1);
+                announcement.likeCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementLikeCount + announcement._id.toString(), 10, async () => {
                     let likeCount = 0;
-                    likeCount += await RedisService.client.lLen(RedisKeyType.DBAnnouncementLike + announcement._id.toString());
+                    likeCount += redisAnnouncementLikes.length;
                     likeCount += await AnnouncementLikeEntity.countDocuments({ announcementId: announcement._id, type: LikeType.Like })
                     return likeCount;
                 });
@@ -79,6 +80,11 @@ export class AnnouncementAccess {
                             schoolId: x._id.toString()
                         }
                     });
+                announcement.liked = redisAnnouncementLikes.map(y => JSON.parse(y).ownerId).includes(currentUserId);
+
+                if (!announcement.liked) {
+                    announcement.liked = await AnnouncementLikeEntity.exists({ announcementId: announcement._id, ownerId: currentUserId, type: LikeType.Like }) ? true : false;
+                }
             }
         }
         return announcements;
@@ -99,14 +105,20 @@ export class AnnouncementAccess {
             let schools = await RedisService.acquire<SchoolDocument[]>(RedisKeyType.Schools + "schools", 60 * 60 * 24, async () => await SchoolEntity.find({}, ["_id", "title"], { lean: true }));
             for (let i = 0; i < comments.length; i++) {
                 const comment = comments[i];
+                const redisCommentLikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementCommentLike + comment._id.toString(), 0, -1);
                 comment.owner = commentUsers.find(y => y._id.toString() === comment.ownerId);
                 comment.ownerSchool = schools.find(y => y._id.toString() === comment.owner?.schoolId);
                 comment.likeCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementCommentLikeCount + comment._id, 10, async () => {
                     let likeCount = 0;
-                    likeCount += await RedisService.client.lLen(RedisKeyType.DBAnnouncementCommentLike + comment._id);
+                    likeCount += redisCommentLikes.length;
                     likeCount += await AnnouncementCommentLikeEntity.countDocuments({ announcementId: payload.announcementId, commentId: comment._id, type: LikeType.Like });
                     return likeCount;
                 });
+                comment.liked = redisCommentLikes.map(y => JSON.parse(y).ownerId).includes(currentUserId);
+
+                if (!comment.liked) {
+                    comment.liked = await AnnouncementCommentLikeEntity.exists({ commentId: comment._id, ownerId: currentUserId, type: LikeType.Like }) ? true : false;
+                }
             }
         }
         return comments;
@@ -144,7 +156,7 @@ export class AnnouncementAccess {
 
         announcement.owner = requiredUsers.find(x => x._id.toString() === announcement.ownerId);
         const redisAnnouncementLikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementLike + announcement._id.toString(), 0, -1);
-        announcement.likeCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementLikeCount + announcement._id, 30, async () => {
+        announcement.likeCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementLikeCount + announcement._id.toString(), 30, async () => {
             let likeCount = 0;
             likeCount += redisAnnouncementLikes.length;
             await AnnouncementLikeEntity.countDocuments({ announcementId: announcement._id, type: LikeType.Like })

@@ -331,6 +331,7 @@ const doc = {
                 "recordStatus": 1,
                 "likeCount": 0,
                 "commentCount": 0,
+                "liked": true
             },
         },
         AnnouncementGetCommentsRequest: {
@@ -370,7 +371,8 @@ const doc = {
                         "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
                         "__t": "User"
                     },
-                    "likeCount": 22
+                    "likeCount": 22,
+                    "liked": false
                 },
                 {
                     "_id": "62b6f0b662245f6dc443a9ae",
@@ -390,7 +392,8 @@ const doc = {
                         "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
                         "__t": "User"
                     },
-                    "likeCount": 22
+                    "likeCount": 22,
+                    "liked": true
                 },
             ]
         },
@@ -445,6 +448,7 @@ const doc = {
                         "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
                     }
                 ],
+                "liked": false,
                 "comments": [
                     {
                         "_id": "62b6f0b662245f6dc443a9ad",
@@ -457,7 +461,8 @@ const doc = {
                             "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                             "__t": "User"
                         },
-                        "likeCount": 22
+                        "likeCount": 22,
+                        "liked": false
                     },
                     {
                         "_id": "62b6f0b662245f6dc443a9ae",
@@ -470,7 +475,8 @@ const doc = {
                             "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                             "__t": "User"
                         },
-                        "likeCount": 22
+                        "likeCount": 22,
+                        "liked": true
                     },]
             },
         },
