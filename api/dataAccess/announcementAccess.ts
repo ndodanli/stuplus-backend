@@ -6,6 +6,8 @@ import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { SchoolDocument } from "../../stuplus-lib/entities/SchoolEntity";
 import { RedisOperationType } from "../../stuplus-lib/enums/enums_socket";
+import { stringify } from "../../stuplus-lib/utils/general";
+import { LikeType } from "../../stuplus-lib/enums/enums";
 
 export class AnnouncementAccess {
     public static async addAnnouncement(acceptedLanguages: Array<string>, payload: AddAnnouncementDTO, currentUserId: string): Promise<Boolean> {
@@ -98,8 +100,8 @@ export class AnnouncementAccess {
             let schools = await RedisService.acquire<SchoolDocument[]>("schools", 60 * 60 * 2, async () => await SchoolEntity.find({}, ["_id", "title"], { lean: true }));
             for (let i = 0; i < announcements.length; i++) {
                 const announcement = announcements[i];
-                announcement.likeCount = await RedisService.acquire<number>(`announcement:${announcement._id}:likeCount`, 10, async () => await AnnouncementLikeEntity.countDocuments({ announcementId: announcement._id }));
-                announcement.commentCount = await RedisService.acquire<number>(`announcement:${announcement._id}:commentCount`, 10, async () => await AnnouncementCommentEntity.countDocuments({ announcementId: announcement._id }));
+                announcement.likeCount = await RedisService.acquire<number>(`announcement:${announcement._id}:likeCount`, 30, async () => await AnnouncementLikeEntity.countDocuments({ announcementId: announcement._id, type: LikeType.Like }));
+                announcement.commentCount = await RedisService.acquire<number>(`announcement:${announcement._id}:commentCount`, 30, async () => await AnnouncementCommentEntity.countDocuments({ announcementId: announcement._id }));
                 announcement.owner = announcementUsers.find(y => y._id.toString() === announcement.ownerId);
                 announcement.relatedSchools = schools.filter(y => announcement.relatedSchoolIds.includes(y._id.toString()))
                     .map(x => {
@@ -123,7 +125,7 @@ export class AnnouncementAccess {
                 type: payload.type
             },
         }
-        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, announcementLikeDislikeData.toString());
+        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, stringify(announcementLikeDislikeData));
         return true;
     }
 
@@ -137,7 +139,7 @@ export class AnnouncementAccess {
                 comment: payload.comment
             },
         }
-        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, announcementCommentData.toString());
+        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, stringify(announcementCommentData));
 
         return true;
     }
@@ -153,7 +155,7 @@ export class AnnouncementAccess {
                 type: payload.type
             },
         }
-        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, announcementCommentData.toString());
+        await RedisService.client.rPush(RedisOperationType.AnnouncementLikeDislike + payload.announcementId, stringify(announcementCommentData));
 
         return true;
     }

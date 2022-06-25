@@ -1,24 +1,28 @@
 import AsyncLock from "async-lock";
 import { RedisMessageReceiptUpdateDTO } from "../../api/socket/dtos/RedisChat";
 import { config } from "../../stuplus-lib/config/config";
-import { GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, MessageEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { AnnouncementCommentEntity, AnnouncementCommentLikeEntity, AnnouncementLikeEntity, GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, MessageEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { RedisGMOperationType, RedisOperationType, RedisPMOperationType } from "../../stuplus-lib/enums/enums_socket";
 import RedisService from "../../stuplus-lib/services/redisService";
-import IBaseCronJob from "./BaseCronJob";
+import IBaseCronJob from "./IBaseCronJob";
 
 export default class RedisDatabaseJob implements IBaseCronJob {
     cronExpression: string;
     customLock?: AsyncLock | undefined;
+    title: string;
+    description: string;
     static currentCursor: number = 0;
     /**
      *
      */
-    constructor(cronExpression: string, customLock: AsyncLock = new AsyncLock()) {
+    constructor({ cronExpression, customLock, title, description }: { cronExpression: string, customLock?: AsyncLock | undefined, title: string, description: string }) {
         this.cronExpression = cronExpression;
         this.customLock = customLock;
+        this.title = title;
+        this.description = description;
     }
     async run(): Promise<void> {
-        console.log("Cron job started");
+        console.log("RedisDatabaseJob Cron job started");
         do {
             const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { MATCH: "*", COUNT: 100 });
             RedisDatabaseJob.currentCursor = cursor;
@@ -28,10 +32,15 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     await handlePMOperations(currentKey);
                 } else if (currentKey.startsWith(RedisOperationType.GroupMessage)) {
                     await handleGroupMessageOperations(currentKey);
+                } else if (currentKey.startsWith(RedisOperationType.AnnouncementLikeDislike)) {
+                    await handleAnnouncementLikeDislikeOperations(currentKey);
+                } else if (currentKey.startsWith(RedisOperationType.AnnouncementComment)) {
+                    await handleAnnouncementCommentOperations(currentKey);
+                } else if (currentKey.startsWith(RedisOperationType.AnnouncementCommentLikeDislike)) {
+                    await handleAnnouncementCommentLikeDislikeOperations(currentKey);
                 }
             }
-            // await wait(12000).then(() => done());
-            console.log("Cron job finished");
+            console.log("RedisDatabaseJob Cron job finished");
         } while (RedisDatabaseJob.currentCursor != 0);
 
         async function handlePMOperations(currentKey: string) {
@@ -40,7 +49,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 const privateMessageBatches: Array<Array<object>> = [];
                 const readedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
                 const forwardedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
-                const batchSize = config.pmBatchSize;
+                const batchSize = config.BATCH_SIZES.PM_BATCH_SIZE;
                 let iterator = 0;
                 for (let i = 0; i < data.length; i += batchSize) {
                     const currentBatch = data.slice(i, i + batchSize);
@@ -133,7 +142,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 const groupMessageBatches: Array<Array<object>> = [];
                 const readedBatches: Array<Array<object>> = [];
                 const forwardedBatches: Array<Array<object>> = [];
-                const batchSize = config.gmBatchSize;
+                const batchSize = config.BATCH_SIZES.GM_BATCH_SIZE;
                 let iterator = 0;
                 for (let i = 0; i < data.length; i += batchSize) {
                     const currentBatch = data.slice(i, i + batchSize);
@@ -192,6 +201,89 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 resolve(true);
             });
         }
+        async function handleAnnouncementLikeDislikeOperations(currentKey: string) {
+            return new Promise(async (resolve, reject) => {
+                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const announcementLikeDislikeBatches: Array<Array<object>> = [];
+                const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_LD_BATCH_SIZE;
+                let iterator = 0;
+                for (let i = 0; i < data.length; i += batchSize) {
+                    const currentBatch = data.slice(i, i + batchSize);
+                    announcementLikeDislikeBatches[iterator] = new Array<object>();
+                    for (let j = 0; j < currentBatch.length; j++) {
+                        const query: any = currentBatch[j].toJSONObject();
+                        announcementLikeDislikeBatches[iterator].push(query.e);
+                    }
+                    iterator++;
+                }
+                if (announcementLikeDislikeBatches.length > 0) {
+                    for (let i = 0; i < announcementLikeDislikeBatches.length; i++) {
+                        if (announcementLikeDislikeBatches[i].length > 0) {
+                            console.time("Announcement LD insertBulk operation time");
+                            await AnnouncementLikeEntity.insertMany(announcementLikeDislikeBatches[i]);
+                            console.timeEnd("Announcement LD insertBulk operation time");
+                        }
+                    }
+                }
+                await RedisService.client.lTrim(currentKey, data.length, -1);
+                resolve(true);
+            });
+        }
+        async function handleAnnouncementCommentOperations(currentKey: string) {
+            return new Promise(async (resolve, reject) => {
+                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const announcementCommentBatches: Array<Array<object>> = [];
+                const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_COMMENT_BATCH_SIZE;
+                let iterator = 0;
+                for (let i = 0; i < data.length; i += batchSize) {
+                    const currentBatch = data.slice(i, i + batchSize);
+                    announcementCommentBatches[iterator] = new Array<object>();
+                    for (let j = 0; j < currentBatch.length; j++) {
+                        const query: any = currentBatch[j].toJSONObject();
+                        announcementCommentBatches[iterator].push(query.e);
+                    }
+                    iterator++;
+                }
+                if (announcementCommentBatches.length > 0) {
+                    for (let i = 0; i < announcementCommentBatches.length; i++) {
+                        if (announcementCommentBatches[i].length > 0) {
+                            console.time("Announcement Comment insertBulk operation time");
+                            await AnnouncementCommentEntity.insertMany(announcementCommentBatches[i]);
+                            console.timeEnd("Announcement Comment insertBulk operation time");
+                        }
+                    }
+                }
+                await RedisService.client.lTrim(currentKey, data.length, -1);
+                resolve(true);
+            });
+        }
+        async function handleAnnouncementCommentLikeDislikeOperations(currentKey: string) {
+            return new Promise(async (resolve, reject) => {
+                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const announcementCommentLikeDislikeBatches: Array<Array<object>> = [];
+                const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_COMMENT_LD_BATCH_SIZE;
+                let iterator = 0;
+                for (let i = 0; i < data.length; i += batchSize) {
+                    const currentBatch = data.slice(i, i + batchSize);
+                    announcementCommentLikeDislikeBatches[iterator] = new Array<object>();
+                    for (let j = 0; j < currentBatch.length; j++) {
+                        const query: any = currentBatch[j].toJSONObject();
+                        announcementCommentLikeDislikeBatches[iterator].push(query.e);
+                    }
+                    iterator++;
+                }
+                if (announcementCommentLikeDislikeBatches.length > 0) {
+                    for (let i = 0; i < announcementCommentLikeDislikeBatches.length; i++) {
+                        if (announcementCommentLikeDislikeBatches[i].length > 0) {
+                            console.time("Announcement Comment LD insertBulk operation time");
+                            await AnnouncementCommentLikeEntity.insertMany(announcementCommentLikeDislikeBatches[i]);
+                            console.timeEnd("Announcement Comment LD insertBulk operation time");
+                        }
+                    }
+                }
+                await RedisService.client.lTrim(currentKey, data.length, -1);
+                resolve(true);
+            });
+        }
     }
-
 }

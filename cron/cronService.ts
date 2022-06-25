@@ -1,182 +1,39 @@
 import cron from "node-cron"
-import { RedisPMOperationType, RedisOperationType, RedisGMOperationType } from "../stuplus-lib/enums/enums_socket";
-import { GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, MessageEntity } from "../stuplus-lib/entities/BaseEntity";
 import AsyncLock from "async-lock"
-import { RedisMessageReceiptUpdateDTO } from "../api/socket/dtos/RedisChat";
-import { config } from "../api/socket/config/config";
-import RedisService from "../stuplus-lib/services/redisService";
-var lock = new AsyncLock({ timeout: 5000 });
+import IBaseCronJob from "./jobs/IBaseCronJob";
+import logger from "./config/logger";
+import { stringify } from "../stuplus-lib/utils/general";
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export default class CronService {
-    private static currentCursor: number = 0;
-    static init(): void {
-        cron.schedule(`*/30 * * * * *`, async () => {
-            lock.acquire("redis-db-operations", async function (done: any) {
-               
-                done();
-            }, function (err, ret) {
-                if (err) console.log(err)
-            });
-        });
+    private static lock = new AsyncLock({ timeout: 5000 });
 
-        async function handlePMOperations(currentKey: string) {
-            return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
-                const privateMessageBatches: Array<Array<object>> = [];
-                const readedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
-                const forwardedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
-                const batchSize = config.pmBatchSize;
-                let iterator = 0;
-                for (let i = 0; i < data.length; i += batchSize) {
-                    const currentBatch = data.slice(i, i + batchSize);
-                    privateMessageBatches[iterator] = new Array<object>();
-                    readedBatches[iterator] = new Array<RedisMessageReceiptUpdateDTO>();
-                    forwardedBatches[iterator] = new Array<RedisMessageReceiptUpdateDTO>();
-                    for (let j = 0; j < currentBatch.length; j++) {
-                        const query: any = currentBatch[j].toJSONObject();
-                        switch (query.t) {
-                            case RedisPMOperationType.InsertMessage:
-                                privateMessageBatches[iterator].push(query.e);
-                                break;
-                            case RedisPMOperationType.UpdateReaded:
-                                readedBatches[iterator].push({ ...query.e, readed: true });
-                                break;
-                            case RedisPMOperationType.UpdateForwarded:
-                                forwardedBatches[iterator].push({ ...query.e, forwarded: true });
-                                break;
-                            default:
-                                break;
-                        }
+    static init(jobs: Array<IBaseCronJob>): void {
+        for (let i = 0; i < jobs.length; i++) {
+            const job = jobs[i];
+            let jobLock: AsyncLock;
+            if (job.customLock) {
+                jobLock = job.customLock;
+            } else {
+                jobLock = CronService.lock;
+            }
+            const lockKey = job.constructor.name;
+            cron.schedule(job.cronExpression, async () => {
+                jobLock.acquire(lockKey, async function (done: any) {
+                    try {
+                        await job.run();
+                    } catch (error: any) {
+                        logger.error(`Job ${job.title} failed. {Error}`, stringify({ ErorMessage: error.message, ErrorStack: error.stack, ErrorName: error.name, ErrorCode: error.code, ErrorData: error.data }));
+                        console.log(`Job ${job.title} failed. Error: `, error);
+                    } finally {
+                        done();
                     }
-                    iterator++;
-                }
-                if (privateMessageBatches.length > 0) {
-                    for (let i = 0; i < privateMessageBatches.length; i++) {
-                        if (privateMessageBatches[i].length > 0) {
-                            console.time("PM insertMessage Bulk operation time");
-                            await MessageEntity.insertMany(privateMessageBatches[i]);
-                            console.timeEnd("PM insertMessage Bulk operation time");
-                        }
+                }, function (error: any, ret: any) {
+                    if (error) {
+                        logger.error(`Job ${job.title} failed. {Error}`, stringify({ ErorMessage: error.message, ErrorStack: error.stack, ErrorName: error.name, ErrorCode: error.code, ErrorData: error.data }));
+                        console.log(`Job ${job.title} failed. Error: `, error);
                     }
-                }
-
-                if (forwardedBatches.length > 0) {
-                    for (let i = 0; i < forwardedBatches.length; i++) {
-                        if (forwardedBatches[i].length > 0) {
-                            console.time("PM updateForwarded Bulk operation time");
-                            const bulkForwardUpdateOp = forwardedBatches[i].map(obj => {
-                                return {
-                                    updateOne: {
-                                        filter: {
-                                            _id: obj._id
-                                        },
-
-                                        update: {
-                                            forwarded: true
-                                        }
-                                    }
-                                }
-                            })
-                            await MessageEntity.bulkWrite(bulkForwardUpdateOp);
-                            console.timeEnd("PM updateForwarded Bulk operation time");
-                        }
-                    }
-                }
-
-                if (readedBatches.length > 0) {
-                    for (let i = 0; i < readedBatches.length; i++) {
-                        if (readedBatches[i].length > 0) {
-                            console.time("PM updateReaded Bulk operation time");
-                            const bulkForwardUpdateOp = readedBatches[i].map(obj => {
-                                return {
-                                    updateOne: {
-                                        filter: {
-                                            _id: obj._id
-                                        },
-
-                                        update: {
-                                            readed: true
-                                        }
-                                    }
-                                }
-                            })
-                            await MessageEntity.bulkWrite(bulkForwardUpdateOp);
-                            console.timeEnd("PM updateReaded Bulk operation time");
-
-                        }
-                    }
-                }
-
-                await RedisService.client.lTrim(currentKey, data.length, -1);
-                resolve(true);
-            });
-
-        }
-        async function handleGroupMessageOperations(currentKey: string) {
-            return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
-                const groupMessageBatches: Array<Array<object>> = [];
-                const readedBatches: Array<Array<object>> = [];
-                const forwardedBatches: Array<Array<object>> = [];
-                const batchSize = config.gmBatchSize;
-                let iterator = 0;
-                for (let i = 0; i < data.length; i += batchSize) {
-                    const currentBatch = data.slice(i, i + batchSize);
-                    groupMessageBatches[iterator] = new Array<object>();
-                    readedBatches[iterator] = new Array<object>();
-                    forwardedBatches[iterator] = new Array<object>();
-                    for (let j = 0; j < currentBatch.length; j++) {
-                        const query: any = currentBatch[j].toJSONObject();
-                        switch (query.t) {
-                            case RedisGMOperationType.InsertMessage:
-                                groupMessageBatches[iterator].push(query.e);
-                                break;
-                            case RedisGMOperationType.InsertReaded:
-                                readedBatches[iterator].push(query.e);
-                                break;
-                            case RedisGMOperationType.InsertForwarded:
-                                forwardedBatches[iterator].push(query.e);
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    iterator++;
-                }
-                if (groupMessageBatches.length > 0) {
-                    for (let i = 0; i < groupMessageBatches.length; i++) {
-                        if (groupMessageBatches[i].length > 0) {
-                            console.time("GM insertMessage Bulk operation time");
-                            await GroupMessageEntity.insertMany(groupMessageBatches[i]);
-                            console.timeEnd("GM insertMessage Bulk operation time");
-                        }
-                    }
-                }
-
-                if (forwardedBatches.length > 0) {
-                    for (let i = 0; i < forwardedBatches.length; i++) {
-                        if (forwardedBatches[i].length > 0) {
-                            console.time("GM insertForwarded Bulk operation time");
-                            await GroupMessageForwardEntity.insertMany(forwardedBatches[i]);
-                            console.timeEnd("GM insertForwarded Bulk operation time");
-                        }
-                    }
-                }
-
-                if (readedBatches.length > 0) {
-                    for (let i = 0; i < readedBatches.length; i++) {
-                        if (readedBatches[i].length > 0) {
-                            console.time("GM insertReaded Bulk operation time");
-                            await GroupMessageReadEntity.insertMany(readedBatches[i]);
-                            console.timeEnd("GM insertReaded Bulk operation time");
-                        }
-                    }
-                }
-
-                await RedisService.client.lTrim(currentKey, data.length, -1);
-                resolve(true);
+                });
             });
         }
-        
     }
 }

@@ -1,7 +1,28 @@
-import cron from "node-cron"
-import RedisDatabaseJobModel from "./models/RedisDatabaseJob";
+import CronService from "./cronService";
+import IBaseCronJob from "./jobs/IBaseCronJob";
+import RedisDatabaseJob from "./jobs/RedisDatabaseJob";
+import express from "express";
+import { config } from "./config/config";
+import logger from "./config/logger";
+import UpdateAnnouncementScoresJob from "./jobs/UpdateAnnouncementScoresJob";
+import cronTimes from "./constants/cronTimes";
 
-const jobs = [];
+const jobs: Array<IBaseCronJob> = [];
 
-jobs.push(new RedisDatabaseJobModel("*/30 * * * * *"))
+// const app = express();
+setup()
+
+function setup() {
+    import("./config/logger");
+    jobs.push(new RedisDatabaseJob({ cronExpression: cronTimes.everyThirtySeconds, title: "RedisDatabaseJob", description: "Job for database operations recorded in redis." }));
+    jobs.push(new UpdateAnnouncementScoresJob({ cronExpression: cronTimes.everyMinute, title: "UpdateAnnouncementScoresJob", description: "Job for update active announcement scores(based on only likes right now)." }));
+
+    CronService.init(jobs);
+}
+
+// app.listen(config.PORT, () => {
+    //     console.log(`Server started at http://localhost:${config.PORT}`);
+    // logger.info(`Cron Server started at http://localhost:${config.PORT}`);
+// });
+
 

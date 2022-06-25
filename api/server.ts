@@ -14,6 +14,7 @@ import path from "path";
 import { config } from "./config/config";
 import interestRoute from "./routes/interestRoute";
 import customExtensions from "../stuplus-lib/extensions/extensions";
+import logger from "./config/logger";
 
 dotenv.config();
 
@@ -22,9 +23,9 @@ const app = express();
 setup();
 
 async function setup() {
+  import("./config/logger");
   await initializeDatabese();
-  CronService.init();
-
+  import("../cron/index");
 }
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -40,9 +41,9 @@ app.use(
 app.use(cookieParser());
 app.use(customExtensions())
 
-app.use(function(error: any, req: any, res: any, next: any) {
-    /* #swagger.security = [{
-      "bearerAuth": []
+app.use(function (error: any, req: any, res: any, next: any) {
+  /* #swagger.security = [{
+    "bearerAuth": []
 }] */
 });
 app.get("/", async (req: Request, res: Response) => {
@@ -56,12 +57,15 @@ app.use("/announcement", announcementRoute);
 
 app.use("/doc", swaggerRoute);
 
-const httpServer = app.listen((process.env.PORT || config.PORT), () => console.log("Server started at http://localhost:" + (process.env.PORT || config.PORT)));
+const httpServer = app.listen((process.env.PORT || config.PORT), () => {
+  logger.info("API-SOCKET Server started at http://localhost:" + (process.env.PORT || config.PORT));
+  console.log("API-SOCKET Server started at http://localhost:" + (process.env.PORT || config.PORT));
+});
 
 export {
   httpServer,
-  app
+  app,
 }
 
 import "./socket/index";
-import CronService from "../cron/cronService";
+
