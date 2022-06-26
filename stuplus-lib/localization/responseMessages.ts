@@ -67,7 +67,7 @@ const systemLangs: Record<string, Function> = {
             unauthorized: "Yetkiniz yok.",
             announcementNotFound: "Duyuru bulunamadı.",
             announcementNotAvailable: "Artık bu duyuruya erişemiyoruz, üzgünüz.",
-            alreadyLiked: "Bunu zaten beğendin, yoksa çok mu beğendin? :).",
+            alreadyLikedOrDisliked: "Buna zaten oy verdin ki :).",
         }
     },
     "en": function (args: string[] = []) {

@@ -36,6 +36,12 @@ export const validateLikeDislikeAnnouncement = [
         .bail()
         .isNumeric({ no_symbols: true })
         .bail(),
+    check('beforeType')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .isNumeric({ no_symbols: true })
+        .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
@@ -75,6 +81,51 @@ export const validateCommentLikeDislikeAnnouncement = [
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail()
         .isNumeric({ no_symbols: true })
+        .bail(),
+    check('beforeType')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .isNumeric({ no_symbols: true })
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
+
+export const validateGetCommentsAnnouncement = [
+    check('announcementId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    check('page')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    check('pageSize')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
+export const validateGetAnnouncementsAnnouncement = [
+    check('page')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    check('pageSize')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);

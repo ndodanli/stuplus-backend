@@ -98,19 +98,19 @@ export const UserSchema: Schema = new Schema({
     type: new Schema({
       code: { type: Number, required: false, default: null },
       expiresAt: { type: Date, required: false, default: null },
-    }), required: false, default: { code: null, expiresAt: null }
+    }, { _id : false }), required: false, default: { code: null, expiresAt: null }
   },
   schoolEmailConfirmation: {
     type: new Schema({
       code: { type: Number, required: false, default: null },
       expiresAt: { type: Date, required: false, default: null },
-    }), required: false, default: { code: null, expiresAt: null }
+    }, { _id : false }), required: false, default: { code: null, expiresAt: null }
   },
   fpEmailConfirmation: {
     type: new Schema({
       code: { type: Number, required: false, default: null },
       expiresAt: { type: Date, required: false, default: null },
-    }), required: false, default: { code: null, expiresAt: null }
+    }, { _id: false }), required: false, default: { code: null, expiresAt: null }
   },
   roomIds: { type: Array.of(String), required: false, default: [] },
   blockedUserIds: { type: Array.of(String), required: false, default: [] },

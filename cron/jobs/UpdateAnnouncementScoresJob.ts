@@ -22,7 +22,7 @@ export default class UpdateAnnouncementScoresJob implements IBaseCronJob {
         this.description = description;
     }
     async run(): Promise<void> {
-        console.log("UpdateAnnouncementScoresJob Cron job started");
+        // console.log("UpdateAnnouncementScoresJob Cron job started");
         let now = new Date();
         let activeAnnouncementIds = await AnnouncementEntity.find({
             isActive: true,
@@ -94,6 +94,6 @@ export default class UpdateAnnouncementScoresJob implements IBaseCronJob {
         }
 
 
-        console.log("UpdateAnnouncementScoresJob Cron job finished");
+        // console.log("UpdateAnnouncementScoresJob Cron job finished");
     }
 }

@@ -38,6 +38,7 @@ export class AnnouncementGetSingleDTO extends BaseFilter {
 
 export class AnnouncementLikeDislikeDTO extends BaseFilter {
     announcementId: string = "";
+    beforeType: LikeType = LikeType.None;
     type: LikeType = LikeType.Like;
     constructor(obj: any) {
         super(obj);
@@ -62,6 +63,7 @@ export class AnnouncementCommenLikeDisliketDTO extends BaseFilter {
     commentId: string = "";
     announcementId: string = "";
     type: LikeType = LikeType.Like;
+    beforeType: LikeType = LikeType.None;
     constructor(obj: any) {
         super(obj);
         if (obj) {

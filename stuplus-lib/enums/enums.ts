@@ -18,7 +18,8 @@ export enum Gender {
 
 export enum LikeType {
    Dislike = 0,
-   Like = 1
+   Like = 1,
+   None = 2
 }
 
 export enum RedisAcquireEntityFilterOrder {

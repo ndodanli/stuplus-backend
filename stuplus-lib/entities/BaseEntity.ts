@@ -24,7 +24,7 @@ export default interface BaseEntity {
 
 const collections = ["User", "School", "Faculty", "Department", "Interest", "Announcement", "AnnouncementLike",
   "AnnouncementComment", "GroupChat", "GroupChatUser", "GroupMessage", "GroupMessageForward", "GroupMessageRead",
-  "Message", "Chat", "AnnouncementCommentLike", 
+  "Message", "Chat", "AnnouncementCommentLike",
 ];
 
 const baseSpreadator: Record<string, AcceptsDiscriminator> = {};

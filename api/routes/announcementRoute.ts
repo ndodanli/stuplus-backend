@@ -3,7 +3,7 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
-import { validateAddAnnouncement, validateCommentAnnouncement, validateCommentLikeDislikeAnnouncement, validateLikeDislikeAnnouncement } from "../middlewares/validation/announcement/validateAnnouncementRoute";
+import { validateAddAnnouncement, validateCommentAnnouncement, validateCommentLikeDislikeAnnouncement, validateGetAnnouncementsAnnouncement, validateGetCommentsAnnouncement, validateLikeDislikeAnnouncement } from "../middlewares/validation/announcement/validateAnnouncementRoute";
 import { authorize } from "../middlewares/auth";
 import { Role } from "../../stuplus-lib/enums/enums";
 import { uploadSingleFileS3 } from "../../stuplus-lib/services/fileService";
@@ -70,7 +70,7 @@ router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadSingleFi
     return Ok(res, response)
 });
 
-router.post("/getAnnouncements", authorize([Role.ContentCreator, Role.User, Role.Admin]), async (req: CustomRequest<AnnouncementGetMultipleDTO>, res: any) => {
+router.post("/getAnnouncements", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateGetAnnouncementsAnnouncement, async (req: CustomRequest<AnnouncementGetMultipleDTO>, res: any) => {
     /* #swagger.tags = ['Announcement']
         #swagger.description = 'Get announcements.' */
     /*	#swagger.requestBody = {
@@ -133,7 +133,7 @@ router.post("/likeDislike", authorize([Role.ContentCreator, Role.User, Role.Admi
    } */
     const response = new BaseResponse<object>();
     try {
-        await AnnouncementAccess.likeDislikeAnnouncement(req.selectedLangs(), new AnnouncementLikeDislikeDTO(req.body), res.locals.user._id);
+        response.data = await AnnouncementAccess.likeDislikeAnnouncement(req.selectedLangs(), new AnnouncementLikeDislikeDTO(req.body), res.locals.user._id);
     } catch (err: any) {
         response.setErrorMessage(err.message)
 
@@ -144,7 +144,7 @@ router.post("/likeDislike", authorize([Role.ContentCreator, Role.User, Role.Admi
     return Ok(res, response)
 });
 
-router.post("/getComments", authorize([Role.ContentCreator, Role.User, Role.Admin]), async (req: CustomRequest<AnnouncementGetCommentsDTO>, res: any) => {
+router.post("/getComments", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateGetCommentsAnnouncement, async (req: CustomRequest<AnnouncementGetCommentsDTO>, res: any) => {
     /* #swagger.tags = ['Announcement']
         #swagger.description = 'Get comments of an announcement.' */
     /*	#swagger.requestBody = {
@@ -211,7 +211,7 @@ router.post("/commentLikeDislike", authorize([Role.ContentCreator, Role.User, Ro
    } */
     const response = new BaseResponse<object>();
     try {
-        await AnnouncementAccess.commentLikeDislikeAnnouncement(req.selectedLangs(), new AnnouncementCommenLikeDisliketDTO(req.body), res.locals.user._id);
+        response.data = await AnnouncementAccess.commentLikeDislikeAnnouncement(req.selectedLangs(), new AnnouncementCommenLikeDisliketDTO(req.body), res.locals.user._id);
     } catch (err: any) {
         response.setErrorMessage(err.message)
 

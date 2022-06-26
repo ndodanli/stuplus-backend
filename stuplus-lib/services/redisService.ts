@@ -51,9 +51,9 @@ export default class RedisService {
 
             if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
-            const school = await SchoolEntity.findOne({ _id: user.schoolId });
-            const faculty = await FacultyEntity.findOne({ _id: user.facultyId });
-            const department = await DepartmentEntity.findOne({ _id: user.departmentId });
+            const school = await SchoolEntity.findOne({ _id: user.schoolId }, { "title": 1, "_id": 0 });
+            const faculty = await FacultyEntity.findOne({ _id: user.facultyId }, { "title": 1, "_id": 0 });
+            const department = await DepartmentEntity.findOne({ _id: user.departmentId }, { "title": 1, "_id": 0 });
 
             if (school)
                 user.schoolName = school.title;
@@ -89,12 +89,12 @@ export default class RedisService {
                 }
             }
             if (filters) {
-                if (filters.sort) {
-                    if (filters.sort.order === RedisAcquireEntityFilterOrder.ASC)
-                        documentList = documentList.sort((a: any, b: any) => (a[filters.sort.property] > b[filters.sort.property]) ? 1 : ((b[filters.sort.property] > a[filters.sort.property]) ? -1 : 0));
-                    else
-                        documentList = documentList.sort((a: any, b: any) => (a[filters.sort.property] < b[filters.sort.property]) ? 1 : ((b[filters.sort.property] < a[filters.sort.property]) ? -1 : 0));
-                }
+                // if (filters.sort) {
+                //     if (filters.sort.order === RedisAcquireEntityFilterOrder.ASC)
+                //         documentList = documentList.sort((a: any, b: any) => (a[filters.sort.property] > b[filters.sort.property]) ? 1 : ((b[filters.sort.property] > a[filters.sort.property]) ? -1 : 0));
+                //     else
+                //         documentList = documentList.sort((a: any, b: any) => (a[filters.sort.property] < b[filters.sort.property]) ? 1 : ((b[filters.sort.property] < a[filters.sort.property]) ? -1 : 0));
+                // }
                 if (filters.limit) {
                     documentList = documentList.slice(0, filters.limit);
                 }

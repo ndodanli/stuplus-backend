@@ -19,3 +19,11 @@ export const checkIfValidSchool = (email: string, emailFormat: string): Boolean 
 export const stringify = (obj: any): string => JSON.stringify(obj);
 
 export const flatten: any = (arr: any[]) => arr.reduce((flat, toFlatten) => flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten), []);
+
+export const reverseArray = (arr: any[]): any[] => {
+    const newArr = [];
+    for (let i = arr.length - 1; i >= 0; i--) {
+        newArr.push(arr[i]);
+    }
+    return newArr;
+}

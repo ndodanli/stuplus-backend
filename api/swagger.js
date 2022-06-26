@@ -6,7 +6,7 @@ const doc = {
         title: "Stuplus API",
         description: "Stuplus API Documentation."
     },
-    host: "127.0.0.1:25010",
+    servers: [{ url: "http://46.101.160.93:25010/", description: "Canli API" }, { url: "http://127.0.0.1:25010/", description: "Local API" },],
     basePath: "/",
     schemes: ['http'],
     consumes: ['application/json', 'multipart/form-data'],
@@ -278,7 +278,7 @@ const doc = {
         AnnouncementGetAnnouncementsRequest: {
             $page: 1,
             $pageSize: 20,
-            $schoolIds: ["schoolId1", "schoolId2"],
+            schoolIds: ["schoolId1", "schoolId2"],
         },
         AnnouncementGetAnnouncementsResponse: {
             hasError: {
@@ -410,75 +410,77 @@ const doc = {
                 type: "string",
                 description: "Message describing the error."
             },
-            data: {
-                "_id": "62af8aade035eb1764400d36",
-                "ownerId": "62ab8a204166fd1eaebbb3fa",
-                "coverImageUrl": null,
-                "title": "das",
-                "relatedSchoolIds": [
-                    "string1",
-                    "string2"
-                ],
-                "text": "dasdsa",
-                "isActive": true,
-                "fromDate": null,
-                "toDate": null,
-                "__t": "Announcement",
-                "createdAt": "2022-06-19T20:44:29.908Z",
-                "updatedAt": "2022-06-25T11:18:01.665Z",
-                "__v": 0,
-                "recordStatus": 1,
-                "score": 47,
-                "owner": {
-                    "_id": "62ab8a204166fd1eaebbb3fa",
-                    "username": "ndodanli14",
-                    "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
-                    "__t": "User"
-                },
-                "likeCount": 22,
-                "relatedSchools": [
-                    {
-                        "title": "test",
-                        "schoolId": "62b0c8d63721b9b60d3585db",
-                        "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
+            data: [
+                {
+                    "_id": "62af8aade035eb1764400d36",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "coverImageUrl": null,
+                    "title": "das",
+                    "relatedSchoolIds": [
+                        "string1",
+                        "string2"
+                    ],
+                    "text": "dasdsa",
+                    "isActive": true,
+                    "fromDate": null,
+                    "toDate": null,
+                    "__t": "Announcement",
+                    "createdAt": "2022-06-19T20:44:29.908Z",
+                    "updatedAt": "2022-06-25T11:18:01.665Z",
+                    "__v": 0,
+                    "recordStatus": 1,
+                    "score": 47,
+                    "owner": {
+                        "_id": "62ab8a204166fd1eaebbb3fa",
+                        "username": "ndodanli14",
+                        "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                        "__t": "User"
                     },
-                    {
-                        "title": "test",
-                        "schoolId": "62b0c8f91faac470de48b820",
-                        "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
-                    }
-                ],
-                "liked": false,
-                "comments": [
-                    {
-                        "_id": "62b6f0b662245f6dc443a9ad",
-                        "ownerId": "62ab8a204166fd1eaebbb3fa",
-                        "comment": "some comment.",
-                        "__t": "AnnouncementComment",
-                        "owner": {
-                            "_id": "62ab8a204166fd1eaebbb3fa",
-                            "username": "ndodanli14",
-                            "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
-                            "__t": "User"
+                    "likeCount": 22,
+                    "relatedSchools": [
+                        {
+                            "title": "test",
+                            "schoolId": "62b0c8d63721b9b60d3585db",
+                            "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
                         },
-                        "likeCount": 22,
-                        "liked": false
-                    },
-                    {
-                        "_id": "62b6f0b662245f6dc443a9ae",
-                        "ownerId": "62ab8a204166fd1eaebbb3fa",
-                        "comment": "some comment.",
-                        "__t": "AnnouncementComment",
-                        "owner": {
-                            "_id": "62ab8a204166fd1eaebbb3fa",
-                            "username": "ndodanli14",
-                            "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
-                            "__t": "User"
+                        {
+                            "title": "test",
+                            "schoolId": "62b0c8f91faac470de48b820",
+                            "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
+                        }
+                    ],
+                    "liked": false,
+                    "comments": [
+                        {
+                            "_id": "62b6f0b662245f6dc443a9ad",
+                            "ownerId": "62ab8a204166fd1eaebbb3fa",
+                            "comment": "some comment.",
+                            "__t": "AnnouncementComment",
+                            "owner": {
+                                "_id": "62ab8a204166fd1eaebbb3fa",
+                                "username": "ndodanli14",
+                                "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                                "__t": "User"
+                            },
+                            "likeCount": 22,
+                            "liked": false
                         },
-                        "likeCount": 22,
-                        "liked": true
-                    },]
-            },
+                        {
+                            "_id": "62b6f0b662245f6dc443a9ae",
+                            "ownerId": "62ab8a204166fd1eaebbb3fa",
+                            "comment": "some comment.",
+                            "__t": "AnnouncementComment",
+                            "owner": {
+                                "_id": "62ab8a204166fd1eaebbb3fa",
+                                "username": "ndodanli14",
+                                "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                                "__t": "User"
+                            },
+                            "likeCount": 22,
+                            "liked": true
+                        },]
+                }
+            ],
         },
         AnnouncementLikeDislikeRequest: {
             $announcementId: "announcementId",
@@ -487,6 +489,15 @@ const doc = {
                 values: {
                     Dislike: 0,
                     Like: 1
+                }
+            },
+            $beforeType: {
+                type: "enum",
+                description: "Type of the previous like/dislike.",
+                values: {
+                    Dislike: 0,
+                    Like: 1,
+                    None: 2
                 }
             }
         },
@@ -502,6 +513,15 @@ const doc = {
                 values: {
                     Dislike: 0,
                     Like: 1
+                }
+            },
+            $beforeType: {
+                type: "enum",
+                description: "Type of the previous like/dislike.",
+                values: {
+                    Dislike: 0,
+                    Like: 1,
+                    None: 2
                 }
             }
         },
@@ -542,6 +562,7 @@ const doc = {
         SchoolGetAllSchoolsResponse: {
             "_id": "interestId",
             "title": "interestTitle",
+            "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
         },
         SchoolGetFacultiesResponse: {
             "_id": "interestId",

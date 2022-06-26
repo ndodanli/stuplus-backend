@@ -7,7 +7,12 @@
   },
   "servers": [
     {
-      "url": "http://127.0.0.1:25010/"
+      "url": "http://46.101.160.93:25010/",
+      "description": "Canli API"
+    },
+    {
+      "url": "http://127.0.0.1:25010/",
+      "description": "Local API"
     }
   ],
   "tags": [
@@ -1907,8 +1912,7 @@
         },
         "required": [
           "page",
-          "pageSize",
-          "schoolIds"
+          "pageSize"
         ],
         "xml": {
           "name": "AnnouncementGetAnnouncementsRequest"
@@ -2265,163 +2269,166 @@
             }
           },
           "data": {
-            "type": "object",
-            "properties": {
-              "_id": {
-                "type": "string",
-                "example": "62af8aade035eb1764400d36"
-              },
-              "ownerId": {
-                "type": "string",
-                "example": "62ab8a204166fd1eaebbb3fa"
-              },
-              "coverImageUrl": {},
-              "title": {
-                "type": "string",
-                "example": "das"
-              },
-              "relatedSchoolIds": {
-                "type": "array",
-                "example": [
-                  "string1",
-                  "string2"
-                ],
-                "items": {
-                  "type": "string"
-                }
-              },
-              "text": {
-                "type": "string",
-                "example": "dasdsa"
-              },
-              "isActive": {
-                "type": "boolean",
-                "example": true
-              },
-              "fromDate": {},
-              "toDate": {},
-              "__t": {
-                "type": "string",
-                "example": "Announcement"
-              },
-              "createdAt": {
-                "type": "string",
-                "example": "2022-06-19T20:44:29.908Z"
-              },
-              "updatedAt": {
-                "type": "string",
-                "example": "2022-06-25T11:18:01.665Z"
-              },
-              "__v": {
-                "type": "number",
-                "example": 0
-              },
-              "recordStatus": {
-                "type": "number",
-                "example": 1
-              },
-              "score": {
-                "type": "number",
-                "example": 47
-              },
-              "owner": {
-                "type": "object",
-                "properties": {
-                  "_id": {
-                    "type": "string",
-                    "example": "62ab8a204166fd1eaebbb3fa"
-                  },
-                  "username": {
-                    "type": "string",
-                    "example": "ndodanli14"
-                  },
-                  "profilePhotoUrl": {
-                    "type": "string",
-                    "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
-                  },
-                  "__t": {
-                    "type": "string",
-                    "example": "User"
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62af8aade035eb1764400d36"
+                },
+                "ownerId": {
+                  "type": "string",
+                  "example": "62ab8a204166fd1eaebbb3fa"
+                },
+                "coverImageUrl": {},
+                "title": {
+                  "type": "string",
+                  "example": "das"
+                },
+                "relatedSchoolIds": {
+                  "type": "array",
+                  "example": [
+                    "string1",
+                    "string2"
+                  ],
+                  "items": {
+                    "type": "string"
                   }
-                }
-              },
-              "likeCount": {
-                "type": "number",
-                "example": 22
-              },
-              "relatedSchools": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "title": {
-                      "type": "string",
-                      "example": "test"
-                    },
-                    "schoolId": {
-                      "type": "string",
-                      "example": "62b0c8f91faac470de48b820"
-                    },
-                    "coverImageUrl": {
-                      "type": "string",
-                      "example": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg"
-                    }
-                  }
-                }
-              },
-              "liked": {
-                "type": "boolean",
-                "example": false
-              },
-              "comments": {
-                "type": "array",
-                "items": {
+                },
+                "text": {
+                  "type": "string",
+                  "example": "dasdsa"
+                },
+                "isActive": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "fromDate": {},
+                "toDate": {},
+                "__t": {
+                  "type": "string",
+                  "example": "Announcement"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2022-06-19T20:44:29.908Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "example": "2022-06-25T11:18:01.665Z"
+                },
+                "__v": {
+                  "type": "number",
+                  "example": 0
+                },
+                "recordStatus": {
+                  "type": "number",
+                  "example": 1
+                },
+                "score": {
+                  "type": "number",
+                  "example": 47
+                },
+                "owner": {
                   "type": "object",
                   "properties": {
                     "_id": {
                       "type": "string",
-                      "example": "62b6f0b662245f6dc443a9ae"
-                    },
-                    "ownerId": {
-                      "type": "string",
                       "example": "62ab8a204166fd1eaebbb3fa"
                     },
-                    "comment": {
+                    "username": {
                       "type": "string",
-                      "example": "some comment."
+                      "example": "ndodanli14"
+                    },
+                    "profilePhotoUrl": {
+                      "type": "string",
+                      "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
                     },
                     "__t": {
                       "type": "string",
-                      "example": "AnnouncementComment"
-                    },
-                    "owner": {
-                      "type": "object",
-                      "properties": {
-                        "_id": {
-                          "type": "string",
-                          "example": "62ab8a204166fd1eaebbb3fa"
-                        },
-                        "username": {
-                          "type": "string",
-                          "example": "ndodanli14"
-                        },
-                        "profilePhotoUrl": {
-                          "type": "string",
-                          "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
-                        },
-                        "__t": {
-                          "type": "string",
-                          "example": "User"
-                        }
+                      "example": "User"
+                    }
+                  }
+                },
+                "likeCount": {
+                  "type": "number",
+                  "example": 22
+                },
+                "relatedSchools": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "example": "test"
+                      },
+                      "schoolId": {
+                        "type": "string",
+                        "example": "62b0c8f91faac470de48b820"
+                      },
+                      "coverImageUrl": {
+                        "type": "string",
+                        "example": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg"
                       }
-                    },
-                    "likeCount": {
-                      "type": "number",
-                      "example": 22
-                    },
-                    "liked": {
-                      "type": "boolean",
-                      "example": true
+                    }
+                  }
+                },
+                "liked": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "comments": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "example": "62b6f0b662245f6dc443a9ae"
+                      },
+                      "ownerId": {
+                        "type": "string",
+                        "example": "62ab8a204166fd1eaebbb3fa"
+                      },
+                      "comment": {
+                        "type": "string",
+                        "example": "some comment."
+                      },
+                      "__t": {
+                        "type": "string",
+                        "example": "AnnouncementComment"
+                      },
+                      "owner": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "62ab8a204166fd1eaebbb3fa"
+                          },
+                          "username": {
+                            "type": "string",
+                            "example": "ndodanli14"
+                          },
+                          "profilePhotoUrl": {
+                            "type": "string",
+                            "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                          },
+                          "__t": {
+                            "type": "string",
+                            "example": "User"
+                          }
+                        }
+                      },
+                      "likeCount": {
+                        "type": "number",
+                        "example": 22
+                      },
+                      "liked": {
+                        "type": "boolean",
+                        "example": true
+                      }
                     }
                   }
                 }
@@ -2461,11 +2468,42 @@
                 }
               }
             }
+          },
+          "beforeType": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "description": {
+                "type": "string",
+                "example": "Type of the previous like/dislike."
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "None": {
+                    "type": "number",
+                    "example": 2
+                  }
+                }
+              }
+            }
           }
         },
         "required": [
           "announcementId",
-          "type"
+          "type",
+          "beforeType"
         ],
         "xml": {
           "name": "AnnouncementLikeDislikeRequest"
@@ -2523,12 +2561,43 @@
                 }
               }
             }
+          },
+          "beforeType": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "description": {
+                "type": "string",
+                "example": "Type of the previous like/dislike."
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "None": {
+                    "type": "number",
+                    "example": 2
+                  }
+                }
+              }
+            }
           }
         },
         "required": [
           "commentId",
           "announcementId",
-          "type"
+          "type",
+          "beforeType"
         ],
         "xml": {
           "name": "AnnouncementCommentLikeDislikeRequest"
@@ -2686,6 +2755,10 @@
           "title": {
             "type": "string",
             "example": "interestTitle"
+          },
+          "coverImageUrl": {
+            "type": "string",
+            "example": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg"
           }
         },
         "xml": {
