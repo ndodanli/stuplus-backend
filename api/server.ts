@@ -1,3 +1,4 @@
+import logger from "./config/logger";
 import "../stuplus-lib/extensions/extensionMethods"
 import express, { Request, Response, } from "express";
 import { initializeDatabese } from "./config/database";
@@ -14,7 +15,6 @@ import path from "path";
 import { config } from "./config/config";
 import interestRoute from "./routes/interestRoute";
 import customExtensions from "../stuplus-lib/extensions/extensions";
-import logger from "./config/logger";
 
 dotenv.config();
 
@@ -23,7 +23,6 @@ const app = express();
 setup();
 
 async function setup() {
-  import("./config/logger");
   await initializeDatabese();
   import("../cron/index");
 }

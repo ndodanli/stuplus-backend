@@ -2065,9 +2065,9 @@
                 "type": "number",
                 "example": 0
               },
-              "liked": {
-                "type": "boolean",
-                "example": true
+              "likeType": {
+                "type": "number",
+                "example": 1
               }
             }
           }
@@ -2214,9 +2214,9 @@
                   "type": "number",
                   "example": 22
                 },
-                "liked": {
-                  "type": "boolean",
-                  "example": true
+                "likeType": {
+                  "type": "number",
+                  "example": 2
                 }
               }
             }
@@ -2375,9 +2375,9 @@
                     }
                   }
                 },
-                "liked": {
-                  "type": "boolean",
-                  "example": false
+                "likeType": {
+                  "type": "number",
+                  "example": 2
                 },
                 "comments": {
                   "type": "array",
@@ -2425,9 +2425,9 @@
                         "type": "number",
                         "example": 22
                       },
-                      "liked": {
-                        "type": "boolean",
-                        "example": true
+                      "likeType": {
+                        "type": "number",
+                        "example": 0
                       }
                     }
                   }

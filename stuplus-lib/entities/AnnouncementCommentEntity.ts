@@ -1,5 +1,6 @@
 import { Document, Schema } from "mongoose";
 import { AnnouncementUserMM } from "../../api/dtos/AnnouncementDTOs";
+import { LikeType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 import { School } from "./SchoolEntity";
 import { User } from "./UserEntity";
@@ -13,7 +14,7 @@ export interface AnnouncementComment extends BaseEntity {
   owner?: User | null; // ignore
   ownerSchool?: School | null; //ignore
   likeCount: number; // ignore
-  liked: boolean; // ignore
+  likeType: LikeType; // ignore
 
 }
 
@@ -48,12 +49,13 @@ AnnouncementCommentSchema.methods.minify = async function (
     announcementId: this.announcementId,
     comment: this.comment,
     score: this.score,
-    owner: this.owner,
-    likeCount: this.likeCount,
-    ownerSchool: this.ownerSchool,
-    liked: this.liked,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
+    //ignore
+    likeType: LikeType.None, // ignore
+    likeCount: 0, // ignore
+    owner: null, // ignore
+    ownerSchool: null, // ignore
   };
   return response;
 };

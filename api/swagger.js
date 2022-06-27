@@ -331,7 +331,7 @@ const doc = {
                 "recordStatus": 1,
                 "likeCount": 0,
                 "commentCount": 0,
-                "liked": true
+                "likeType": 1
             },
         },
         AnnouncementGetCommentsRequest: {
@@ -372,7 +372,7 @@ const doc = {
                         "__t": "User"
                     },
                     "likeCount": 22,
-                    "liked": false
+                    "likeType": 2
                 },
                 {
                     "_id": "62b6f0b662245f6dc443a9ae",
@@ -393,7 +393,7 @@ const doc = {
                         "__t": "User"
                     },
                     "likeCount": 22,
-                    "liked": true
+                    "likeType": 2
                 },
             ]
         },
@@ -449,7 +449,7 @@ const doc = {
                             "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
                         }
                     ],
-                    "liked": false,
+                    "likeType": 2,
                     "comments": [
                         {
                             "_id": "62b6f0b662245f6dc443a9ad",
@@ -463,7 +463,7 @@ const doc = {
                                 "__t": "User"
                             },
                             "likeCount": 22,
-                            "liked": false
+                            "likeType": 1
                         },
                         {
                             "_id": "62b6f0b662245f6dc443a9ae",
@@ -477,7 +477,7 @@ const doc = {
                                 "__t": "User"
                             },
                             "likeCount": 22,
-                            "liked": true
+                            "likeType": 0
                         },]
                 }
             ],

@@ -1,4 +1,5 @@
 import { Document, Schema } from "mongoose";
+import { LikeType } from "../enums/enums";
 import { AnnouncementComment, AnnouncementCommentDocument } from "./AnnouncementCommentEntity";
 import BaseEntity from "./BaseEntity";
 import { User } from "./UserEntity";
@@ -17,7 +18,7 @@ export interface Announcement extends BaseEntity {
   owner?: User | null; // ignore
   relatedSchools: object[] | null; // ignore
   likeCount: number; // ignore
-  liked: boolean; // ignore
+  likeType: LikeType; // ignore
   commentCount: number; // ignore
   comments: object[]; // ignore
 }
@@ -75,7 +76,7 @@ AnnouncementSchema.methods.minify = async function (
     owner: null, // ignore
     relatedSchools: null, // ignore
     likeCount: 0, // ignore
-    liked: false, // ignore
+    likeType: LikeType.None, // ignore
     commentCount: 0, // ignore
     comments: [], // ignore
   };
