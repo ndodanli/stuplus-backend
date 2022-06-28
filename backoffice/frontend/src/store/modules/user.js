@@ -33,7 +33,8 @@ const actions = {
   login({ commit }, userInfo) {
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(response => {
+      console.log('before')
+      login({ email: username.trim(), password: password }).then(response => {
         const { data } = response
         commit('SET_TOKEN', data.token)
         setToken(data.token)
@@ -53,18 +54,17 @@ const actions = {
         if (!data) {
           reject('Verification failed, please Login again.')
         }
+        console.log('data', data)
 
-        const { roles, name, avatar, introduction } = data
-
-        // roles must be a non-empty array
-        if (!roles || roles.length <= 0) {
-          reject('getInfo: roles must be a non-null array!')
-        }
-
-        commit('SET_ROLES', roles)
-        commit('SET_NAME', name)
-        commit('SET_AVATAR', avatar)
-        commit('SET_INTRODUCTION', introduction)
+        const { role, firstName, lastName, profilePhotoUrl } = data
+        if (!firstName) { data.firstName = 'None' }
+        if (!lastName) { data.lastName = 'None' }
+        if (!profilePhotoUrl) { data.profilePhotoUrl = 'https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200' }
+        commit('SET_ROLES', [role])
+        commit('SET_NAME', firstName ?? 'None' + ' ' + lastName?.charAt(0) + '.')
+        commit('SET_AVATAR', profilePhotoUrl)
+        commit('SET_INTRODUCTION', `${firstName} ${lastName} info`)
+        console.log('before resolve')
         resolve(data)
       }).catch(error => {
         reject(error)

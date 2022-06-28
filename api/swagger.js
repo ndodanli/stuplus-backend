@@ -96,7 +96,8 @@ const doc = {
                         "string"
                     ],
                     __t: "User",
-                    avatarKey: "string"
+                    avatarKey: "string",
+                    username: "string",
 
                 }
             }
@@ -529,6 +530,7 @@ const doc = {
             "_id": "interestId",
             "url": "url",
             "title": "interestTitle",
+            "icon": "http://fakultembucket.s3.amazonaws.com/public/interest_icons/interestId/icon.png",
         },
         LoginRequest: {
             $email: "stuplus@gmail.com",

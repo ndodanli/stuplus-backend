@@ -1,3 +1,4 @@
+import { Role } from '@/enums/enums'
 import { asyncRoutes, constantRoutes } from '@/router'
 
 /**
@@ -50,7 +51,8 @@ const actions = {
   generateRoutes({ commit }, roles) {
     return new Promise(resolve => {
       let accessedRoutes
-      if (roles.includes('admin')) {
+      console.log('roles.includes(Role.Admin): ', roles.includes(Role.Admin))
+      if (roles.includes(Role.Admin)) {
         accessedRoutes = asyncRoutes || []
       } else {
         accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)

@@ -1,5 +1,7 @@
 // Just a mock data
 
+const { Role } = require("./")
+
 const constantRoutes = [
   {
     path: '/redirect',
@@ -81,7 +83,7 @@ const asyncRoutes = [
     meta: {
       title: 'Permission',
       icon: 'lock',
-      roles: ['admin', 'editor']
+      roles: [Role.Admin, 'editor']
     },
     children: [
       {
@@ -90,7 +92,7 @@ const asyncRoutes = [
         name: 'PagePermission',
         meta: {
           title: 'Page Permission',
-          roles: ['admin']
+          roles: [Role.Admin]
         }
       },
       {
@@ -107,7 +109,7 @@ const asyncRoutes = [
         name: 'RolePermission',
         meta: {
           title: 'Role Permission',
-          roles: ['admin']
+          roles: [Role.Admin]
         }
       }
     ]

@@ -16,7 +16,7 @@ router.get("/getAllInterests", async (req: CustomRequest<object>, res: any) => {
    } */
     const response = new BaseResponse<object>();
     try {
-        response.data = await InterestAccess.getAllInterests(["_id", "url", "title"]);
+        response.data = await InterestAccess.getAllInterests(["_id", "url", "title", "icon"]);
 
     } catch (err: any) {
         response.setErrorMessage(err.message);

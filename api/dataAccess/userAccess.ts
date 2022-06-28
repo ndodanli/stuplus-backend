@@ -110,6 +110,7 @@ export class UserAccess {
         const createdUser = await UserEntity.create({
             ...payload,
             username: username,
+            avatarKey: username,
             role: Role.User
         });
 
