@@ -1,7 +1,25 @@
 /**
  * Created by PanJiaChen on 16/11/18.
  */
-
+function padLeft(base, chr) {
+  var len = (String(base || 10).length - String(this).length) + 1
+  return len > 0 ? new Array(len).join(chr || '0') + this : this
+}
+export function formatDate(d) {
+  // check if object is not date
+  if (typeof d !== 'object') {
+    d = new Date(d)
+  }
+  return [padLeft(d.getMonth() + 1),
+    padLeft(d.getDate()),
+    d.getFullYear()].join('/') + ' ' +
+    [padLeft(d.getHours()),
+      padLeft(d.getMinutes()),
+      padLeft(d.getSeconds())].join(':')
+}
+export function getOrderNo(page, index) {
+  return page * index
+}
 /**
  * Parse the time to string
  * @param {(Object|string|number)} time
@@ -45,7 +63,7 @@ export function parseTime(time, cFormat) {
   const time_str = format.replace(/{([ymdhisa])+}/g, (result, key) => {
     const value = formatObj[key]
     // Note: getDay() returns 0 on Sunday
-    if (key === 'a') { return ['日', '一', '二', '三', '四', '五', '六'][value ] }
+    if (key === 'a') { return ['日', '一', '二', '三', '四', '五', '六'][value] }
     return value.toString().padStart(2, '0')
   })
   return time_str

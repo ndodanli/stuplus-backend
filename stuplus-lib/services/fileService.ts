@@ -4,6 +4,7 @@ import multer from "multer"
 import multerS3 from "multer-s3"
 import path from "path";
 import { getMessage } from "../localization/responseMessages";
+import { CustomRequest } from "../utils/base/baseOrganizers";
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 AWS.config.update({
@@ -15,7 +16,7 @@ const BUCKET_NAME = process.env.BUCKET_NAME_S3 || config.S3.BUCKET_NAME_S3
 var s3 = new AWS.S3();
 
 export const uploadSingleFileS3 = {
-  single: function (fileName: string, allowedExtensions: string[], filePath: string, fileSizeLimit: number = 5242880) {
+  single: function (fileName: string, allowedExtensions: string[], filePath?: string | null, fileSizeLimit: number = 5242880) {
     return multer({
       storage: multerS3({
         s3: s3,
@@ -23,18 +24,30 @@ export const uploadSingleFileS3 = {
         metadata: function (req, file, cb) {
           cb(null, { fieldName: file.fieldname });
         },
-        key: function (req, file, cb) {
+        key: function (req: CustomRequest<object>, file, cb) {
           var newFileName = Date.now().toString() + "-" + file.originalname;
-          var fullPath = filePath + newFileName;
+          let fullPath;
+          if (filePath)
+            fullPath = filePath;
+          else if (req.query.uploadPath)
+            fullPath = req.query.uploadPath;
+          else {
+            cb({ message: "No upload path founded." }, file.fieldname)
+            return;
+          }
+
+          fullPath += newFileName;
           cb(null, fullPath.substring(0, 150))
         }
       }),
       fileFilter: function (req: any, file, callback) {
         var ext = path.extname(file.originalname);
-        if (!allowedExtensions.includes(ext.toLowerCase())) {
-          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileExtError", req.selectedLangs(), [ext]) })
-          callback(null, false)
-          return;
+        if (allowedExtensions && allowedExtensions.length > 0) {
+          if (!allowedExtensions.includes(ext.toLowerCase())) {
+            req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileExtError", req.selectedLangs(), [ext]) })
+            callback(null, false)
+            return;
+          }
         }
 
         if (file.originalname.length > 50) {

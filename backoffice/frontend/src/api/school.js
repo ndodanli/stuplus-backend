@@ -1,8 +1,9 @@
 import request from '@/utils/request'
 
 export function fetchList(query) {
+  console.log
   return request({
-    url: '/vue-element-admin/article/list',
+    url: '/school/list',
     method: 'get',
     params: query
   })
@@ -32,9 +33,9 @@ export function createArticle(data) {
   })
 }
 
-export function updateArticle(data) {
+export function addUpdateSchool(data) {
   return request({
-    url: '/vue-element-admin/article/update',
+    url: '/school/addUpdateSchool',
     method: 'post',
     data
   })

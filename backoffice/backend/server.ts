@@ -7,8 +7,11 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import loginRoute from "./routes/loginRoute";
 import accountRoute from "./routes/accountRoute";
+import schoolRoute from "./routes/schoolRoute";
+import generalRoute from "./routes/generalRoute";
 import path from "path";
 import { config } from "./config/config";
+import customExtensions from "../../stuplus-lib/extensions/extensions";
 
 dotenv.config({path:".env"});
 
@@ -31,6 +34,7 @@ app.use(
 );
 
 app.use(cookieParser());
+app.use(customExtensions())
 
 app.use(function (error: any, req: any, res: any, next: any) {
     /* #swagger.security = [{
@@ -42,6 +46,8 @@ app.get("/", async (req: Request, res: Response) => {
 });
 app.use("/login", loginRoute);
 app.use("/account", accountRoute);
+app.use("/school", schoolRoute);
+app.use("/general", generalRoute);
 
 const httpServer = app.listen((process.env.PORT || config.PORT), () => {
     logger.info("Backoffice Server started at http://localhost:" + (process.env.PORT || config.PORT));
