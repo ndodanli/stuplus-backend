@@ -1,5 +1,5 @@
 <template>
-  <div :class="{'has-logo':showLogo}">
+  <div :class="{ 'has-logo': showLogo }">
     <logo v-if="showLogo" :collapse="isCollapse" />
     <el-scrollbar wrap-class="scrollbar-wrapper">
       <el-menu
@@ -31,6 +31,7 @@ export default {
       'permission_routes',
       'sidebar'
     ]),
+
     activeMenu() {
       const route = this.$route
       const { meta, path } = route
