@@ -1,8 +1,13 @@
 <template>
   <div class="app-container">
     <div class="filter-container d-flex" style="gap:5px;">
-      <el-input v-model="listQuery.search" placeholder="Title" style="width: 200px" class="filter-item"
-        @keyup.enter.native="handleFilter" />
+      <el-input
+        v-model="listQuery.search"
+        placeholder="Title"
+        style="width: 200px"
+        class="filter-item"
+        @keyup.enter.native="handleFilter"
+      />
       <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleFilter">
         <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
       </el-select>
@@ -18,12 +23,20 @@
       </el-button> -->
     </div>
 
-    <el-table :key="tableKey" v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%"
-      @sort-change="sortChange">
+    <el-table
+      :key="tableKey"
+      v-loading="listLoading"
+      :data="list"
+      border
+      fit
+      highlight-current-row
+      style="width: 100%"
+      @sort-change="sortChange"
+    >
       <el-table-column label="Order No" width="150px" align="center">
         <template slot-scope="scope">
           <span>{{
-              (listQuery.page - 1) * listQuery.pageSize + scope.$index + 1
+            (listQuery.page - 1) * listQuery.pageSize + scope.$index + 1
           }}</span>
         </template>
       </el-table-column>
@@ -55,12 +68,22 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total > 0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.pageSize"
-      @pagination="getList" />
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      :page.sync="listQuery.page"
+      :limit.sync="listQuery.pageSize"
+      @pagination="getList"
+    />
 
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left"
-        style="width: 400px; margin-left: 50px">
+      <el-form
+        ref="dataForm"
+        :rules="rules"
+        :model="temp"
+        label-position="left"
+        style="width: 400px; margin-left: 50px"
+      >
         <!-- <el-form-item label="Type" prop="type">
           <el-select v-model="temp.type" class="filter-item" placeholder="Please select">
             <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.display_name"
@@ -158,7 +181,7 @@ export default {
       temp: {
         _id: null,
         title: null,
-        icon: null,
+        icon: null
       },
       dialogFormVisible: false,
       dialogStatus: '',
@@ -174,7 +197,7 @@ export default {
         ],
         icon: [
           { required: true, message: 'Icon is required', trigger: 'blur' }
-        ],
+        ]
       },
       downloadLoading: false
     }
@@ -359,7 +382,7 @@ export default {
         })
       )
     },
-    getSortClass: function (key) {
+    getSortClass: function(key) {
       const sort = this.listQuery.sort
       return sort === `+${key}` ? 'ascending' : 'descending'
     }

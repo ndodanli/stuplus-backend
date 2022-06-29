@@ -22,12 +22,12 @@ import './permission' // permission control
 import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
-import VueSweetalert2 from 'vue-sweetalert2';
+import VueSweetalert2 from 'vue-sweetalert2'
 
 // If you don't need the styles, do not connect
-import 'sweetalert2/dist/sweetalert2.min.css';
+import 'sweetalert2/dist/sweetalert2.min.css'
 
-Vue.use(VueSweetalert2);
+Vue.use(VueSweetalert2)
 Vue.use(Element, {
   size: Cookies.get('size') || 'medium', // set element-ui default size
   locale: enLang // 如果使用中文，无需设置，请删除
