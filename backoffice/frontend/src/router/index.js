@@ -91,36 +91,36 @@ export const constantRoutes = [
       {
         path: 'index',
         component: () => import('@/views/schools/index'),
-        name: 'Okullar',
-        meta: { title: 'Okullar', icon: 'school', affix: true }
+        name: 'Schools',
+        meta: { title: 'Schools', icon: 'el-icon-school', affix: true }
       }
     ]
   },
   {
-    path: '/documentation',
+    path: '/announcements',
     component: Layout,
     children: [
       {
         path: 'index',
-        component: () => import('@/views/documentation/index'),
-        name: 'Documentation',
-        meta: { title: 'Documentation', icon: 'documentation', affix: true }
+        component: () => import('@/views/announcement/index'),
+        name: 'Announcements',
+        meta: { title: 'Schools', icon: 'el-icon-school', affix: true }
       }
     ]
   },
   {
-    path: '/guide',
+    path: '/interests',
     component: Layout,
-    redirect: '/guide/index',
     children: [
       {
         path: 'index',
-        component: () => import('@/views/guide/index'),
-        name: 'Guide',
-        meta: { title: 'Guide', icon: 'guide', noCache: true }
+        component: () => import('@/views/interests/index'),
+        name: 'Interests',
+        meta: { title: 'Interest', icon: 'el-icon-football', affix: true }
       }
     ]
   },
+
   {
     path: '/profile',
     component: Layout,
@@ -142,48 +142,6 @@ export const constantRoutes = [
  * the routes that need to be dynamically loaded based on user roles
  */
 export const asyncRoutes = [
-  {
-    path: '/permission',
-    component: Layout,
-    redirect: '/permission/page',
-    alwaysShow: true, // will always show the root menu
-    name: 'Permission',
-    meta: {
-      title: 'Permission',
-      icon: 'lock',
-      roles: [Role.Admin] // you can set roles in root nav
-    },
-    children: [
-      {
-        path: 'page',
-        component: () => import('@/views/permission/page'),
-        name: 'PagePermission',
-        meta: {
-          title: 'Page Permission',
-          roles: [Role.Admin] // or you can only set roles in sub nav
-        }
-      },
-      {
-        path: 'directive',
-        component: () => import('@/views/permission/directive'),
-        name: 'DirectivePermission',
-        meta: {
-          title: 'Directive Permission'
-          // if do not set roles, means: this page does not require permission
-        }
-      },
-      {
-        path: 'role',
-        component: () => import('@/views/permission/role'),
-        name: 'RolePermission',
-        meta: {
-          title: 'Role Permission',
-          roles: [Role.Admin]
-        }
-      }
-    ]
-  },
-
   {
     path: '/icon',
     component: Layout,
@@ -231,19 +189,6 @@ export const asyncRoutes = [
         component: () => import('@/views/example/list'),
         name: 'ArticleList',
         meta: { title: 'Article List', icon: 'list' }
-      }
-    ]
-  },
-
-  {
-    path: '/tab',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/tab/index'),
-        name: 'Tab',
-        meta: { title: 'Tab', icon: 'tab' }
       }
     ]
   },

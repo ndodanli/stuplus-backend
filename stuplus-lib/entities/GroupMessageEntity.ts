@@ -40,6 +40,7 @@ GroupMessageSchema.methods.minify = async function (
 ) {
   const response: GroupMessage & { _id: string } = {
     _id: this._id,
+    recordStatus: this.recordStatus,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     from: this.from,

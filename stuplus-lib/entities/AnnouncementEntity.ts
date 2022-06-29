@@ -61,6 +61,7 @@ AnnouncementSchema.methods.minify = async function (
 ) {
   const response: Announcement & { _id: string } = {
     _id: this._id,
+    recordStatus: this.recordStatus,
     ownerId: this.ownerId,
     coverImageUrl: this.coverImageUrl,
     title: this.title,

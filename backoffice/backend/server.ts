@@ -8,6 +8,7 @@ import bodyParser from "body-parser";
 import loginRoute from "./routes/loginRoute";
 import accountRoute from "./routes/accountRoute";
 import schoolRoute from "./routes/schoolRoute";
+import interestRoute from "./routes/interestRoute";
 import generalRoute from "./routes/generalRoute";
 import path from "path";
 import { config } from "./config/config";
@@ -47,6 +48,7 @@ app.get("/", async (req: Request, res: Response) => {
 app.use("/login", loginRoute);
 app.use("/account", accountRoute);
 app.use("/school", schoolRoute);
+app.use("/interest", interestRoute);
 app.use("/general", generalRoute);
 
 const httpServer = app.listen((process.env.PORT || config.PORT), () => {

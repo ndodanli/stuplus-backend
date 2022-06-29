@@ -3,7 +3,6 @@ import { Gender, RecordStatus } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 
 export interface User extends BaseEntity {
-  recordStatus: RecordStatus;
   email: string;
   password: string;
   username: string;
@@ -12,9 +11,9 @@ export interface User extends BaseEntity {
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  schoolId: string;
-  facultyId: string;
-  departmentId: string;
+  schoolId: string | null;
+  facultyId: string | null;
+  departmentId: string | null;
   isAccEmailConfirmed: Boolean;
   isSchoolEmailConfirmed: Boolean;
   accEmailConfirmation: EmailConfirmation;
@@ -98,13 +97,13 @@ export const UserSchema: Schema = new Schema({
     type: new Schema({
       code: { type: Number, required: false, default: null },
       expiresAt: { type: Date, required: false, default: null },
-    }, { _id : false }), required: false, default: { code: null, expiresAt: null }
+    }, { _id: false }), required: false, default: { code: null, expiresAt: null }
   },
   schoolEmailConfirmation: {
     type: new Schema({
       code: { type: Number, required: false, default: null },
       expiresAt: { type: Date, required: false, default: null },
-    }, { _id : false }), required: false, default: { code: null, expiresAt: null }
+    }, { _id: false }), required: false, default: { code: null, expiresAt: null }
   },
   fpEmailConfirmation: {
     type: new Schema({

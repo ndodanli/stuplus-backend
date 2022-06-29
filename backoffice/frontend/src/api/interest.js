@@ -3,21 +3,21 @@ import request from '@/utils/request'
 export function fetchList(query) {
   console.log
   return request({
-    url: '/school/list',
+    url: '/interest/list',
     method: 'get',
     params: query
   })
 }
-export function addUpdateSchool(data) {
+export function addUpdateInterest(data) {
   return request({
-    url: '/school/addUpdateSchool',
+    url: '/interest/addUpdateInterest',
     method: 'post',
     data
   })
 }
-export function deleteSchool(data) {
+export function deleteInterest(data) {
   return request({
-    url: '/school/deleteSchool',
+    url: '/interest/deleteInterest',
     method: 'delete',
     data
   })

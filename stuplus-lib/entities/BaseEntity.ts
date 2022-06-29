@@ -18,6 +18,7 @@ import { SchoolDocument, SchoolSchema } from "./SchoolEntity";
 import { UserDocument, UserSchema } from "./UserEntity";
 
 export default interface BaseEntity {
+  recordStatus: RecordStatus;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -130,6 +131,10 @@ function registerHooks(): void {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
+  AnnouncementCommentLikeSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
   DepartmentSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
@@ -139,6 +144,10 @@ function registerHooks(): void {
     next()
   })
   DepartmentSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  DepartmentSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
@@ -154,6 +163,10 @@ function registerHooks(): void {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
+  FacultySchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
   InterestSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
@@ -163,6 +176,10 @@ function registerHooks(): void {
     next()
   })
   InterestSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  InterestSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
@@ -178,6 +195,10 @@ function registerHooks(): void {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
+  AnnouncementSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
   AnnouncementLikeSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
@@ -187,6 +208,10 @@ function registerHooks(): void {
     next()
   })
   AnnouncementLikeSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  AnnouncementLikeSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
@@ -202,6 +227,10 @@ function registerHooks(): void {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
+  AnnouncementCommentSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
   ChatSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
@@ -211,6 +240,10 @@ function registerHooks(): void {
     next()
   })
   ChatSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  ChatSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
@@ -226,6 +259,10 @@ function registerHooks(): void {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
+  GroupChatUserSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
   GroupMessageForwardSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
@@ -235,6 +272,10 @@ function registerHooks(): void {
     next()
   })
   GroupMessageForwardSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  GroupMessageForwardSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
@@ -250,6 +291,10 @@ function registerHooks(): void {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
+  GroupMessageSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
   GroupMessageReadSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
@@ -259,6 +304,10 @@ function registerHooks(): void {
     next()
   })
   GroupMessageReadSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  GroupMessageReadSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
@@ -274,6 +323,10 @@ function registerHooks(): void {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
+  MessageSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
   UserSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
@@ -283,6 +336,10 @@ function registerHooks(): void {
     next()
   })
   UserSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  UserSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
@@ -298,6 +355,10 @@ function registerHooks(): void {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
+  GroupChatSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
   SchoolSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
@@ -307,6 +368,10 @@ function registerHooks(): void {
     next()
   })
   SchoolSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  SchoolSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });

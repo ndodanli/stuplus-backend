@@ -34,6 +34,7 @@ SchoolSchema.methods.minify = async function (
 
   const response: School & { _id: string } = {
     _id: this._id,
+    recordStatus: this.recordStatus,
     emailFormat: this.emailFormat,
     title: this.title,
     coverImageUrl: this.coverImageUrl,

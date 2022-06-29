@@ -40,6 +40,7 @@ MessageSchema.methods.minify = async function (
 ) {
   const response: Message & { _id: string } = {
     _id: this._id,
+    recordStatus: this.recordStatus,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     from: this.from,

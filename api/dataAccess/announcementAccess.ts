@@ -61,13 +61,14 @@ export class AnnouncementAccess {
         if (announcements.length) {
             let announcementIds = announcements.map(x => x._id);
             let announcementUserIds = [...new Set(announcements.map(x => x.ownerId))];
-            let announcementUsers = await UserEntity.find({ _id: { $in: announcementUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1 }, { lean: true });
+            let announcementUsers = await UserEntity.find({ _id: { $in: announcementUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
             let likedDislikedAnnouncements = await AnnouncementLikeEntity.find({ announcementId: { $in: announcementIds }, ownerId: currentUserId }, { "_id": 0, "announcementId": 1, "type": 1 }, { lean: true });
             let schools = await RedisService.acquire<SchoolDocument[]>(RedisKeyType.Schools + "schools", 60 * 60 * 2, async () => await SchoolEntity.find({}, ["_id", "title"], { lean: true }));
             for (let i = 0; i < announcements.length; i++) {
                 const announcement = announcements[i];
                 //TODO:IMPROVEMENT: scan edilebilir
                 const redisAnnouncementLikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementLike + announcement._id.toString(), 0, -1);
+                const redisAnnouncementDislikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementDislike + announcement._id.toString(), 0, -1);
                 announcement.likeCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementLikeCount + announcement._id.toString(), 10, async () => {
                     let likeCount = 0;
                     likeCount += redisAnnouncementLikes.length;
@@ -89,15 +90,19 @@ export class AnnouncementAccess {
                         }
                     });
 
-                const likeDislike = likedDislikedAnnouncements.find(x => x.announcementId.toString() == announcement._id.toString());
-                if (!likeDislike) {
-                    announcement.likeType = LikeType.None;
-                } else {
-                    let liked = likeDislike.type === LikeType.Like ? true : false;
-                    if (!liked) {
-                        liked = redisAnnouncementLikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+                let likeType;
+                likeType = redisAnnouncementLikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+                if (!likeType) {
+                    likeType = redisAnnouncementDislikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+                    if (!likeType) {
+                        likeType = likedDislikedAnnouncements.find(y => y.announcementId.toString() === announcement._id.toString());
+                        if (likeType) announcement.likeType = likeType.type;
+                        else announcement.likeType = LikeType.None;
+                    } else {
+                        announcement.likeType = LikeType.Dislike;
                     }
-                    announcement.likeType = liked ? LikeType.Like : LikeType.Dislike;
+                } else {
+                    announcement.likeType = LikeType.Like;
                 }
             }
         }
@@ -148,11 +153,12 @@ export class AnnouncementAccess {
             const commentIds = comments.map(x => x._id);
             const likedDislikedComments = await AnnouncementCommentLikeEntity.find({ commentId: { $in: commentIds }, ownerId: currentUserId }, { "_id": 0, "commentId": 1, "type": 1 }).lean(true);
             let commentUserIds = [...new Set(comments.map(x => x.ownerId))];
-            let commentUsers = await UserEntity.find({ _id: { $in: commentUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1 }, { lean: true });
+            let commentUsers = await UserEntity.find({ _id: { $in: commentUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
             let schools = await RedisService.acquire<SchoolDocument[]>(RedisKeyType.Schools + "schools", 60 * 60 * 24, async () => await SchoolEntity.find({}, ["_id", "title"], { lean: true }));
             for (let i = 0; i < comments.length; i++) {
                 const comment = comments[i];
                 const redisCommentLikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementCommentLike + comment._id.toString(), 0, -1);
+                const redisCommentDislikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementCommentDislike + comment._id.toString(), 0, -1);
                 comment.owner = commentUsers.find(y => y._id.toString() === comment.ownerId);
                 comment.ownerSchool = schools.find(y => y._id.toString() === comment.owner?.schoolId);
                 comment.likeCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementCommentLikeCount + comment._id, 20, async () => {
@@ -161,15 +167,19 @@ export class AnnouncementAccess {
                     likeCount += await AnnouncementCommentLikeEntity.countDocuments({ announcementId: payload.announcementId, commentId: comment._id, type: LikeType.Like });
                     return likeCount;
                 });
-                const likeDislike = likedDislikedComments.find(x => x._id.toString() == comment._id.toString());
-                if (!likeDislike) {
-                    comment.likeType = LikeType.None;
-                } else {
-                    let liked = likeDislike.type === LikeType.Like ? true : false;
-                    if (!liked) {
-                        liked = redisCommentLikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+                let likeType;
+                likeType = redisCommentLikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+                if (!likeType) {
+                    likeType = redisCommentDislikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+                    if (!likeType) {
+                        likeType = likedDislikedComments.find(y => y.announcementId.toString() === comment._id.toString());
+                        if (likeType) comment.likeType = likeType.type;
+                        else comment.likeType = LikeType.None;
+                    } else {
+                        comment.likeType = LikeType.Dislike;
                     }
-                    comment.likeType = liked ? LikeType.Like : LikeType.Dislike;
+                } else {
+                    comment.likeType = LikeType.Like;
                 }
             }
         }
@@ -251,25 +261,30 @@ export class AnnouncementAccess {
         const comments = await AnnouncementCommentEntity.find({ announcementId: announcement._id }, { ownerId: 1, comment: 1 }, { lean: true, sort: { score: -1 }, limit: 20 });
         const requiredUserIds = comments.map(x => x.ownerId);
         requiredUserIds.push(announcement.ownerId);
-        const requiredUsers = await UserEntity.find({ _id: { $in: requiredUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1 }, { lean: true });
+        const requiredUsers = await UserEntity.find({ _id: { $in: requiredUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
 
         announcement.owner = requiredUsers.find(x => x._id.toString() === announcement.ownerId);
         const redisAnnouncementLikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementLike + announcement._id.toString(), 0, -1);
+        const redisAnnouncementDislikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementDislike + announcement._id.toString(), 0, -1);
         announcement.likeCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementLikeCount + announcement._id.toString(), 30, async () => {
             let likeCount = 0;
             likeCount += redisAnnouncementLikes.length;
             likeCount += await AnnouncementLikeEntity.countDocuments({ announcementId: announcement._id, type: LikeType.Like });
             return likeCount;
         });
-        const likeDislike = await AnnouncementLikeEntity.findOne({ announcementId: announcement._id, ownerId: currentUserId }, { "_id": 0, "type": 1 });
-        if (!likeDislike) {
-            announcement.likeType = LikeType.None;
-        } else {
-            let liked = likeDislike.type === LikeType.Like ? true : false;
-            if (!liked) {
-                liked = redisAnnouncementLikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+        let likeType;
+        likeType = redisAnnouncementLikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+        if (!likeType) {
+            likeType = redisAnnouncementDislikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+            if (!likeType) {
+                likeType = await AnnouncementLikeEntity.findOne({ announcementId: announcement._id, ownerId: currentUserId }, { "_id": 0, "type": 1 });
+                if (likeType) announcement.likeType = likeType.type;
+                else announcement.likeType = LikeType.None;
+            } else {
+                announcement.likeType = LikeType.Dislike;
             }
-            announcement.likeType = liked ? LikeType.Like : LikeType.Dislike;
+        } else {
+            announcement.likeType = LikeType.Like;
         }
 
         let schools = await RedisService.acquire<SchoolDocument[]>(RedisKeyType.Schools, 60 * 60 * 2, async () => await SchoolEntity.find({}, {}, { lean: true }));

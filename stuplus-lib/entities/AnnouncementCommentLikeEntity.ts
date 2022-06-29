@@ -36,6 +36,7 @@ AnnouncementCommentLikeSchema.methods.minify = async function (
 ) {
   const response: AnnouncementCommentLike & { _id: string } = {
     _id: this._id,
+    recordStatus: this.recordStatus,
     ownerId: this.ownerId,
     commentId: this.commentId,
     announcementId: this.announcementId,

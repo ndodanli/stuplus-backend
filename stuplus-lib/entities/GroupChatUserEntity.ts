@@ -30,6 +30,7 @@ GroupChatUserSchema.methods.minify = async function (
 ) {
   const response: GroupChatUser & { _id: string } = {
     _id: this._id,
+    recordStatus: this.recordStatus,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     userId: this.userId,

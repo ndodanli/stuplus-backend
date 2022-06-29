@@ -33,6 +33,7 @@ DepartmentSchema.methods.minify = async function (
 ) {
   const response: Department & { _id: string } = {
     _id: this._id,
+    recordStatus: this.recordStatus,
     facultyId: this.facultyId,
     grade: this.grade,
     title: this.title,

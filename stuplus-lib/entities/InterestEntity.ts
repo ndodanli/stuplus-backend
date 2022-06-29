@@ -30,6 +30,7 @@ InterestSchema.methods.minify = async function (
 ) {
   const response: Interest & { _id: string } = {
     _id: this._id,
+    recordStatus: this.recordStatus,
     icon: this.icon,
     title: this.title,
     createdAt: this.createdAt,

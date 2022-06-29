@@ -1,10 +1,10 @@
 import { Router } from "express"
-import { SchoolEntity, UserEntity } from "../../../stuplus-lib/entities/BaseEntity";
+import { InterestEntity, UserEntity } from "../../../stuplus-lib/entities/BaseEntity";
 import NotValidError from "../../../stuplus-lib/errors/NotValidError";
 import { CustomRequest } from "../../../stuplus-lib/utils/base/baseOrganizers";
 import BaseResponse from "../../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../../stuplus-lib/utils/base/ResponseObjectResults";
-import { AddUpdateSchoolDTO, SchoolListDTO } from "../dtos/school";
+import { AddUpdateInterestDTO, InterestListDTO } from "../dtos/interest";
 import { authorize } from "../middlewares/auth";
 import { RecordStatus, Role } from "../../../stuplus-lib/enums/enums";
 import { SortOrder } from "mongoose";
@@ -12,7 +12,7 @@ import RedisService from "../../../stuplus-lib/services/redisService";
 
 const router = Router();
 
-router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<SchoolListDTO>, res: any) => {
+router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<InterestListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     let limit = parseInt(req.query.pageSize as string);
@@ -28,16 +28,15 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<SchoolLis
       search = search.toLowerCase();
     }
 
-    let temp = SchoolEntity.find({}).skip(skip).limit(limit).sort(sortFilter);
+    let temp = InterestEntity.find({}).skip(skip).limit(limit).sort(sortFilter);
     if (search) {
       temp.or([
         { title: { $regex: search, $options: "i" } },
-        { emailFormat: { $regex: search, $options: "i" } }
       ]);
     }
-    let schools = await temp;
-    const total = await SchoolEntity.countDocuments();
-    response.data = { items: schools, total: total };
+    let interests = await temp;
+    const total = await InterestEntity.countDocuments();
+    response.data = { items: interests, total: total };
   } catch (err: any) {
     response.setErrorMessage(err.message)
 
@@ -48,24 +47,23 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<SchoolLis
   return Ok(res, response)
 });
 
-router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomRequest<AddUpdateSchoolDTO>, res: any) => {
+router.post("/addUpdateInterest", authorize([Role.Admin]), async (req: CustomRequest<AddUpdateInterestDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    const school = new AddUpdateSchoolDTO(req.body);
-    if (school._id) {
-      const schoolToUpdate = await SchoolEntity.findById(school._id);
-      if (!schoolToUpdate) {
-        response.setErrorMessage("School not found");
-        throw new NotValidError("School not found", 404);
+    const Interest = new AddUpdateInterestDTO(req.body);
+    if (Interest._id) {
+      const interestToUpdate = await InterestEntity.findById(Interest._id);
+      if (!interestToUpdate) {
+        response.setErrorMessage("Interest not found");
+        throw new NotValidError("Interest not found", 404);
       }
-      schoolToUpdate.title = school.title;
-      schoolToUpdate.emailFormat = school.emailFormat;
-      schoolToUpdate.coverImageUrl = school.coverImageUrl;
-      await schoolToUpdate.save();
+      interestToUpdate.title = Interest.title;
+      interestToUpdate.icon = Interest.icon;
+      await interestToUpdate.save();
     }
     else {
-      const newSchool = new SchoolEntity(school);
-      await newSchool.save();
+      const newInterest = new InterestEntity(Interest);
+      await newInterest.save();
     }
   } catch (err: any) {
 
@@ -77,39 +75,37 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
   return Ok(res, response)
 });
 
-router.delete("/deleteSchool", authorize([Role.Admin]), async (req: CustomRequest<SchoolListDTO>, res: any) => {
+router.delete("/deleteInterest", authorize([Role.Admin]), async (req: CustomRequest<InterestListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    const school = await SchoolEntity.findOne({ _id: req.body._id });
-    if (!school) {
-      throw new NotValidError("School not found", 404);
+    const interest = await InterestEntity.findOne({ _id: req.body._id });
+    if (!interest) {
+      throw new NotValidError("Interest not found", 404);
     }
-    school.recordStatus = RecordStatus.Deleted;
+    interest.recordStatus = RecordStatus.Deleted;
 
     const bulkUserUpdateOps = [];
-    const usersWhoRelatedToSchool = await UserEntity.find({})
+    const usersWhoRelatedTointerest = await UserEntity.find({})
       .or([
-        { schoolId: school._id },
-        { relatedSchoolIds: { $in: [school._id] } }
+        { interestId: interest._id },
+        { relatedinterestIds: { $in: [interest._id] } }
       ]);
-    for (let user of usersWhoRelatedToSchool) {
-      user.schoolId = null;
-      user.relatedSchoolIds = user.relatedSchoolIds.filter(id => id != school._id.toString());
+    for (let user of usersWhoRelatedTointerest) {
+      user.interestIds = user.interestIds.filter(id => id != interest._id.toString());
       bulkUserUpdateOps.push({
         updateOne: {
           filter: {
             _id: user._id.toString()
           },
           update: {
-            schoolId: user.schoolId,
-            relatedSchoolIds: user.relatedSchoolIds
+            interestIds: user.interestIds
           }
         }
-      })
+      });
     }
     await UserEntity.bulkWrite(bulkUserUpdateOps);
-    await school.save();
-    for (let user of usersWhoRelatedToSchool) {
+    await interest.save();
+    for (let user of usersWhoRelatedTointerest) {
       RedisService.updateUser(user)
     }
   } catch (err: any) {

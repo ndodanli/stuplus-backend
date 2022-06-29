@@ -1,5 +1,8 @@
 import Vue from 'vue'
-
+import '@/bootstrap/bootstrap.min.css'
+import '@/bootstrap/jquery.js'
+import '@/bootstrap/popper.js'
+import '@/bootstrap/bootstrap.min.js'
 import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
@@ -19,20 +22,12 @@ import './permission' // permission control
 import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
+import VueSweetalert2 from 'vue-sweetalert2';
 
-/**
- * If you don't want to use mock-server
- * you want to use MockJs for mock api
- * you can execute: mockXHR()
- *
- * Currently MockJs will be used in the production environment,
- * please remove it before going online ! ! !
- */
-if (process.env.NODE_ENV === 'production') {
-  const { mockXHR } = require('../mock')
-  mockXHR()
-}
+// If you don't need the styles, do not connect
+import 'sweetalert2/dist/sweetalert2.min.css';
 
+Vue.use(VueSweetalert2);
 Vue.use(Element, {
   size: Cookies.get('size') || 'medium', // set element-ui default size
   locale: enLang // 如果使用中文，无需设置，请删除

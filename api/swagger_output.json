@@ -773,7 +773,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "profilePhoto": {
+                  "coverImage": {
                     "type": "string",
                     "format": "binary"
                   },

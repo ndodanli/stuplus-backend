@@ -22,7 +22,7 @@ router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadSingleFi
                      schema: {
                          type: "object",
                          properties: {
-                             profilePhoto: {
+                             coverImage: {
                                  type: "string",
                                  format: "binary"
                              },

@@ -31,6 +31,7 @@ FacultySchema.methods.minify = async function (
 ) {
   const response: Faculty & { _id: string } = {
     _id: this._id,
+    recordStatus: this.recordStatus,
     schoolId: this.schoolId,
     title: this.title,
     createdAt: this.createdAt,

@@ -27,19 +27,14 @@
           }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Cover Image" width="150px" align="center">
-        <template slot-scope="{ row }">
-          <span><img :src="row.coverImageUrl" width="100px"></span>
-        </template>
-      </el-table-column>
       <el-table-column label="Title" prop="id" align="center">
         <template slot-scope="{ row }">
           <span>{{ row.title }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Email Format" prop="id" align="center">
+      <el-table-column label="Icon" prop="id" align="center">
         <template slot-scope="{ row }">
-          <span>{{ row.emailFormat }}</span>
+          <span><img :src="row.icon" width="100px"></span>
         </template>
       </el-table-column>
       <el-table-column label="Created/Updated At" width="250px" align="center">
@@ -76,16 +71,8 @@
         <el-form-item label="Title" prop="title">
           <el-input v-model="temp.title" />
         </el-form-item>
-        <el-form-item label="Email Format" prop="emailFormat">
-          <el-input v-model="temp.emailFormat" />
-        </el-form-item>
-        <el-form-item label="Cover Image" prop="coverImageUrl">
-          <el-upload name="file" class="avatar-uploader" :action="uploadFilePath" :show-file-list="false"
-            :headers="{ Authorization: 'Bearer ' + token }" :on-success="handleCoverImageUploadSuccess"
-            :before-upload="handleCoverImageUploadBefore">
-            <img v-if="temp.coverImageUrl" :src="temp.coverImageUrl" width="150px" height="150px">
-            <i v-else class="el-icon-plus avatar-uploader-icon" />
-          </el-upload>
+        <el-form-item label="Icon" prop="icon">
+          <el-input v-model="temp.icon" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -109,7 +96,7 @@
 </template>
 
 <script>
-import { fetchList, fetchPv, addUpdateSchool, deleteSchool } from '@/api/school'
+import { fetchList, fetchPv, addUpdateInterest, deleteInterest } from '@/api/interest'
 import waves from '@/directive/waves' // waves directive
 import { formatDate, parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -171,8 +158,7 @@ export default {
       temp: {
         _id: null,
         title: null,
-        emailFormat: null,
-        coverImageUrl: null
+        icon: null,
       },
       dialogFormVisible: false,
       dialogStatus: '',
@@ -186,12 +172,9 @@ export default {
         title: [
           { required: true, message: 'Title is required', trigger: 'blur' }
         ],
-        emailFormat: [
-          { required: true, message: 'Email format is required', trigger: 'blur' }
+        icon: [
+          { required: true, message: 'Icon is required', trigger: 'blur' }
         ],
-        coverImageUrl: [
-          { required: true, message: 'Cover image is required', trigger: 'blur' }
-        ]
       },
       downloadLoading: false
     }
@@ -259,7 +242,7 @@ export default {
       this.temp = {
         _id: undefined,
         title: null,
-        emailFormat: null,
+        icon: null,
         coverImageUrl: null
       }
     },
@@ -274,7 +257,7 @@ export default {
     createData() {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
-          addUpdateSchool(this.temp).then(() => {
+          addUpdateInterest(this.temp).then(() => {
             this.temp.createdAt = new Date().toISOString()
             this.temp.updatedAt = new Date().toISOString()
             this.list.unshift(this.temp)
@@ -302,7 +285,7 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.temp)
           console.log('tempData', tempData)
-          addUpdateSchool(tempData).then(() => {
+          addUpdateInterest(tempData).then(() => {
             const index = this.list.findIndex((v) => v._id === this.temp._id)
             this.list.splice(index, 1, this.temp)
             this.dialogFormVisible = false
@@ -327,7 +310,7 @@ export default {
         reverseButtons: true
       }).then((result) => {
         if (result.isConfirmed) {
-          deleteSchool({ _id: row._id }).then(() => {
+          deleteInterest({ _id: row._id }).then(() => {
             this.$notify({
               title: 'Success',
               message: 'Deleted Successfully',
