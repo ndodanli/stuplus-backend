@@ -61,7 +61,7 @@ export class AnnouncementAccess {
         if (announcements.length) {
             let announcementIds = announcements.map(x => x._id);
             let announcementUserIds = [...new Set(announcements.map(x => x.ownerId))];
-            let announcementUsers = await UserEntity.find({ _id: { $in: announcementUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1 }, { lean: true });
+            let announcementUsers = await UserEntity.find({ _id: { $in: announcementUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1 }, { lean: true });
             let likedDislikedAnnouncements = await AnnouncementLikeEntity.find({ announcementId: { $in: announcementIds }, ownerId: currentUserId }, { "_id": 0, "announcementId": 1, "type": 1 }, { lean: true });
             let schools = await RedisService.acquire<SchoolDocument[]>(RedisKeyType.Schools + "schools", 60 * 60 * 2, async () => await SchoolEntity.find({}, ["_id", "title"], { lean: true }));
             for (let i = 0; i < announcements.length; i++) {
@@ -89,7 +89,7 @@ export class AnnouncementAccess {
                         }
                     });
 
-                const likeDislike = likedDislikedAnnouncements.find(x => x._id.toString() == announcement._id.toString());
+                const likeDislike = likedDislikedAnnouncements.find(x => x.announcementId.toString() == announcement._id.toString());
                 if (!likeDislike) {
                     announcement.likeType = LikeType.None;
                 } else {
@@ -251,7 +251,7 @@ export class AnnouncementAccess {
         const comments = await AnnouncementCommentEntity.find({ announcementId: announcement._id }, { ownerId: 1, comment: 1 }, { lean: true, sort: { score: -1 }, limit: 20 });
         const requiredUserIds = comments.map(x => x.ownerId);
         requiredUserIds.push(announcement.ownerId);
-        const requiredUsers = await UserEntity.find({ _id: { $in: requiredUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1 }, { lean: true });
+        const requiredUsers = await UserEntity.find({ _id: { $in: requiredUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1 }, { lean: true });
 
         announcement.owner = requiredUsers.find(x => x._id.toString() === announcement.ownerId);
         const redisAnnouncementLikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementLike + announcement._id.toString(), 0, -1);

@@ -268,7 +268,7 @@ schema: { $ref: "#/definitions/AccountSendConfirmationEmailRequest" }
   return Ok(res, response);
 });
 
-router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSingleFileS3.single("profilePhoto", [".png", ".jpg", ".jpeg", ".svg"], "public/profile_images/", 5242880), async (req: CustomRequest<object>, res: any) => {
+router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSingleFileS3.single("profilePhoto", [".png", ".jpg", ".jpeg", ".svg"], "profile_images/", 5242880), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
          #swagger.description = 'Update user's profile photo(accepts only with one of ".png", ".jpg", ".jpeg", ".svg" extensions and 5MB size limit).' */
   /*	#swagger.requestBody = {

@@ -26,11 +26,11 @@ export const uploadSingleFileS3 = {
         },
         key: function (req: CustomRequest<object>, file, cb) {
           var newFileName = Date.now().toString() + "-" + file.originalname;
-          let fullPath;
+          let fullPath = "public/";
           if (filePath)
-            fullPath = filePath;
+            fullPath += filePath;
           else if (req.query.uploadPath)
-            fullPath = req.query.uploadPath;
+            fullPath += req.query.uploadPath + "/";
           else {
             cb({ message: "No upload path founded." }, file.fieldname)
             return;

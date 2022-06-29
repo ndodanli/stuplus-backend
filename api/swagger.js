@@ -301,6 +301,7 @@ const doc = {
                     "_id": "62ab8a204166fd1eaebbb3fa",
                     "username": "ndodanli14",
                     "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                    "schoolId": "schoolId1",
                     "__t": "User"
                 },
                 "coverImageUrl": null,
@@ -368,7 +369,7 @@ const doc = {
                     "owner": {
                         "_id": "62ab8a204166fd1eaebbb3fa",
                         "username": "ndodanli14",
-                        "schoolId": null,
+                        "schoolId": "schoolId1",
                         "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
                         "__t": "User"
                     },
@@ -435,6 +436,7 @@ const doc = {
                         "_id": "62ab8a204166fd1eaebbb3fa",
                         "username": "ndodanli14",
                         "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                        "schoolId": "schoolId1",
                         "__t": "User"
                     },
                     "likeCount": 22,

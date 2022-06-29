@@ -12,7 +12,7 @@ import { AnnouncementAddDTO, AnnouncementCommenLikeDisliketDTO, AnnouncementComm
 import { AnnouncementAccess } from "../dataAccess/announcementAccess";
 const router = Router();
 
-router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadSingleFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "public/announcement/cover_images/", 5242880), validateAddAnnouncement, async (req: CustomRequest<AnnouncementAddDTO>, res: any) => {
+router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadSingleFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "announcement/cover_images/", 5242880), validateAddAnnouncement, async (req: CustomRequest<AnnouncementAddDTO>, res: any) => {
     /* #swagger.tags = ['Announcement']
        #swagger.description = 'Add an announcement.' */
     /*	#swagger.requestBody = {

@@ -1,9 +1,9 @@
 /**
  * Created by PanJiaChen on 16/11/18.
  */
-function padLeft(base, chr) {
+function padLeft(date, base, chr) {
   var len = (String(base || 10).length - String(this).length) + 1
-  return len > 0 ? new Array(len).join(chr || '0') + this : this
+  return len > 0 ? new Array(len).join(chr || '0') + date : date
 }
 export function formatDate(d) {
   // check if object is not date

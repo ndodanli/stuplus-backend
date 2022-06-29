@@ -1990,6 +1990,10 @@
                     "type": "string",
                     "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
                   },
+                  "schoolId": {
+                    "type": "string",
+                    "example": "schoolId1"
+                  },
                   "__t": {
                     "type": "string",
                     "example": "User"
@@ -2348,6 +2352,10 @@
                     "profilePhotoUrl": {
                       "type": "string",
                       "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                    },
+                    "schoolId": {
+                      "type": "string",
+                      "example": "schoolId1"
                     },
                     "__t": {
                       "type": "string",
