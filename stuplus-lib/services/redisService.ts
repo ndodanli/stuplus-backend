@@ -2,7 +2,7 @@ import path from 'path';
 import { createClient } from 'redis';
 import logger from '../../api/config/logger';
 import { AnnouncementEntity, DepartmentEntity, FacultyEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
-import { UserDocument } from '../entities/UserEntity';
+import { User, UserDocument } from '../entities/UserEntity';
 import { RedisKeyType } from '../enums/enums_socket';
 import NotValidError from '../errors/NotValidError';
 import { getMessage } from '../localization/responseMessages';
@@ -44,12 +44,12 @@ export default class RedisService {
         }
     }
 
-    static async acquireUser(userId: string, acceptedLanguages: Array<string> = ["tr"]): Promise<UserDocument> {
-        return await this.acquire<UserDocument>(RedisKeyType.User + userId, 60 * 120, async () => {
+    static async acquireUser(userId: string, project?: string[]): Promise<UserDocument> {
+        const redisUser = await this.acquire<UserDocument>(RedisKeyType.User + userId, 60 * 120, async () => {
 
             const user = await UserEntity.findOne({ _id: userId }, {}, { lean: true })
 
-            if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
+            if (!user) throw new NotValidError(getMessage("userNotFound", ["tr"]));
 
             const school = await SchoolEntity.findOne({ _id: user.schoolId }, { "title": 1, "_id": 0 });
             const faculty = await FacultyEntity.findOne({ _id: user.facultyId }, { "title": 1, "_id": 0 });
@@ -65,8 +65,16 @@ export default class RedisService {
                 user.departmentName = department.title;
 
             return user;
+        });
+
+        if (project && project.length > 0) {
+            for (const key in redisUser) {
+                if (!project.includes(key))
+                    delete redisUser[key];
+            }
         }
-        )
+
+        return redisUser;
     }
 
     static async updateUser(user: UserDocument): Promise<void> {

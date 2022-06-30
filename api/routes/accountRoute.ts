@@ -5,7 +5,7 @@ import { authorize } from "../middlewares/auth";
 import { UserAccess } from "../dataAccess/userAccess";
 import { Role } from "../../stuplus-lib/enums/enums";
 import { validateEmailConfirmation, validateForgotPassword, validateForgotPasswordCode, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdateProfile } from "../middlewares/validation/account/validateAccountRoute";
-import { UpdateUserInterestsDTO, UpdateUserProfileDTO } from "../dtos/UserDTOs";
+import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserFollowUserDTO } from "../dtos/UserDTOs";
 import { CustomRequest, CustomResponse } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import path from "path";
@@ -29,7 +29,35 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
     const user = await UserAccess.getUserWithFields(req.selectedLangs(), res.locals.user._id,
       ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
         "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
-        "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username"]);
+        "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about"]);
+
+    response.data = user;
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.get("/getUserProfile/:userId", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['Account']
+          #swagger.description = 'Get user's profile info.' */
+  /* #swagger.responses[200] = {
+"description": "Success",
+"schema": {
+"$ref": "#/definitions/AccountGetUserProfileResponse"
+}
+} */
+  const response = new BaseResponse<object>();
+  try {
+    const user = await UserAccess.getUserWithFields(req.selectedLangs(), res.locals.user._id,
+      ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
+        "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
+        "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about"]);
 
     response.data = user;
 
@@ -317,4 +345,29 @@ router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSin
   return Ok(res, response);
 })
 
+router.post("/followUser", validateEmailConfirmation, async (req: CustomRequest<UserFollowUserDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+        #swagger.description = 'Follow user.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountFollowUserRequest" }
+} */
+  /* #swagger.responses[200] = {
+    "description": "Success",
+    "schema": {
+      "$ref": "#/definitions/NullResponse"
+    }
+  } */
+  const response = new BaseResponse<object>();
+  try {
+    await UserAccess.followUser(req.selectedLangs(), res.locals.user._id, new UserFollowUserDTO(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
 export default router;

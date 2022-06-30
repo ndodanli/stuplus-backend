@@ -9,6 +9,7 @@ export class UpdateUserProfileDTO {
     lastName: string = "";
     phoneNumber: string = "";
     avatarKey: string = "";
+    about: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);
@@ -52,6 +53,15 @@ export class LoginUserDTO {
 
 export class LoginUserGoogleDTO {
     AccessToken: string = "";
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class UserFollowUserDTO {
+    followingId: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

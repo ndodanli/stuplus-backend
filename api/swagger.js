@@ -107,6 +107,7 @@ const doc = {
             lastName: "string",
             phoneNumber: "string",
             avatarKey: "string",
+            about: "string"
         },
         AccountUpdateProfileResponse: {
             hasError: {
@@ -310,18 +311,6 @@ const doc = {
                     "string1",
                     "string2"
                 ],
-                "relatedSchools": [
-                    {
-                        "title": "test",
-                        "schoolId": "62b0c8d63721b9b60d3585db",
-                        "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
-                    },
-                    {
-                        "title": "test",
-                        "schoolId": "62b0c8f91faac470de48b820",
-                        "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
-                    }
-                ],
                 "text": "dasdsa",
                 "isActive": true,
                 "fromDate": null,
@@ -440,18 +429,6 @@ const doc = {
                         "__t": "User"
                     },
                     "likeCount": 22,
-                    "relatedSchools": [
-                        {
-                            "title": "test",
-                            "schoolId": "62b0c8d63721b9b60d3585db",
-                            "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
-                        },
-                        {
-                            "title": "test",
-                            "schoolId": "62b0c8f91faac470de48b820",
-                            "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
-                        }
-                    ],
                     "likeType": 2,
                     "comments": [
                         {
@@ -578,6 +555,9 @@ const doc = {
             "title": "interestTitle",
             "facultyId": "facultyId",
             "grade": 0,
+        },
+        AccountFollowUserRequest: {
+            $followingId: "userToFollowId",
         },
     }
 };

@@ -42,6 +42,7 @@ export const RedisKeyType = {
    AnnouncementLikeCount: "11:",
    AnnouncementDislikeCount: "12:",
    AnnouncementCommentCount: "13:",
+   Interests: "14:",
 }
 
 export const SocketRoomTypes = {

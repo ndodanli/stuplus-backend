@@ -7,6 +7,7 @@ import { AnnouncementLikeDocument, AnnouncementLikeSchema } from "./Announcement
 import { ChatDocument, ChatSchema } from "./ChatEntity";
 import { DepartmentDocument, DepartmentSchema } from "./DepartmentEntity";
 import { FacultyDocument, FacultySchema } from "./FacultyEntity";
+import { FollowerDocument, FollowerSchema } from "./FollowerEntity";
 import { GroupChatDocument, GroupChatSchema } from "./GroupChatEntity";
 import { GroupChatUserDocument, GroupChatUserSchema } from "./GroupChatUserEntity";
 import { GroupMessageDocument, GroupMessageSchema } from "./GroupMessageEntity";
@@ -18,6 +19,7 @@ import { SchoolDocument, SchoolSchema } from "./SchoolEntity";
 import { UserDocument, UserSchema } from "./UserEntity";
 
 export default interface BaseEntity {
+  [key: string]: any;
   recordStatus: RecordStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -25,7 +27,7 @@ export default interface BaseEntity {
 
 const collections = ["User", "School", "Faculty", "Department", "Interest", "Announcement", "AnnouncementLike",
   "AnnouncementComment", "GroupChat", "GroupChatUser", "GroupMessage", "GroupMessageForward", "GroupMessageRead",
-  "Message", "Chat", "AnnouncementCommentLike",
+  "Message", "Chat", "AnnouncementCommentLike", "Follower"
 ];
 
 const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
@@ -118,7 +120,28 @@ export const GroupChatEntity = baseSpreadator["GroupChat"].discriminator<
   Model<GroupChatDocument>
 >("GroupChat", GroupChatSchema);
 
+export const FollowerEntity = baseSpreadator["Follower"].discriminator<
+  FollowerDocument,
+  Model<FollowerDocument>
+>("GroupChat", FollowerSchema);
+
 function registerHooks(): void {
+  FollowerSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  FollowerSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  FollowerSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  FollowerSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
   AnnouncementCommentLikeSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()

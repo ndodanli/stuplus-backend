@@ -1,22 +1,21 @@
 import bcrypt from "bcryptjs"
-import { DepartmentEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
-import { FacultyEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { FollowerEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { SchoolEntity } from "../../stuplus-lib/entities/BaseEntity";
-import { EmailConfirmation, ExternalLogin, UserDocument } from "../../stuplus-lib/entities/UserEntity";
+import { ExternalLogin, UserDocument } from "../../stuplus-lib/entities/UserEntity";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { Role } from "../../stuplus-lib/enums/enums";
 import { getNewToken } from "../utils/token";
 import EmailService from "../../stuplus-lib/services/emailService";
 import moment from "moment";
-import { checkIfStudentEmail, checkIfValidSchool, generateCode } from "../../stuplus-lib/utils/general";
-import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO } from "../dtos/UserDTOs";
+import { checkIfStudentEmail, generateCode } from "../../stuplus-lib/utils/general";
+import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserFollowUserDTO } from "../dtos/UserDTOs";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { config } from "../config/config";
 import axios from "axios";
 import RedisService from "../../stuplus-lib/services/redisService";
 export class UserAccess {
     public static async getUserWithFields(acceptedLanguages: Array<string>, id: string, fields?: Array<string>): Promise<UserDocument | null> {
-        const user = await RedisService.acquireUser(id);
+        const user = await RedisService.acquireUser(id, fields);
 
         return user;
     }
@@ -356,5 +355,19 @@ export class UserAccess {
         }
 
         return { token: getNewToken(user) };
+    }
+
+    public static async followUser(acceptedLanguages: Array<string>, userId: string, payload: UserFollowUserDTO): Promise<boolean> {
+        //TODO: alt yorum satirini uygulamak yerine belirli periyotlarda duplicateler kontrol edilebilir, simdilik geciyoruz
+        // const follower = await FollowerEntity.findOne({ followerId: userId, followingId: followingId });
+        // if (follower)
+        //     throw new NotValidError(getMessage("alreadyFollowing", acceptedLanguages));
+
+        await FollowerEntity.create({
+            followerId: userId,
+            followingId: payload.followingId
+        });
+
+        return true;
     }
 }

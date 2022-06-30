@@ -33,6 +33,7 @@ export interface User extends BaseEntity {
   externalLogins: Array<ExternalLogin>,
   relatedSchoolIds: Array<string>,
   avatarKey: string,
+  about: string,
   //ignore
   schoolName: string | null; //ignore
   facultyName: string | null; //ignore
@@ -127,6 +128,7 @@ export const UserSchema: Schema = new Schema({
   },
   relatedSchoolIds: { type: Array.of(String), required: false, default: [] },
   avatarKey: { type: String, required: false, default: null },
+  about: { type: String, required: false, default: null },
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -180,6 +182,7 @@ UserSchema.methods.minify = async function (
     externalLogins: this.externalLogins,
     relatedSchoolIds: this.relatedSchoolIds,
     avatarKey: this.avatarKey,
+    about: this.about,
     //ignore
     schoolName: null, //ignore
     facultyName: null, //ignore

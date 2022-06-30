@@ -63,7 +63,6 @@ export class AnnouncementAccess {
             let announcementUserIds = [...new Set(announcements.map(x => x.ownerId))];
             let announcementUsers = await UserEntity.find({ _id: { $in: announcementUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
             let likedDislikedAnnouncements = await AnnouncementLikeEntity.find({ announcementId: { $in: announcementIds }, ownerId: currentUserId }, { "_id": 0, "announcementId": 1, "type": 1 }, { lean: true });
-            let schools = await RedisService.acquire<SchoolDocument[]>(RedisKeyType.Schools + "schools", 60 * 60 * 2, async () => await SchoolEntity.find({}, ["_id", "title"], { lean: true }));
             for (let i = 0; i < announcements.length; i++) {
                 const announcement = announcements[i];
                 //TODO:IMPROVEMENT: scan edilebilir
@@ -82,13 +81,6 @@ export class AnnouncementAccess {
                     return commentCount;
                 });
                 announcement.owner = announcementUsers.find(y => y._id.toString() === announcement.ownerId);
-                announcement.relatedSchools = schools.filter(y => announcement.relatedSchoolIds.includes(y._id.toString()))
-                    .map(x => {
-                        return {
-                            title: x.title,
-                            schoolId: x._id.toString()
-                        }
-                    });
 
                 let likeType;
                 likeType = redisAnnouncementLikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
@@ -154,13 +146,11 @@ export class AnnouncementAccess {
             const likedDislikedComments = await AnnouncementCommentLikeEntity.find({ commentId: { $in: commentIds }, ownerId: currentUserId }, { "_id": 0, "commentId": 1, "type": 1 }).lean(true);
             let commentUserIds = [...new Set(comments.map(x => x.ownerId))];
             let commentUsers = await UserEntity.find({ _id: { $in: commentUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
-            let schools = await RedisService.acquire<SchoolDocument[]>(RedisKeyType.Schools + "schools", 60 * 60 * 24, async () => await SchoolEntity.find({}, ["_id", "title"], { lean: true }));
             for (let i = 0; i < comments.length; i++) {
                 const comment = comments[i];
                 const redisCommentLikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementCommentLike + comment._id.toString(), 0, -1);
                 const redisCommentDislikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementCommentDislike + comment._id.toString(), 0, -1);
                 comment.owner = commentUsers.find(y => y._id.toString() === comment.ownerId);
-                comment.ownerSchool = schools.find(y => y._id.toString() === comment.owner?.schoolId);
                 comment.likeCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementCommentLikeCount + comment._id, 20, async () => {
                     let likeCount = 0;
                     likeCount += redisCommentLikes.length;
@@ -286,14 +276,6 @@ export class AnnouncementAccess {
         } else {
             announcement.likeType = LikeType.Like;
         }
-
-        let schools = await RedisService.acquire<SchoolDocument[]>(RedisKeyType.Schools, 60 * 60 * 2, async () => await SchoolEntity.find({}, {}, { lean: true }));
-        announcement.relatedSchools = schools.filter(y => announcement.relatedSchoolIds.includes(y._id.toString())).map(x => {
-            return {
-                title: x.title,
-                schoolId: x._id.toString()
-            }
-        });
 
         let announcementCommentGetDTO = new AnnouncementGetCommentsDTO({
             page: 1,
