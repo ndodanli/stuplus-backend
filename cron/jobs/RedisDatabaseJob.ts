@@ -1,5 +1,5 @@
 import AsyncLock from "async-lock";
-import { RedisMessageReceiptUpdateDTO } from "../../api/socket/dtos/RedisChat";
+import { RedisMessageReceiptUpdateDTO } from "../../stuplus.api/socket/dtos/RedisChat";
 import { config } from "../../stuplus-lib/config/config";
 import { AnnouncementCommentEntity, AnnouncementCommentLikeEntity, AnnouncementLikeEntity, GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, MessageEntity, QuestionCommentEntity, QuestionCommentLikeEntity, QuestionLikeEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { LikeType } from "../../stuplus-lib/enums/enums";

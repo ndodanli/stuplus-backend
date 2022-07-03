@@ -1,6 +1,6 @@
 import path from 'path';
 import { createClient } from 'redis';
-import logger from '../../api/config/logger';
+import logger from '../../stuplus.api/config/logger';
 import { AnnouncementEntity, DepartmentEntity, FacultyEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
 import { User, UserDocument } from '../entities/UserEntity';
 import { RedisKeyType } from '../enums/enums_socket';

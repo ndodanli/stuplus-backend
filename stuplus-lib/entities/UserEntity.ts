@@ -22,19 +22,15 @@ export interface User extends BaseEntity {
   grade: Number;
   profilePhotoUrl: string;
   gender: Gender;
-  chatSettings: object,
-  notificationSettings: NotificationSettings,
-  roomIds: Array<string>,
-  blockedUserIds: Array<string>,
-  interestIds: Array<string>,
-  friendIds: Array<string>,
-  takenFriendRequestIds: Array<string>,
-  sendedFriendRequestIds: Array<string>,
-  externalLogins: Array<ExternalLogin>,
-  relatedSchoolIds: Array<string>,
-  avatarKey: string,
-  about: string,
-  privacySettings: PrivacySettings,
+  chatSettings: object;
+  notificationSettings: NotificationSettings;
+  blockedUserIds: Array<string>;
+  interestIds: Array<string>;
+  externalLogins: Array<ExternalLogin>;
+  relatedSchoolIds: Array<string>;
+  avatarKey: string;
+  about: string;
+  privacySettings: PrivacySettings;
   //ignore
   schoolName: string | null; //ignore
   facultyName: string | null; //ignore
@@ -118,12 +114,8 @@ export const UserSchema: Schema = new Schema({
       expiresAt: { type: Date, required: false, default: null },
     }, { _id: false }), required: false, default: { code: null, expiresAt: null }
   },
-  roomIds: { type: Array.of(String), required: false, default: [] },
   blockedUserIds: { type: Array.of(String), required: false, default: [] },
   interestIds: { type: Array.of(String), required: false, default: [] },
-  friendIds: { type: Array.of(String), required: false, default: [] },
-  takenFriendRequestIds: { type: Array.of(String), required: false, default: [] },
-  sendedFriendRequestIds: { type: Array.of(String), required: false, default: [] },
   externalLogins: {
     type: Array.of(new Schema({
       providerId: { type: String, required: true },
@@ -187,12 +179,8 @@ UserSchema.methods.minify = async function (
     profilePhotoUrl: this.profilePhotoUrl,
     gender: this.gender,
     chatSettings: this.chatSettings,
-    roomIds: this.roomIds,
     blockedUserIds: this.blockedUserIds,
     interestIds: this.interestIds,
-    friendIds: this.friendIds,
-    takenFriendRequestIds: this.takenFriendRequestIds,
-    sendedFriendRequestIds: this.sendedFriendRequestIds,
     externalLogins: this.externalLogins,
     relatedSchoolIds: this.relatedSchoolIds,
     avatarKey: this.avatarKey,

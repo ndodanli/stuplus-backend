@@ -30,7 +30,7 @@ export const AnnouncementSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
   coverImageUrl: { type: String, required: false, default: null },
   title: { type: String, required: true },
-  relatedSchoolIds: { type: Array.of(String), required: false, default: null },
+  relatedSchoolIds: { type: Array.of(String), required: false, default: [] },
   text: { type: String, required: true },
   isActive: { type: Boolean, required: false, default: true },
   fromDate: { type: Date, required: false, default: null },
