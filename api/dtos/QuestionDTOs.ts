@@ -2,7 +2,7 @@ import { LikeType } from "../../stuplus-lib/enums/enums";
 import { mapToDTO } from "../../stuplus-lib/utils/general";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 
-export class AnnouncementAddDTO {
+export class QuestionAddDTO {
     coverImageUrl: string = "";
     title: string = "";
     relatedSchoolIds: string[] | string = [];
@@ -14,7 +14,7 @@ export class AnnouncementAddDTO {
     }
 }
 
-export class AnnouncementGetMultipleDTO extends BaseFilter {
+export class QuestionGetMultipleDTO extends BaseFilter {
     schoolIds: string[] = [];
     constructor(obj: any) {
         super(obj);
@@ -24,7 +24,7 @@ export class AnnouncementGetMultipleDTO extends BaseFilter {
     }
 }
 
-export class AnnouncementGetSingleDTO extends BaseFilter {
+export class QuestionGetSingleDTO extends BaseFilter {
     id: string[] | undefined;
     constructor(obj: any) {
         super(obj);
@@ -34,8 +34,8 @@ export class AnnouncementGetSingleDTO extends BaseFilter {
     }
 }
 
-export class AnnouncementLikeDislikeDTO extends BaseFilter {
-    announcementId: string = "";
+export class QuestionLikeDislikeDTO extends BaseFilter {
+    questionId: string = "";
     beforeType: LikeType = LikeType.None;
     type: LikeType = LikeType.Like;
     constructor(obj: any) {
@@ -46,8 +46,8 @@ export class AnnouncementLikeDislikeDTO extends BaseFilter {
     }
 }
 
-export class AnnouncementCommentDTO extends BaseFilter {
-    announcementId: string = "";
+export class QuestionCommentDTO extends BaseFilter {
+    questionId: string = "";
     comment: string = "";
     constructor(obj: any) {
         super(obj);
@@ -57,9 +57,9 @@ export class AnnouncementCommentDTO extends BaseFilter {
     }
 }
 
-export class AnnouncementCommenLikeDisliketDTO extends BaseFilter {
+export class QuestionCommenLikeDisliketDTO extends BaseFilter {
     commentId: string = "";
-    announcementId: string = "";
+    questionId: string = "";
     type: LikeType = LikeType.Like;
     beforeType: LikeType = LikeType.None;
     constructor(obj: any) {
@@ -70,8 +70,8 @@ export class AnnouncementCommenLikeDisliketDTO extends BaseFilter {
     }
 }
 
-export class AnnouncementGetCommentsDTO extends BaseFilter {
-    announcementId: string = "";
+export class QuestionGetCommentsDTO extends BaseFilter {
+    questionId: string = "";
     constructor(obj: any) {
         super(obj);
         if (obj) {
@@ -80,8 +80,8 @@ export class AnnouncementGetCommentsDTO extends BaseFilter {
     }
 }
 
-//#region AnnouncementEntity DTOs
-export class AnnouncementUserMM extends BaseFilter {
+//#region QuestionEntity DTOs
+export class QuestionUserMM extends BaseFilter {
     _id: string = "";
     username: string = "";
     constructor(obj: any) {

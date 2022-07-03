@@ -1,5 +1,5 @@
 import { Document, Schema } from "mongoose";
-import { Gender, RecordStatus } from "../enums/enums";
+import { FollowLimitation, Gender, RecordStatus } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 
 export interface User extends BaseEntity {
@@ -34,12 +34,18 @@ export interface User extends BaseEntity {
   relatedSchoolIds: Array<string>,
   avatarKey: string,
   about: string,
+  privacySettings: PrivacySettings,
   //ignore
   schoolName: string | null; //ignore
   facultyName: string | null; //ignore
   departmentName: string | null; //ignore
+  followerCount: number; //ignore
+  followingCount: number; //ignore
 }
 
+export class PrivacySettings {
+  followLimitation: FollowLimitation = FollowLimitation.None;
+}
 export class ExternalLogin {
   providerId: string | null;
   providerName: string | null;
@@ -129,6 +135,14 @@ export const UserSchema: Schema = new Schema({
   relatedSchoolIds: { type: Array.of(String), required: false, default: [] },
   avatarKey: { type: String, required: false, default: null },
   about: { type: String, required: false, default: null },
+  privacySettings: {
+    type: new Schema({
+      followLimitation: { type: Number, required: false, default: null },
+    },
+      { _id: false }),
+    required: false,
+    default: { followLimitation: FollowLimitation.None }
+  },
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -183,10 +197,13 @@ UserSchema.methods.minify = async function (
     relatedSchoolIds: this.relatedSchoolIds,
     avatarKey: this.avatarKey,
     about: this.about,
+    privacySettings: this.privacySettings,
     //ignore
     schoolName: null, //ignore
     facultyName: null, //ignore
     departmentName: null, //ignore
+    followerCount: 0, //ignore
+    followingCount: 0, //ignore
   };
   return response;
 };

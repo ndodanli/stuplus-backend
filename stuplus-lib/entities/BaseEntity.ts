@@ -7,7 +7,8 @@ import { AnnouncementLikeDocument, AnnouncementLikeSchema } from "./Announcement
 import { ChatDocument, ChatSchema } from "./ChatEntity";
 import { DepartmentDocument, DepartmentSchema } from "./DepartmentEntity";
 import { FacultyDocument, FacultySchema } from "./FacultyEntity";
-import { FollowerDocument, FollowerSchema } from "./FollowerEntity";
+import { FollowDocument, FollowSchema } from "./FollowEntity";
+import { FollowRequestDocument, FollowRequestSchema } from "./FollowRequestEntity";
 import { GroupChatDocument, GroupChatSchema } from "./GroupChatEntity";
 import { GroupChatUserDocument, GroupChatUserSchema } from "./GroupChatUserEntity";
 import { GroupMessageDocument, GroupMessageSchema } from "./GroupMessageEntity";
@@ -15,6 +16,10 @@ import { GroupMessageForwardDocument, GroupMessageForwardSchema } from "./GroupM
 import { GroupMessageReadDocument, GroupMessageReadSchema } from "./GroupMessageReadEntity";
 import { InterestDocument, InterestSchema } from "./InterestEntity";
 import { MessageDocument, MessageSchema } from "./MessageEntity";
+import { QuestionCommentDocument, QuestionCommentSchema } from "./QuestionCommentEntity";
+import { QuestionCommentLikeDocument, QuestionCommentLikeSchema } from "./QuestionCommentLikeEntity";
+import { QuestionDocument, QuestionSchema } from "./QuestionEntity";
+import { QuestionLikeDocument, QuestionLikeSchema } from "./QuestionLikeEntity";
 import { SchoolDocument, SchoolSchema } from "./SchoolEntity";
 import { UserDocument, UserSchema } from "./UserEntity";
 
@@ -27,8 +32,7 @@ export default interface BaseEntity {
 
 const collections = ["User", "School", "Faculty", "Department", "Interest", "Announcement", "AnnouncementLike",
   "AnnouncementComment", "GroupChat", "GroupChatUser", "GroupMessage", "GroupMessageForward", "GroupMessageRead",
-  "Message", "Chat", "AnnouncementCommentLike", "Follower"
-];
+  "Message", "Chat", "AnnouncementCommentLike", "Follow", "FollowRequest", "Question", "QuestionLike", "QuestionComment", "QuestionCommentLike"];
 
 const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
 
@@ -85,6 +89,26 @@ export const AnnouncementCommentLikeEntity = baseSpreadator["AnnouncementComment
   Model<AnnouncementCommentLikeDocument>
 >("AnnouncementCommentLike", AnnouncementCommentLikeSchema);
 
+export const QuestionEntity = baseSpreadator["Question"].discriminator<
+  QuestionDocument,
+  Model<QuestionDocument>
+>("Question", QuestionSchema);
+
+export const QuestionLikeEntity = baseSpreadator["QuestionLike"].discriminator<
+  QuestionLikeDocument,
+  Model<QuestionLikeDocument>
+>("QuestionLike", QuestionLikeSchema);
+
+export const QuestionCommentEntity = baseSpreadator["QuestionComment"].discriminator<
+  QuestionCommentDocument,
+  Model<QuestionCommentDocument>
+>("QuestionComment", QuestionCommentSchema);
+
+export const QuestionCommentLikeEntity = baseSpreadator["QuestionCommentLike"].discriminator<
+  QuestionCommentLikeDocument,
+  Model<QuestionCommentLikeDocument>
+>("QuestionCommentLike", QuestionCommentLikeSchema);
+
 export const ChatEntity = baseSpreadator["Chat"].discriminator<
   ChatDocument,
   Model<ChatDocument>
@@ -120,25 +144,110 @@ export const GroupChatEntity = baseSpreadator["GroupChat"].discriminator<
   Model<GroupChatDocument>
 >("GroupChat", GroupChatSchema);
 
-export const FollowerEntity = baseSpreadator["Follower"].discriminator<
-  FollowerDocument,
-  Model<FollowerDocument>
->("GroupChat", FollowerSchema);
+export const FollowEntity = baseSpreadator["Follow"].discriminator<
+  FollowDocument,
+  Model<FollowDocument>
+>("Follow", FollowSchema);
+
+export const FollowRequestEntity = baseSpreadator["FollowRequest"].discriminator<
+  FollowRequestDocument,
+  Model<FollowRequestDocument>
+>("FollowRequest", FollowRequestSchema);
 
 function registerHooks(): void {
-  FollowerSchema.pre("find", function (next) {
+  QuestionCommentLikeSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   })
-  FollowerSchema.pre("findOne", function (next) {
+  QuestionCommentLikeSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   })
-  FollowerSchema.pre("findOneAndUpdate", function (next) {
+  QuestionCommentLikeSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });
-  FollowerSchema.pre("countDocuments", function (next) {
+  QuestionCommentLikeSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  QuestionCommentSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  QuestionCommentSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  QuestionCommentSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  QuestionCommentSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  QuestionLikeSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  QuestionLikeSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  QuestionLikeSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  QuestionLikeSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  QuestionSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  QuestionSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  QuestionSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  QuestionSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  FollowRequestSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  FollowRequestSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  FollowRequestSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  FollowRequestSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  FollowSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  FollowSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  })
+  FollowSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next()
+  });
+  FollowSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     next()
   });

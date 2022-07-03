@@ -5,7 +5,7 @@ import express from "express";
 import { config } from "./config/config";
 import logger from "./config/logger";
 import UpdateAnnouncementScoresJob from "./jobs/UpdateAnnouncementScoresJob";
-import cronTimes from "./constants/cronTimes";
+import cronTimes from "../stuplus-lib/constants/cronTimes";
 
 const jobs: Array<IBaseCronJob> = [];
 

@@ -9,7 +9,7 @@ export const getNewToken = (user: any) => {
         },
         process.env.JWT_SECRET || config.JWT_SECRET,
         {
-            expiresIn: "30d",
+            expiresIn: "360d",
         }
     );
 };

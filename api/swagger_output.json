@@ -85,6 +85,61 @@
         ]
       }
     },
+    "/account/getUserProfile/{userId}": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Get user",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountGetUserProfileProfileResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountGetUserProfileProfileResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountGetUserProfileProfileRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountGetUserProfileProfileRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/account/updateProfile": {
       "post": {
         "tags": [
@@ -451,6 +506,466 @@
                 "required": [
                   "profilePhoto"
                 ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/followUser": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Follow user without privacy limitations.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountFollowUserResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountFollowUserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountFollowUserRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountFollowUserRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/unfollowUser": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Send following request to user(if privacy limitations = ByRequest).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChangeFollowStatusRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChangeFollowStatusRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/cancelFollowUserRequest": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Cancel the request that sent to the user for following.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChangeFollowStatusRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChangeFollowStatusRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/acceptFollowUserRequest": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Accept follow request.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChangeFollowStatusRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChangeFollowStatusRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/rejectFollowUserRequest": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Reject follow request",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChangeFollowStatusRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChangeFollowStatusRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/removeFollower": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Remove user from followers.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChangeFollowStatusRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChangeFollowStatusRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/getFollowRequestsFromMe": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Get user info.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountGetFollowRequestsFromMeResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountGetFollowRequestsFromMeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/getFollowRequestsToMe": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Get user info.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountGetFollowRequestsToMeResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountGetFollowRequestsToMeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/getFollowers": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Get user info.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountGetFollowersResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountGetFollowersResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/getFollowing": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Get user info.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountGetFollowingResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountGetFollowingResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
               }
             }
           }
@@ -1068,6 +1583,336 @@
         }
       }
     },
+    "/question/add": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "description": "Add an question.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "coverImage": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "relatedSchoolIds": {
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "title",
+                  "text"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/question/getQuestions": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "description": "Get questions.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionGetQuestionsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionGetQuestionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionGetQuestionsRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionGetQuestionsRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/question/getQuestion/{id}": {
+      "get": {
+        "tags": [
+          "Question"
+        ],
+        "description": "Get question by id.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionGetQuestionResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionGetQuestionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/question/likeDislike": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "description": "Like or dislike an question.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionLikeDislikeRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionLikeDislikeRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/question/getComments": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "description": "Get comments of an question.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionGetCommentsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionGetCommentsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionGetCommentsRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionGetCommentsRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/question/comment": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "description": "Comment to an question.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionCommentRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionCommentRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/question/commentLikeDislike": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "description": "Like or dislike a anouncement",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionCommentLikeDislikeRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionCommentLikeDislikeRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/doc/": {
       "get": {
         "description": "",
@@ -1137,6 +1982,25 @@
         },
         "xml": {
           "name": "NullResponse"
+        }
+      },
+      "BasePaginationRequest": {
+        "type": "object",
+        "properties": {
+          "lastRecordDate": {
+            "type": "string",
+            "example": "2022-07-02T20:12:59.891Z"
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "pageSize"
+        ],
+        "xml": {
+          "name": "BasePaginationRequest"
         }
       },
       "GetAccountUserRequest": {
@@ -1262,6 +2126,10 @@
                   "username": {
                     "type": "string",
                     "example": "string"
+                  },
+                  "about": {
+                    "type": "string",
+                    "example": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quidem."
                   }
                 }
               }
@@ -1288,6 +2156,10 @@
             "example": "string"
           },
           "avatarKey": {
+            "type": "string",
+            "example": "string"
+          },
+          "about": {
             "type": "string",
             "example": "string"
           }
@@ -1895,9 +2767,9 @@
       "AnnouncementGetAnnouncementsRequest": {
         "type": "object",
         "properties": {
-          "page": {
-            "type": "number",
-            "example": 1
+          "lastRecordDate": {
+            "type": "string",
+            "example": "2022-07-02T20:12:59.891Z"
           },
           "pageSize": {
             "type": "number",
@@ -1915,7 +2787,6 @@
           }
         },
         "required": [
-          "page",
           "pageSize"
         ],
         "xml": {
@@ -2015,26 +2886,6 @@
                   "type": "string"
                 }
               },
-              "relatedSchools": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "title": {
-                      "type": "string",
-                      "example": "test"
-                    },
-                    "schoolId": {
-                      "type": "string",
-                      "example": "62b0c8f91faac470de48b820"
-                    },
-                    "coverImageUrl": {
-                      "type": "string",
-                      "example": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg"
-                    }
-                  }
-                }
-              },
               "text": {
                 "type": "string",
                 "example": "dasdsa"
@@ -2087,9 +2938,9 @@
       "AnnouncementGetCommentsRequest": {
         "type": "object",
         "properties": {
-          "page": {
-            "type": "number",
-            "example": 1
+          "lastRecordDate": {
+            "type": "string",
+            "example": "2022-07-02T20:12:59.891Z"
           },
           "pageSize": {
             "type": "number",
@@ -2101,7 +2952,6 @@
           }
         },
         "required": [
-          "page",
           "pageSize",
           "announcementId"
         ],
@@ -2366,26 +3216,6 @@
                 "likeCount": {
                   "type": "number",
                   "example": 22
-                },
-                "relatedSchools": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "title": {
-                        "type": "string",
-                        "example": "test"
-                      },
-                      "schoolId": {
-                        "type": "string",
-                        "example": "62b0c8f91faac470de48b820"
-                      },
-                      "coverImageUrl": {
-                        "type": "string",
-                        "example": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg"
-                      }
-                    }
-                  }
                 },
                 "likeType": {
                   "type": "number",
@@ -2823,6 +3653,1398 @@
         },
         "xml": {
           "name": "SchoolGetDepartmentsResponse"
+        }
+      },
+      "AccountGetUserProfileProfileRequest": {
+        "type": "object",
+        "properties": {
+          "targetUserId": {
+            "type": "string",
+            "example": "targetUserId"
+          }
+        },
+        "required": [
+          "targetUserId"
+        ],
+        "xml": {
+          "name": "AccountGetUserProfileProfileRequest"
+        }
+      },
+      "AccountGetUserProfileProfileResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "object"
+              },
+              "description": {
+                "type": "string",
+                "example": "Data returned by the operation."
+              },
+              "properties": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string",
+                    "example": "62ab8a204166fd1eaebbb3fa"
+                  },
+                  "role": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "schoolId": {},
+                  "facultyId": {},
+                  "departmentId": {},
+                  "grade": {},
+                  "firstName": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "profilePhotoUrl": {
+                    "type": "string",
+                    "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                  },
+                  "isAccEmailConfirmed": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "isSchoolEmailConfirmed": {
+                    "type": "boolean",
+                    "example": false
+                  },
+                  "interestIds": {
+                    "type": "array",
+                    "example": [
+                      "string"
+                    ],
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "__t": {
+                    "type": "string",
+                    "example": "User"
+                  },
+                  "avatarKey": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "string"
+                  },
+                  "followerCount": {
+                    "type": "number",
+                    "example": 232
+                  },
+                  "followingCount": {
+                    "type": "number",
+                    "example": 40
+                  },
+                  "about": {
+                    "type": "string",
+                    "example": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quidem."
+                  },
+                  "followStatus": {
+                    "type": "object",
+                    "properties": {
+                      "followId": {
+                        "type": "string",
+                        "example": "string"
+                      },
+                      "status": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "enum"
+                          },
+                          "values": {
+                            "type": "object",
+                            "properties": {
+                              "Pending": {
+                                "type": "number",
+                                "example": 2
+                              },
+                              "Accepted": {
+                                "type": "number",
+                                "example": 3
+                              },
+                              "None": {
+                                "type": "number",
+                                "example": 4
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "AccountGetUserProfileProfileResponse"
+        }
+      },
+      "AccountFollowUserRequest": {
+        "type": "object",
+        "properties": {
+          "requestedId": {
+            "type": "string",
+            "example": "userToFollowId"
+          }
+        },
+        "required": [
+          "requestedId"
+        ],
+        "xml": {
+          "name": "AccountFollowUserRequest"
+        }
+      },
+      "AccountFollowUserResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "object"
+              },
+              "description": {
+                "type": "string",
+                "example": "Data returned by the operation."
+              },
+              "properties": {
+                "type": "object",
+                "properties": {
+                  "followId": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "AccountFollowUserResponse"
+        }
+      },
+      "AccountChangeFollowStatusRequest": {
+        "type": "object",
+        "properties": {
+          "followId": {
+            "type": "string",
+            "example": "followId"
+          }
+        },
+        "required": [
+          "followId"
+        ],
+        "xml": {
+          "name": "AccountChangeFollowStatusRequest"
+        }
+      },
+      "AccountGetFollowRequestsFromMeResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "object"
+              },
+              "description": {
+                "type": "string",
+                "example": "Data returned by the operation."
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62c0788b300e9fafa0923819"
+                    },
+                    "requestedId": {
+                      "type": "string",
+                      "example": "62ad8f706cc42f3e54e3d1e8"
+                    },
+                    "recordStatus": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "2022-07-02T16:55:39.470Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "example": "2022-07-02T16:55:39.470Z"
+                    },
+                    "requestedUser": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "example": "62ad8f706cc42f3e54e3d1e8"
+                        },
+                        "username": {
+                          "type": "string",
+                          "example": "deneme45"
+                        },
+                        "firstName": {},
+                        "lastName": {},
+                        "profilePhotoUrl": {},
+                        "__t": {
+                          "type": "string",
+                          "example": "User"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "AccountGetFollowRequestsFromMeResponse"
+        }
+      },
+      "AccountGetFollowRequestsToMeResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "object"
+              },
+              "description": {
+                "type": "string",
+                "example": "Data returned by the operation."
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62c0788b300e9fafa0923819"
+                    },
+                    "ownerId": {
+                      "type": "string",
+                      "example": "62ad8f706cc42f3e54e3d1e8"
+                    },
+                    "recordStatus": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "2022-07-02T16:55:39.470Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "example": "2022-07-02T16:55:39.470Z"
+                    },
+                    "ownerUser": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "example": "62ad8f706cc42f3e54e3d1e8"
+                        },
+                        "username": {
+                          "type": "string",
+                          "example": "deneme45"
+                        },
+                        "firstName": {},
+                        "lastName": {},
+                        "profilePhotoUrl": {},
+                        "__t": {
+                          "type": "string",
+                          "example": "User"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "AccountGetFollowRequestsToMeResponse"
+        }
+      },
+      "AccountGetFollowersResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "object"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Data returned by the operation."
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62c0788b300e9fafa0923819"
+                    },
+                    "followerId": {
+                      "type": "string",
+                      "example": "62ad8f706cc42f3e54e3d1e8"
+                    },
+                    "recordStatus": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "2022-07-02T16:55:39.470Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "example": "2022-07-02T16:55:39.470Z"
+                    },
+                    "followerUser": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "example": "62ad8f706cc42f3e54e3d1e8"
+                        },
+                        "username": {
+                          "type": "string",
+                          "example": "deneme45"
+                        },
+                        "firstName": {},
+                        "lastName": {},
+                        "profilePhotoUrl": {},
+                        "__t": {
+                          "type": "string",
+                          "example": "User"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "AccountGetFollowersResponse"
+        }
+      },
+      "AccountGetFollowingResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "example": "object"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Data returned by the operation."
+                },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62c0788b300e9fafa0923819"
+                    },
+                    "followingId": {
+                      "type": "string",
+                      "example": "62ad8f706cc42f3e54e3d1e8"
+                    },
+                    "recordStatus": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "2022-07-02T16:55:39.470Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "example": "2022-07-02T16:55:39.470Z"
+                    },
+                    "followingUser": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "example": "62ad8f706cc42f3e54e3d1e8"
+                        },
+                        "username": {
+                          "type": "string",
+                          "example": "deneme45"
+                        },
+                        "firstName": {},
+                        "lastName": {},
+                        "profilePhotoUrl": {},
+                        "__t": {
+                          "type": "string",
+                          "example": "User"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "AccountGetFollowingResponse"
+        }
+      },
+      "QuestionGetQuestionsRequest": {
+        "type": "object",
+        "properties": {
+          "lastRecordDate": {
+            "type": "string",
+            "example": "2022-07-02T20:12:59.891Z"
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          },
+          "schoolIds": {
+            "type": "array",
+            "example": [
+              "schoolId1",
+              "schoolId2"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "pageSize"
+        ],
+        "xml": {
+          "name": "QuestionGetQuestionsRequest"
+        }
+      },
+      "QuestionGetQuestionsResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "example": "62af8aade035eb1764400d30"
+              },
+              "ownerId": {
+                "type": "string",
+                "example": "62ab8a204166fd1eaebbb3fa"
+              },
+              "owner": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string",
+                    "example": "62ab8a204166fd1eaebbb3fa"
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "ndodanli14"
+                  },
+                  "profilePhotoUrl": {
+                    "type": "string",
+                    "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                  },
+                  "schoolId": {
+                    "type": "string",
+                    "example": "schoolId1"
+                  },
+                  "__t": {
+                    "type": "string",
+                    "example": "User"
+                  }
+                }
+              },
+              "coverImageUrl": {},
+              "title": {
+                "type": "string",
+                "example": "das"
+              },
+              "relatedSchoolIds": {
+                "type": "array",
+                "example": [
+                  "string1",
+                  "string2"
+                ],
+                "items": {
+                  "type": "string"
+                }
+              },
+              "text": {
+                "type": "string",
+                "example": "dasdsa"
+              },
+              "isActive": {
+                "type": "boolean",
+                "example": true
+              },
+              "fromDate": {},
+              "toDate": {},
+              "__t": {
+                "type": "string",
+                "example": "Question"
+              },
+              "createdAt": {
+                "type": "string",
+                "example": "2022-06-19T20:44:29.536Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "example": "2022-06-19T20:44:29.536Z"
+              },
+              "__v": {
+                "type": "number",
+                "example": 0
+              },
+              "recordStatus": {
+                "type": "number",
+                "example": 1
+              },
+              "likeCount": {
+                "type": "number",
+                "example": 0
+              },
+              "commentCount": {
+                "type": "number",
+                "example": 0
+              },
+              "likeType": {
+                "type": "number",
+                "example": 1
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "QuestionGetQuestionsResponse"
+        }
+      },
+      "QuestionGetCommentsRequest": {
+        "type": "object",
+        "properties": {
+          "lastRecordDate": {
+            "type": "string",
+            "example": "2022-07-02T20:12:59.891Z"
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          },
+          "questionId": {
+            "type": "string",
+            "example": "questionId"
+          }
+        },
+        "required": [
+          "pageSize",
+          "questionId"
+        ],
+        "xml": {
+          "name": "QuestionGetCommentsRequest"
+        }
+      },
+      "QuestionGetCommentsResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62b6f0b662245f6dc443a9ae"
+                },
+                "ownerId": {
+                  "type": "string",
+                  "example": "62ab8a204166fd1eaebbb3fa"
+                },
+                "questionId": {
+                  "type": "string",
+                  "example": "62af8aade035eb1764400d36"
+                },
+                "comment": {
+                  "type": "string",
+                  "example": "some comment."
+                },
+                "score": {
+                  "type": "number",
+                  "example": 0
+                },
+                "recordStatus": {
+                  "type": "number",
+                  "example": 1
+                },
+                "__t": {
+                  "type": "string",
+                  "example": "QuestionComment"
+                },
+                "__v": {
+                  "type": "number",
+                  "example": 0
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2022-06-25T11:26:00.539Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "example": "2022-06-25T13:22:02.391Z"
+                },
+                "owner": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62ab8a204166fd1eaebbb3fa"
+                    },
+                    "username": {
+                      "type": "string",
+                      "example": "ndodanli14"
+                    },
+                    "schoolId": {},
+                    "profilePhotoUrl": {
+                      "type": "string",
+                      "example": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg"
+                    },
+                    "__t": {
+                      "type": "string",
+                      "example": "User"
+                    }
+                  }
+                },
+                "likeCount": {
+                  "type": "number",
+                  "example": 22
+                },
+                "likeType": {
+                  "type": "number",
+                  "example": 2
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "QuestionGetCommentsResponse"
+        }
+      },
+      "QuestionGetQuestionResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62af8aade035eb1764400d36"
+                },
+                "ownerId": {
+                  "type": "string",
+                  "example": "62ab8a204166fd1eaebbb3fa"
+                },
+                "coverImageUrl": {},
+                "title": {
+                  "type": "string",
+                  "example": "das"
+                },
+                "relatedSchoolIds": {
+                  "type": "array",
+                  "example": [
+                    "string1",
+                    "string2"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "text": {
+                  "type": "string",
+                  "example": "dasdsa"
+                },
+                "isActive": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "fromDate": {},
+                "toDate": {},
+                "__t": {
+                  "type": "string",
+                  "example": "Question"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2022-06-19T20:44:29.908Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "example": "2022-06-25T11:18:01.665Z"
+                },
+                "__v": {
+                  "type": "number",
+                  "example": 0
+                },
+                "recordStatus": {
+                  "type": "number",
+                  "example": 1
+                },
+                "score": {
+                  "type": "number",
+                  "example": 47
+                },
+                "owner": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62ab8a204166fd1eaebbb3fa"
+                    },
+                    "username": {
+                      "type": "string",
+                      "example": "ndodanli14"
+                    },
+                    "profilePhotoUrl": {
+                      "type": "string",
+                      "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                    },
+                    "schoolId": {
+                      "type": "string",
+                      "example": "schoolId1"
+                    },
+                    "__t": {
+                      "type": "string",
+                      "example": "User"
+                    }
+                  }
+                },
+                "likeCount": {
+                  "type": "number",
+                  "example": 22
+                },
+                "likeType": {
+                  "type": "number",
+                  "example": 2
+                },
+                "comments": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "example": "62b6f0b662245f6dc443a9ae"
+                      },
+                      "ownerId": {
+                        "type": "string",
+                        "example": "62ab8a204166fd1eaebbb3fa"
+                      },
+                      "comment": {
+                        "type": "string",
+                        "example": "some comment."
+                      },
+                      "__t": {
+                        "type": "string",
+                        "example": "QuestionComment"
+                      },
+                      "owner": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "62ab8a204166fd1eaebbb3fa"
+                          },
+                          "username": {
+                            "type": "string",
+                            "example": "ndodanli14"
+                          },
+                          "profilePhotoUrl": {
+                            "type": "string",
+                            "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                          },
+                          "__t": {
+                            "type": "string",
+                            "example": "User"
+                          }
+                        }
+                      },
+                      "likeCount": {
+                        "type": "number",
+                        "example": 22
+                      },
+                      "likeType": {
+                        "type": "number",
+                        "example": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "QuestionGetQuestionResponse"
+        }
+      },
+      "QuestionLikeDislikeRequest": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "example": "questionId"
+          },
+          "type": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          },
+          "beforeType": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "description": {
+                "type": "string",
+                "example": "Type of the previous like/dislike."
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "None": {
+                    "type": "number",
+                    "example": 2
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "questionId",
+          "type",
+          "beforeType"
+        ],
+        "xml": {
+          "name": "QuestionLikeDislikeRequest"
+        }
+      },
+      "QuestionCommentRequest": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "example": "questionId"
+          },
+          "comment": {
+            "type": "string",
+            "example": "some comment."
+          }
+        },
+        "required": [
+          "questionId",
+          "comment"
+        ],
+        "xml": {
+          "name": "QuestionCommentRequest"
+        }
+      },
+      "QuestionCommentLikeDislikeRequest": {
+        "type": "object",
+        "properties": {
+          "commentId": {
+            "type": "string",
+            "example": "commentId"
+          },
+          "questionId": {
+            "type": "string",
+            "example": "questionId"
+          },
+          "type": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          },
+          "beforeType": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "description": {
+                "type": "string",
+                "example": "Type of the previous like/dislike."
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "None": {
+                    "type": "number",
+                    "example": 2
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "commentId",
+          "questionId",
+          "type",
+          "beforeType"
+        ],
+        "xml": {
+          "name": "QuestionCommentLikeDislikeRequest"
         }
       }
     },

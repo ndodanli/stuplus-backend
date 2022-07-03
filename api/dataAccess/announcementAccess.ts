@@ -1,18 +1,18 @@
-import { AnnouncementCommentEntity, AnnouncementCommentLikeEntity, AnnouncementEntity, AnnouncementLikeEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { AnnouncementCommentEntity, AnnouncementCommentLikeEntity, AnnouncementEntity, AnnouncementLikeEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { AnnouncementDocument } from "../../stuplus-lib/entities/AnnouncementEntity";
 import { AnnouncementAddDTO, AnnouncementCommenLikeDisliketDTO, AnnouncementCommentDTO, AnnouncementLikeDislikeDTO, AnnouncementGetMultipleDTO, AnnouncementGetCommentsDTO } from "../dtos/AnnouncementDTOs";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import RedisService from "../../stuplus-lib/services/redisService";
-import { SchoolDocument } from "../../stuplus-lib/entities/SchoolEntity";
 import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
 import { stringify } from "../../stuplus-lib/utils/general";
 import { LikeType, RecordStatus } from "../../stuplus-lib/enums/enums";
 import { AnnouncementCommentDocument } from "../../stuplus-lib/entities/AnnouncementCommentEntity";
+import sanitizeHtml from 'sanitize-html';
 
 export class AnnouncementAccess {
     public static async addAnnouncement(acceptedLanguages: Array<string>, payload: AnnouncementAddDTO, currentUserId: string): Promise<Boolean> {
-        const user = await UserEntity.findOne({ _id: currentUserId }, {}, { lean: true });
+        const user = await UserEntity.findOne({ _id: currentUserId }, ["relatedSchoolIds"], { lean: true });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
@@ -21,6 +21,8 @@ export class AnnouncementAccess {
 
         if (!payload.relatedSchoolIds?.every(x => user.relatedSchoolIds.includes(x)))
             throw new NotValidError(getMessage("userNotAuthorized", acceptedLanguages));
+
+        payload.text = sanitizeHtml(payload.text);
 
         await AnnouncementEntity.create(new AnnouncementEntity({
             ...payload,
@@ -49,14 +51,20 @@ export class AnnouncementAccess {
             ]
         });
         if (payload.schoolIds && payload.schoolIds.length) {
-            announcementsQuery = announcementsQuery.where({ relatedSchoolIds: { $in: payload.schoolIds } });
-        } else {
-            var user = await RedisService.acquireUser(currentUserId);
-            if (user?.schoolId) {
-                announcementsQuery = announcementsQuery.where({ relatedSchoolIds: { $in: [user.schoolId] } });
-            }
-        };
-        const announcements = await announcementsQuery.sort({ score: -1, createdAt: -1 }).skip(payload.skip).limit(payload.take).lean(true);
+            announcementsQuery = announcementsQuery.where({
+                $or: [
+                    { relatedSchoolIds: { $in: payload.schoolIds } },
+                    { relatedSchoolIds: [] }
+                ]
+            });
+        }
+        // else {
+        //     var user = await RedisService.acquireUser(currentUserId);
+        //     if (user?.schoolId) {
+        //         announcementsQuery = announcementsQuery.where({ relatedSchoolIds: { $in: [user.schoolId] } });
+        //     }
+        // };
+        const announcements = await announcementsQuery.sort({ createdAt: -1 }).skip(payload.skip).limit(payload.take).lean(true);
 
         if (announcements.length) {
             let announcementIds = announcements.map(x => x._id);
@@ -162,7 +170,7 @@ export class AnnouncementAccess {
                 if (!likeType) {
                     likeType = redisCommentDislikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
                     if (!likeType) {
-                        likeType = likedDislikedComments.find(y => y.announcementId.toString() === comment._id.toString());
+                        likeType = likedDislikedComments.find(y => y.commentId === comment._id.toString());
                         if (likeType) comment.likeType = likeType.type;
                         else comment.likeType = LikeType.None;
                     } else {

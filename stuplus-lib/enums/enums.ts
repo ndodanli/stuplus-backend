@@ -22,6 +22,18 @@ export enum LikeType {
    None = 2
 }
 
+export enum FollowStatus {
+   Cancelled = 0,
+   Rejected = 1,
+   Pending = 2,
+   Accepted = 3,
+   None = 4
+}
+
+export enum FollowLimitation {
+   None = 0,
+   ByRequest = 1
+}
 export enum RedisAcquireEntityFilterOrder {
    ASC = 1,
    DESC = -1

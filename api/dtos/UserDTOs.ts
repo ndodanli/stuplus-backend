@@ -1,5 +1,5 @@
 import { EmailConfigurations } from "aws-sdk/clients/iotevents";
-import { Role } from "../../stuplus-lib/enums/enums";
+import { FollowStatus, Role } from "../../stuplus-lib/enums/enums";
 import { EmailConfirmation } from "../../stuplus-lib/entities/UserEntity";
 import { mapToDTO } from "../../stuplus-lib/utils/general";
 import { Gender } from "../../stuplus-lib/enums/enums_socket";
@@ -60,8 +60,36 @@ export class LoginUserGoogleDTO {
     }
 }
 
-export class UserFollowUserDTO {
-    followingId: string = "";
+export class UserFollowUserRequestDTO {
+    requestedId: string = "";
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class UserFollowReqDTO {
+    followId: string = "";
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class UserUnfollowDTO {
+    followId: string = "";
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class UserRemoveFollowerDTO {
+    followId: string = "";
+    targetUserId: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

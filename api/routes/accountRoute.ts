@@ -4,13 +4,15 @@ import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectRe
 import { authorize } from "../middlewares/auth";
 import { UserAccess } from "../dataAccess/userAccess";
 import { Role } from "../../stuplus-lib/enums/enums";
-import { validateEmailConfirmation, validateForgotPassword, validateForgotPasswordCode, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdateProfile } from "../middlewares/validation/account/validateAccountRoute";
-import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserFollowUserDTO } from "../dtos/UserDTOs";
+import { validateChangeFollowStatus, validateEmailConfirmation, validateFollowUser, validateForgotPassword, validateForgotPasswordCode, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdateProfile } from "../middlewares/validation/account/validateAccountRoute";
+import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO } from "../dtos/UserDTOs";
 import { CustomRequest, CustomResponse } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import path from "path";
 import { uploadSingleFileS3 } from "../../stuplus-lib/services/fileService";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
+import RedisService from "../../stuplus-lib/services/redisService";
+import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 
 
 const router = Router();
@@ -26,12 +28,9 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
 } */
   const response = new BaseResponse<object>();
   try {
-    const user = await UserAccess.getUserWithFields(req.selectedLangs(), res.locals.user._id,
-      ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
-        "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
-        "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about"]);
-
-    response.data = user;
+    response.data = await RedisService.acquireUser(res.locals.user._id, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
+      "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
+      "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings"]);
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -46,20 +45,19 @@ router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomReques
 router.get("/getUserProfile/:userId", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
           #swagger.description = 'Get user's profile info.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountGetUserProfileProfileRequest" }
+} */
   /* #swagger.responses[200] = {
 "description": "Success",
 "schema": {
-"$ref": "#/definitions/AccountGetUserProfileResponse"
+"$ref": "#/definitions/AccountGetUserProfileProfileResponse"
 }
 } */
   const response = new BaseResponse<object>();
   try {
-    const user = await UserAccess.getUserWithFields(req.selectedLangs(), res.locals.user._id,
-      ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
-        "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
-        "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about"]);
-
-    response.data = user;
+    response.data = await UserAccess.getUserProfile(req.selectedLangs(), res.locals.user._id, req.body.targetUserId);
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -345,12 +343,38 @@ router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin]), uploadSin
   return Ok(res, response);
 })
 
-router.post("/followUser", validateEmailConfirmation, async (req: CustomRequest<UserFollowUserDTO>, res: any) => {
+router.post("/followUser", authorize([Role.User, Role.Admin]), validateFollowUser, async (req: CustomRequest<UserFollowUserRequestDTO>, res: any) => {
   /* #swagger.tags = ['Account']
-        #swagger.description = 'Follow user.' */
+        #swagger.description = 'Follow user without privacy limitations.' */
   /*	#swagger.requestBody = {
 required: true,
 schema: { $ref: "#/definitions/AccountFollowUserRequest" }
+} */
+  /* #swagger.responses[200] = {
+    "description": "Success",
+    "schema": {
+      "$ref": "#/definitions/AccountFollowUserResponse"
+    }
+  } */
+  const response = new BaseResponse<object>();
+  try {
+    response.data = await UserAccess.followUser(req.selectedLangs(), res.locals.user._id, new UserFollowUserRequestDTO(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response); ``
+});
+
+router.post("/unfollowUser", authorize([Role.User, Role.Admin]), validateChangeFollowStatus, async (req: CustomRequest<UserUnfollowDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+        #swagger.description = 'Send following request to user(if privacy limitations = ByRequest).' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
 } */
   /* #swagger.responses[200] = {
     "description": "Success",
@@ -360,7 +384,7 @@ schema: { $ref: "#/definitions/AccountFollowUserRequest" }
   } */
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.followUser(req.selectedLangs(), res.locals.user._id, new UserFollowUserDTO(req.body));
+    await UserAccess.unfollowUser(req.selectedLangs(), res.locals.user._id, new UserUnfollowDTO(req.body));
   } catch (err: any) {
     response.setErrorMessage(err.message);
 
@@ -370,4 +394,213 @@ schema: { $ref: "#/definitions/AccountFollowUserRequest" }
 
   return Ok(res, response);
 });
+
+router.post("/cancelFollowUserRequest", authorize([Role.User, Role.Admin]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+        #swagger.description = 'Cancel the request that sent to the user for following.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
+} */
+  /* #swagger.responses[200] = {
+    "description": "Success",
+    "schema": {
+      "$ref": "#/definitions/NullResponse"
+    }
+  } */
+  const response = new BaseResponse<object>();
+  try {
+    await UserAccess.cancelFollowReq(req.selectedLangs(), res.locals.user._id, new UserFollowReqDTO(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.post("/acceptFollowUserRequest", authorize([Role.User, Role.Admin]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+        #swagger.description = 'Accept follow request.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
+} */
+  /* #swagger.responses[200] = {
+    "description": "Success",
+    "schema": {
+      "$ref": "#/definitions/NullResponse"
+    }
+  } */
+  const response = new BaseResponse<object>();
+  try {
+    await UserAccess.acceptFollowReq(req.selectedLangs(), res.locals.user._id, new UserFollowReqDTO(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.post("/rejectFollowUserRequest", authorize([Role.User, Role.Admin]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+        #swagger.description = 'Reject follow request' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
+} */
+  /* #swagger.responses[200] = {
+    "description": "Success",
+    "schema": {
+      "$ref": "#/definitions/NullResponse"
+    }
+  } */
+  const response = new BaseResponse<object>();
+  try {
+    await UserAccess.rejectFollowReq(req.selectedLangs(), res.locals.user._id, new UserFollowReqDTO(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.post("/removeFollower", authorize([Role.User, Role.Admin]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+        #swagger.description = 'Remove user from followers.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
+} */
+  /* #swagger.responses[200] = {
+    "description": "Success",
+    "schema": {
+      "$ref": "#/definitions/NullResponse"
+    }
+  } */
+  const response = new BaseResponse<object>();
+  try {
+    await UserAccess.removeFollower(req.selectedLangs(), res.locals.user._id, new UserRemoveFollowerDTO(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.post("/getFollowRequestsFromMe", authorize([Role.User, Role.Admin]), async (req: CustomRequest<BaseFilter>, res: any) => {
+  /* #swagger.tags = ['Account']
+          #swagger.description = 'Get user info.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/BasePaginationRequest" }
+} */
+  /* #swagger.responses[200] = {
+"description": "Success",
+"schema": {
+"$ref": "#/definitions/AccountGetFollowRequestsFromMeResponse"
+}
+} */
+  const response = new BaseResponse<object>();
+  try {
+    response.data = await UserAccess.getFollowRequestsFromMe(req.selectedLangs(), res.locals.user._id, new BaseFilter(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.post("/getFollowRequestsToMe", authorize([Role.User, Role.Admin]), async (req: CustomRequest<BaseFilter>, res: any) => {
+  /* #swagger.tags = ['Account']
+          #swagger.description = 'Get user info.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/BasePaginationRequest" }
+} */
+  /* #swagger.responses[200] = {
+"description": "Success",
+"schema": {
+"$ref": "#/definitions/AccountGetFollowRequestsToMeResponse"
+}
+} */
+  const response = new BaseResponse<object>();
+  try {
+    response.data = await UserAccess.getFollowRequestsToMe(req.selectedLangs(), res.locals.user._id, new BaseFilter(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.post("/getFollowers", authorize([Role.User, Role.Admin]), async (req: CustomRequest<BaseFilter>, res: any) => {
+  /* #swagger.tags = ['Account']
+          #swagger.description = 'Get user info.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/BasePaginationRequest" }
+} */
+  /* #swagger.responses[200] = {
+"description": "Success",
+"schema": {
+"$ref": "#/definitions/AccountGetFollowersResponse"
+}
+} */
+  const response = new BaseResponse<object>();
+  try {
+    response.data = await UserAccess.getFollowers(req.selectedLangs(), res.locals.user._id, new BaseFilter(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.post("/getFollowing", authorize([Role.User, Role.Admin]), async (req: CustomRequest<BaseFilter>, res: any) => {
+  /* #swagger.tags = ['Account']
+          #swagger.description = 'Get user info.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/BasePaginationRequest" }
+} */
+  /* #swagger.responses[200] = {
+"description": "Success",
+"schema": {
+"$ref": "#/definitions/AccountGetFollowingResponse"
+}
+} */
+  const response = new BaseResponse<object>();
+  try {
+    response.data = await UserAccess.getFollowing(req.selectedLangs(), res.locals.user._id, new BaseFilter(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
 export default router;

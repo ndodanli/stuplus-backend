@@ -5,6 +5,7 @@ export interface GroupChat extends BaseEntity {
   ownerId: string; //user id
   title: string;
   type: GroupChatType;
+  coverImageUrl: string;
 }
 
 export interface GroupChatDocument extends GroupChat, Document {
@@ -15,6 +16,7 @@ export const GroupChatSchema: Schema = new Schema({
   ownerId: { type: String, required: true }, //user id
   title: { type: String, required: true },
   type: { type: Number, required: true },
+  coverImageUrl: { type: String, required: false, default: null },
 });
 
 GroupChatSchema.pre("save", function (next) {
@@ -38,6 +40,7 @@ GroupChatSchema.methods.minify = async function (
     ownerId: this.ownerId,
     title: this.title,
     type: this.type,
+    coverImageUrl: this.coverImageUrl,
   };
   return response;
 };

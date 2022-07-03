@@ -10,6 +10,7 @@ const systemLangs: Record<string, Function> = {
             passwordReset: "Parolanız başarıyla sıfırlandı.",
             accountCreated: "Hesabınızı başarıyla oluşturduk ve hesabınızı doğrulamanız için email adresinize bir link gönderdik.",
             announcementAdded: "Duyurunuzu başarıyla oluşturduk.",
+            questionAdded: "Sorunuzu başarıyla oluşturduk.",
             userNotFound: "Kullanıcı bulunamadı.",
             schoolNotFound: "Okul bulunamadı.",
             passwordNotTrue: "Parolanız doğru değil.",
@@ -49,6 +50,7 @@ const systemLangs: Record<string, Function> = {
             gradeNotSelected: "Lütfen bölümünüzü seçiniz.",
             gradeSelectNotValid: "Lütfen geçerli bir sınıf seçiniz.",
             xNotValid: `${args ? args[0] : "Bu alan"} geçerli değil.`,
+            xNotFound: `${args ? args[0] : "Bu şey"} bulunamadı.`,
             usernameNotValidLength: "Kullanıcı adı en az 4, en fazla 18 karakterden oluşmalıdır.",
             usernameNotValid: "Kullanıcı adı geçersiz, lütfen uygun bir kullanıcı adı seçiniz.",
             fillInReqFields: "Lütfen gerekli bilgileri doldurun.",
@@ -68,6 +70,11 @@ const systemLangs: Record<string, Function> = {
             announcementNotFound: "Duyuru bulunamadı.",
             announcementNotAvailable: "Artık bu duyuruya erişemiyoruz, üzgünüz.",
             alreadyLikedOrDisliked: "Buna zaten oy verdin ki :).",
+            alreadyFollowing: "Zaten bu kişiye takip ediyorsun.",
+            alreadySentFollowReq: "Bu kişiye zaten takip isteği gönderdin.",
+            noUserToUnfollow: "Takibi bırakacak kimseyi bulunamadık. Yok olmuş olabilir.",
+            noUserToRemoveFollow: "Takibi silinecek kimseyi bulunamadık. Yok olmuş olabilir.",
+            notValidDate: "Geçersiz tarih.",
         }
     },
     "en": function (args: string[] = []) {

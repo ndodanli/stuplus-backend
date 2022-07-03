@@ -9,5 +9,8 @@ export interface CustomRequest<T> extends Omit<Request, 'body' | 'query' | 'user
     selectedLangs: Function;
     file: SFile
 }
-export interface CustomResponse extends Response {
+export interface CustomResponse<T> extends Omit<Response, 'json' | 'status' | 'send'> {
+    send: (data: T) => void;
+    json: (data: T) => void;
+    status: (status: number) => void;
 }

@@ -10,6 +10,7 @@ import loginRoute from "./routes/loginRoute";
 import accountRoute from "./routes/accountRoute";
 import schoolRoute from "./routes/schoolRoute";
 import announcementRoute from "./routes/announcementRoute";
+import questionRoute from "./routes/questionRoute";
 import swaggerRoute from "./routes/swaggerRoute";
 import path from "path";
 import { config } from "./config/config";
@@ -53,6 +54,7 @@ app.use("/login", loginRoute);
 app.use("/school", schoolRoute);
 app.use("/interest", interestRoute);
 app.use("/announcement", announcementRoute);
+app.use("/question", questionRoute);
 
 app.use("/doc", swaggerRoute);
 

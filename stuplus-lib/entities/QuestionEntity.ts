@@ -3,7 +3,7 @@ import { LikeType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 import { User } from "./UserEntity";
 
-export interface Announcement extends BaseEntity {
+export interface Question extends BaseEntity {
   ownerId: string; //user id
   coverImageUrl: string;
   title: string;
@@ -22,11 +22,11 @@ export interface Announcement extends BaseEntity {
   comments: object[]; // ignore
 }
 
-export interface AnnouncementDocument extends Announcement, Document {
+export interface QuestionDocument extends Question, Document {
   minify(): unknown;
 }
 
-export const AnnouncementSchema: Schema = new Schema({
+export const QuestionSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
   coverImageUrl: { type: String, required: false, default: null },
   title: { type: String, required: true },
@@ -38,27 +38,27 @@ export const AnnouncementSchema: Schema = new Schema({
   score: { type: Number, required: false, default: 0 },
 });
 
-AnnouncementSchema.pre("save", function (next) {
+QuestionSchema.pre("save", function (next) {
   //
   next()
 })
 
-AnnouncementSchema.pre("findOne", function (next) {
+QuestionSchema.pre("findOne", function (next) {
   console.log("pre findOne");
   next()
 
 
 })
 
-AnnouncementSchema.pre("deleteOne", function (next) {
+QuestionSchema.pre("deleteOne", function (next) {
   //
   next()
 });
 
-AnnouncementSchema.methods.minify = async function (
-  this: AnnouncementDocument
+QuestionSchema.methods.minify = async function (
+  this: QuestionDocument
 ) {
-  const response: Announcement & { _id: string } = {
+  const response: Question & { _id: string } = {
     _id: this._id,
     recordStatus: this.recordStatus,
     ownerId: this.ownerId,

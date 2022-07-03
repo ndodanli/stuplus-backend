@@ -1,23 +1,63 @@
 import bcrypt from "bcryptjs"
-import { FollowerEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { FollowEntity, FollowRequestEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { SchoolEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { ExternalLogin, UserDocument } from "../../stuplus-lib/entities/UserEntity";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
-import { Role } from "../../stuplus-lib/enums/enums";
+import { FollowLimitation, FollowStatus, RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { getNewToken } from "../utils/token";
 import EmailService from "../../stuplus-lib/services/emailService";
 import moment from "moment";
 import { checkIfStudentEmail, generateCode } from "../../stuplus-lib/utils/general";
-import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserFollowUserDTO } from "../dtos/UserDTOs";
+import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO } from "../dtos/UserDTOs";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { config } from "../config/config";
 import axios from "axios";
 import RedisService from "../../stuplus-lib/services/redisService";
+import { UserProfileResponseDTO } from "../dtos/response/UserResponseDTOs";
+import { RedisKeyType, RedisSubKeyType } from "../../stuplus-lib/enums/enums_socket";
+import cronTimes from "../../stuplus-lib/constants/cronTimes";
+import redisTTL from "../../stuplus-lib/constants/redisTTL";
+import { FollowRequestDocument } from "../../stuplus-lib/entities/FollowRequestEntity";
+import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
+import { FollowDocument } from "../../stuplus-lib/entities/FollowEntity";
 export class UserAccess {
-    public static async getUserWithFields(acceptedLanguages: Array<string>, id: string, fields?: Array<string>): Promise<UserDocument | null> {
-        const user = await RedisService.acquireUser(id, fields);
+    public static async getUserProfile(acceptedLanguages: Array<string>, userId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
+        const response = new UserProfileResponseDTO();
+        response.user = await RedisService.acquireUser(targetUserId, ["_id", "firstName", "lastName", "profilePhotoUrl",
+            "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
+            "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings"]);
 
-        return user;
+        response.user.followerCount = await RedisService.acquire(RedisKeyType.User + targetUserId + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
+            return await FollowEntity.countDocuments({ followingId: targetUserId });
+        });
+        response.user.followingCount = await RedisService.acquire(RedisKeyType.User + targetUserId + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
+            return await FollowEntity.countDocuments({ followerId: targetUserId });
+        });
+
+        let followEntity = await FollowEntity.findOne({ followerId: userId, followingId: targetUserId }, { "_id": 1 });
+
+        if (!followEntity) {
+            let followReqEntity = await FollowRequestEntity.findOne({ ownerId: userId, requestedId: targetUserId }, { "_id": 1 });
+            if (!followReqEntity) {
+                response.followStatus = response.followStatus = {
+                    followId: null,
+                    status: FollowStatus.None
+                }
+            } else {
+                response.followStatus = {
+                    followId: followReqEntity.id,
+                    status: FollowStatus.Pending
+                }
+            }
+        }
+        else {
+            response.followStatus = {
+                followId: followEntity.id,
+                status: FollowStatus.Accepted
+            }
+        }
+
+        return response;
     }
 
     public static async updateProfile(acceptedLanguages: Array<string>, id: string, payload: UpdateUserProfileDTO): Promise<UserDocument | null> {
@@ -125,8 +165,8 @@ export class UserAccess {
         return { token: getNewToken(createdUser) };
     }
 
-    public static async sendConfirmationEmail(acceptedLanguages: Array<string>, userId: string, isStudentEmail: Boolean) {
-        const user = await UserEntity.findOne({ _id: userId });
+    public static async sendConfirmationEmail(acceptedLanguages: Array<string>, currentUserId: string, isStudentEmail: Boolean) {
+        const user = await UserEntity.findOne({ _id: currentUserId });
 
         if (!user)
             throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
@@ -357,17 +397,179 @@ export class UserAccess {
         return { token: getNewToken(user) };
     }
 
-    public static async followUser(acceptedLanguages: Array<string>, userId: string, payload: UserFollowUserDTO): Promise<boolean> {
-        //TODO: alt yorum satirini uygulamak yerine belirli periyotlarda duplicateler kontrol edilebilir, simdilik geciyoruz
-        // const follower = await FollowerEntity.findOne({ followerId: userId, followingId: followingId });
-        // if (follower)
-        //     throw new NotValidError(getMessage("alreadyFollowing", acceptedLanguages));
+    public static async acceptFollowReq(acceptedLanguages: Array<string>, userId: string, payload: UserFollowReqDTO): Promise<boolean> {
+        const followRequest = await FollowRequestEntity.findOne({ _id: payload.followId, requestedId: userId });
+        if (!followRequest)
+            throw new NotValidError(getMessage("xNotFound", acceptedLanguages, ["Follow request"]));
 
-        await FollowerEntity.create({
-            followerId: userId,
-            followingId: payload.followingId
+        const rollbackStatus = {
+            status: followRequest.status,
+            recordStatus: followRequest.recordStatus
+        }
+
+        followRequest.status = FollowStatus.Accepted;
+        followRequest.recordStatus = RecordStatus.Deleted;
+
+        const followEntity = new FollowEntity({
+            followerId: followRequest.ownerId,
+            followingId: followRequest.requestedId
         });
+        try {
+            await Promise.all([
+                followRequest.save(),
+                FollowEntity.create(followEntity)
+            ]);
+        } catch (error) {
+            followRequest.status = rollbackStatus.status;
+            followRequest.recordStatus = rollbackStatus.recordStatus;
+            await followRequest.save();
+            await FollowEntity.deleteOne({
+                _id: followEntity._id
+            });
+            throw error;
+        }
+
+        //TODO: send notification to user
 
         return true;
+    }
+
+    public static async rejectFollowReq(acceptedLanguages: Array<string>, userId: string, payload: UserFollowReqDTO): Promise<boolean> {
+        const followRequest = await FollowRequestEntity.findOneAndUpdate({ _id: payload.followId, requestedId: userId }, { status: FollowStatus.Rejected, recordStatus: RecordStatus.Deleted });
+        if (!followRequest)
+            throw new NotValidError(getMessage("xNotFound", acceptedLanguages, ["Follow request"]));
+
+        //TODO: send notification to user *maybe
+
+        return true;
+    }
+
+    public static async cancelFollowReq(acceptedLanguages: Array<string>, userId: string, payload: UserFollowReqDTO): Promise<boolean> {
+        const followRequest = await FollowRequestEntity.findOneAndUpdate({ _id: payload.followId, ownerId: userId }, { status: FollowStatus.Cancelled, recordStatus: RecordStatus.Deleted });
+        if (!followRequest)
+            throw new NotValidError(getMessage("xNotFound", acceptedLanguages, ["Follow request"]));
+
+        return true;
+    }
+
+    public static async followUser(acceptedLanguages: Array<string>, userId: string, payload: UserFollowUserRequestDTO): Promise<object> {
+        let followId: string;
+        const user = await UserEntity.findOne({ _id: payload.requestedId }, { "privacySettings": 1, "_id": 0 }).lean(true);
+        if (user?.privacySettings.followLimitation == FollowLimitation.None) {
+            //TODO: alt yorum satirini uygulamak yerine belirli periyotlarda duplicateler kontrol edilebilir, simdilik geciyoruz
+            const follow = await FollowEntity.exists({ followerId: userId, followingId: payload.requestedId, recordStatus: RecordStatus.Active });
+            if (follow)
+                throw new NotValidError(getMessage("alreadyFollowing", acceptedLanguages));
+
+            //TODO: followingId'ye sahip user var mi kontrol edilmiyor. *maybe
+            const followEntity = await FollowEntity.create({
+                followerId: userId,
+                followingId: payload.requestedId
+            });
+            followId = followEntity.id;
+        } else {
+            const followReq = await FollowRequestEntity.exists({ ownerId: userId, requestedId: payload.requestedId, recordStatus: RecordStatus.Active });
+            if (followReq)
+                throw new NotValidError(getMessage("alreadySentFollowReq", acceptedLanguages));
+
+            //TODO: followingId'ye sahip user var mi kontrol edilmiyor. *maybe
+            const followReqEntity = await FollowRequestEntity.create({
+                ownerId: userId,
+                requestedId: payload.requestedId
+            });
+            followId = followReqEntity.id;
+        }
+
+        return { followId: followId };
+    }
+
+    public static async unfollowUser(acceptedLanguages: Array<string>, userId: string, payload: UserUnfollowDTO): Promise<boolean> {
+
+        const unfollow = await FollowEntity.findOneAndUpdate({ _id: payload.followId, followerId: userId }, { recordStatus: RecordStatus.Deleted });
+        if (!unfollow)
+            throw new NotValidError(getMessage("noUserToUnfollow", acceptedLanguages));
+
+        return true;
+    }
+
+    public static async removeFollower(acceptedLanguages: Array<string>, userId: string, payload: UserRemoveFollowerDTO): Promise<boolean> {
+
+        const unfollow = await FollowEntity.findOneAndUpdate({ _id: payload.followId, followingId: userId }, { recordStatus: RecordStatus.Deleted });
+        if (!unfollow)
+            throw new NotValidError(getMessage("noUserToRemoveFollow", acceptedLanguages));
+
+        return true;
+    }
+
+    public static async getFollowRequestsFromMe(acceptedLanguages: Array<string>, userId: string, payload: BaseFilter): Promise<FollowRequestDocument[]> {
+
+        const followRequests = await FollowRequestEntity.find({ ownerId: userId }, { "ownerId": 0 })
+            .sort({ createdAt: -1 })
+            .skip(payload.skip)
+            .limit(payload.take)
+            .lean(true);
+        if (followRequests.length > 0) {
+            const followReqRequestedUserIds = followRequests.map(x => x.requestedId);
+            const requiredUsers = await UserEntity.find({ _id: { $in: followReqRequestedUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]);
+            for (let i = 0; i < followRequests.length; i++) {
+                const followReq = followRequests[i];
+                followReq.requestedUser = requiredUsers.find(x => x.id == followReq.requestedId);
+            }
+        }
+        return followRequests;
+    }
+
+    public static async getFollowRequestsToMe(acceptedLanguages: Array<string>, userId: string, payload: BaseFilter): Promise<FollowRequestDocument[]> {
+
+        const followRequests = await FollowRequestEntity.find({ requestedId: userId }, { "requestedId": 0 })
+            .sort({ createdAt: -1 })
+            .skip(payload.skip)
+            .limit(payload.take)
+            .lean(true);
+        if (followRequests.length > 0) {
+            const followReqRequestedUserIds = followRequests.map(x => x.ownerId);
+            const requiredUsers = await UserEntity.find({ _id: { $in: followReqRequestedUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]);
+            for (let i = 0; i < followRequests.length; i++) {
+                const followReq = followRequests[i];
+                followReq.ownerUser = requiredUsers.find(x => x.id == followReq.ownerId);
+            }
+        }
+        return followRequests;
+    }
+
+    public static async getFollowers(acceptedLanguages: Array<string>, userId: string, payload: BaseFilter): Promise<FollowDocument[]> {
+
+        const followers = await FollowEntity.find({ followingId: userId }, { "followingId": 0 })
+            .sort({ createdAt: -1 })
+            .skip(payload.skip)
+            .limit(payload.take)
+            .lean(true);
+        if (followers.length > 0) {
+            const followerUserIds = followers.map(x => x.followerId);
+            const requiredUsers = await UserEntity.find({ _id: { $in: followerUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]);
+            for (let i = 0; i < followers.length; i++) {
+                const follow = followers[i];
+                follow.followerUser = requiredUsers.find(x => x.id == follow.followerId);
+            }
+        }
+        return followers;
+    }
+
+    public static async getFollowing(acceptedLanguages: Array<string>, userId: string, payload: BaseFilter): Promise<FollowDocument[]> {
+
+        const followers = await FollowEntity.find({ followerId: userId }, { "followerId": 0 })
+            .sort({ createdAt: -1 })
+            .skip(payload.skip)
+            .limit(payload.take)
+            .lean(true);
+        if (followers.length > 0) {
+            const followingUserIds = followers.map(x => x.followingId);
+            const requiredUsers = await UserEntity.find({ _id: { $in: followingUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]);
+            for (let i = 0; i < followers.length; i++) {
+                const follow = followers[i];
+                follow.followingUser = requiredUsers.find(x => x.id == follow.followingId);
+            }
+        }
+        return followers;
     }
 }

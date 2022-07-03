@@ -104,9 +104,15 @@ io.on("connection", async (socket: ISocket) => {
                 data.ci = chatEntity.id; //may be null, catch it later
                 responseData["ci"] = data.ci;
             }
-
+            const now = new Date();
             const messageEntity = new MessageEntity({});
-            const chatData: object = { e: { _id: messageEntity.id, from: socket.data.user.id, message: data.m, chatId: data.ci }, t: RedisPMOperationType.InsertMessage }
+            const chatData: object = {
+                e: {
+                    _id: messageEntity.id, from: socket.data.user.id, message: data.m, chatId: data.ci,
+                    createdAt: now,
+                    updatedAt: now,
+                }, t: RedisPMOperationType.InsertMessage
+            }
 
             responseData["mi"] = messageEntity.id;
 
@@ -127,10 +133,16 @@ io.on("connection", async (socket: ISocket) => {
                 cb({ success: false, message: "Invalid parameters." });
                 return;
             }
-
+            const now = new Date();
             for (let i = 0; i < data.mids.length; i++) {
                 const mi = data.mids[i];
-                const chatData: object = { e: { _id: mi }, t: RedisPMOperationType.UpdateForwarded };
+                const chatData: object = {
+                    e: {
+                        _id: mi,
+                        createdAt: now,
+                        updatedAt: now,
+                    }, t: RedisPMOperationType.UpdateForwarded
+                };
                 await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + data.ci, stringify(chatData));
             }
 
@@ -150,10 +162,18 @@ io.on("connection", async (socket: ISocket) => {
                 return;
             }
 
+            const now = new Date();
+
             for (let i = 0; i < data.mids.length; i++) {
                 const mi = data.mids[i];
 
-                const chatData: object = { e: { _id: mi }, t: RedisPMOperationType.UpdateReaded }
+                const chatData: object = {
+                    e: {
+                        _id: mi,
+                        createdAt: now,
+                        updatedAt: now,
+                    }, t: RedisPMOperationType.UpdateReaded
+                }
 
                 await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + data.ci, stringify(chatData));
             }
@@ -173,9 +193,14 @@ io.on("connection", async (socket: ISocket) => {
                 cb({ success: false, message: "Invalid parameters." });
                 return;
             }
+            const now = new Date();
             const gMessageEntity = new GroupMessageEntity({});
             const chatData: object = {
-                e: { _id: gMessageEntity.id, from: socket.data.user.id, message: data.m, groupChatId: data.gCi },
+                e: {
+                    _id: gMessageEntity.id, from: socket.data.user.id, message: data.m, groupChatId: data.gCi,
+                    createdAt: now,
+                    updatedAt: now,
+                },
                 t: RedisGMOperationType.InsertMessage
             }
 
@@ -197,11 +222,16 @@ io.on("connection", async (socket: ISocket) => {
                 return;
             }
 
+            const now = new Date();
             for (let i = 0; i < data.mids.length; i++) {
                 const mi = data.mids[i];
                 const gMessageForwardEntity = new GroupMessageForwardEntity({});
                 const chatData: object = {
-                    e: { _id: gMessageForwardEntity.id, messageId: mi, forwardedTo: socket.data.user.id },
+                    e: {
+                        _id: gMessageForwardEntity.id, messageId: mi, forwardedTo: socket.data.user.id,
+                        createdAt: now,
+                        updatedAt: now,
+                    },
                     t: RedisGMOperationType.InsertForwarded
                 }
                 await RedisService.client.rPush(RedisKeyType.DBGroupMessage + data.gCi, stringify(chatData));
@@ -234,11 +264,16 @@ io.on("connection", async (socket: ISocket) => {
                 return;
             }
 
+            const now = new Date();
             for (let i = 0; i < data.mids.length; i++) {
                 const mi = data.mids[i];
                 const gMessageReadEntity = new GroupMessageReadEntity({});
                 const chatData: object = {
-                    e: { _id: gMessageReadEntity.id, messageId: mi, readedBy: socket.data.user.id },
+                    e: {
+                        _id: gMessageReadEntity.id, messageId: mi, readedBy: socket.data.user.id,
+                        createdAt: now,
+                        updatedAt: now,
+                    },
                     t: RedisGMOperationType.InsertReaded
                 }
                 await RedisService.client.rPush(RedisKeyType.DBGroupMessage + data.gCi, stringify(chatData));
