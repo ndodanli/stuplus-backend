@@ -10,7 +10,7 @@ import { uploadSingleFileS3 } from "../../stuplus-lib/services/fileService";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { SchoolDocument } from "../../stuplus-lib/entities/SchoolEntity";
 import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
-import { DepartmentEntity, FacultyEntity, InterestEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { AnnouncementCommentEntity, AnnouncementEntity, DepartmentEntity, FacultyEntity, InterestEntity, QuestionCommentEntity, QuestionEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 
 const router = Router();
 
@@ -121,4 +121,89 @@ router.get("/getUsers", authorize([Role.Admin]), async (req: CustomRequest<objec
 
   return Ok(res, response);
 });
+
+router.get("/getAnnouncements", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+  const response = new BaseResponse<object>();
+  try {
+    let search = req.query.search as string;
+    if (search) {
+      search = search.toLowerCase();
+    }
+
+    let temp = AnnouncementEntity.find({}, ["_id", "title"], { lean: true })
+    if (search) {
+      temp.or([
+        { title: { $regex: search, $options: "i" } },
+      ]);
+    }
+    response.data = await temp;
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.get("/getQuestions", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+  const response = new BaseResponse<object>();
+  try {
+    let search = req.query.search as string;
+    if (search) {
+      search = search.toLowerCase();
+    }
+
+    let temp = QuestionEntity.find({}, ["_id", "title"], { lean: true })
+    if (search) {
+      temp.or([
+        { title: { $regex: search, $options: "i" } },
+      ]);
+    }
+    response.data = await temp;
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.get("/getQuestionComments", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+  const response = new BaseResponse<object>();
+  try {
+
+    response.data = await QuestionCommentEntity.find({ questionId: req.query.questionId as string }, ["_id", "comment"], { lean: true })
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.get("/getAnnouncementComments", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+  const response = new BaseResponse<object>();
+  try {
+
+    response.data = await AnnouncementCommentEntity.find({ announcementId: req.query.announcementId as string }, ["_id", "comment"], { lean: true })
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
 export default router;

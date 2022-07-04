@@ -43,3 +43,35 @@ export function getUsers(query) {
     params: query
   })
 }
+
+export function getAnnouncements(query) {
+  return request({
+    url: '/general/getAnnouncements',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getQuestions(query) {
+  return request({
+    url: '/general/getQuestions',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getQuestionComments(query) {
+  return request({
+    url: '/general/getQuestionComments',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getAnnouncementComments(query) {
+  return request({
+    url: '/general/getAnnouncementComments',
+    method: 'get',
+    params: query
+  })
+}

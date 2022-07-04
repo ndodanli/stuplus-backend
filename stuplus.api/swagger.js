@@ -93,7 +93,7 @@ const doc = {
                     firstName: "string",
                     lastName: "string",
                     phoneNumber: "5073959353",
-                    profilePhotoUrl: "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                    profilePhotoUrl: "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                     isAccEmailConfirmed: true,
                     isSchoolEmailConfirmed: false,
                     interestIds: [
@@ -304,7 +304,7 @@ const doc = {
                 "owner": {
                     "_id": "62ab8a204166fd1eaebbb3fa",
                     "username": "ndodanli14",
-                    "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                    "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                     "schoolId": "schoolId1",
                     "__t": "User"
                 },
@@ -362,7 +362,7 @@ const doc = {
                         "_id": "62ab8a204166fd1eaebbb3fa",
                         "username": "ndodanli14",
                         "schoolId": "schoolId1",
-                        "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
+                        "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
                         "__t": "User"
                     },
                     "likeCount": 22,
@@ -383,7 +383,7 @@ const doc = {
                         "_id": "62ab8a204166fd1eaebbb3fa",
                         "username": "ndodanli14",
                         "schoolId": null,
-                        "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
+                        "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
                         "__t": "User"
                     },
                     "likeCount": 22,
@@ -427,7 +427,7 @@ const doc = {
                     "owner": {
                         "_id": "62ab8a204166fd1eaebbb3fa",
                         "username": "ndodanli14",
-                        "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                        "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                         "schoolId": "schoolId1",
                         "__t": "User"
                     },
@@ -442,7 +442,7 @@ const doc = {
                             "owner": {
                                 "_id": "62ab8a204166fd1eaebbb3fa",
                                 "username": "ndodanli14",
-                                "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                                "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                                 "__t": "User"
                             },
                             "likeCount": 22,
@@ -456,7 +456,7 @@ const doc = {
                             "owner": {
                                 "_id": "62ab8a204166fd1eaebbb3fa",
                                 "username": "ndodanli14",
-                                "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                                "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                                 "__t": "User"
                             },
                             "likeCount": 22,
@@ -512,7 +512,7 @@ const doc = {
             "_id": "interestId",
             "url": "url",
             "title": "interestTitle",
-            "icon": "http://fakultembucket.s3.amazonaws.com/public/interest_icons/interestId/icon.png",
+            "icon": "http://stuplus-bucket.s3.amazonaws.com/public/interest_icons/interestId/icon.png",
         },
         LoginRequest: {
             $email: "stuplus@gmail.com",
@@ -546,7 +546,7 @@ const doc = {
         SchoolGetAllSchoolsResponse: {
             "_id": "interestId",
             "title": "interestTitle",
-            "coverImageUrl": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
+            "coverImageUrl": "https://stuplus-bucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg",
         },
         SchoolGetFacultiesResponse: {
             "_id": "interestId",
@@ -587,7 +587,7 @@ const doc = {
                     grade: null,
                     firstName: "string",
                     lastName: "string",
-                    profilePhotoUrl: "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                    profilePhotoUrl: "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                     isAccEmailConfirmed: true,
                     isSchoolEmailConfirmed: false,
                     interestIds: [
@@ -850,7 +850,7 @@ const doc = {
                 "owner": {
                     "_id": "62ab8a204166fd1eaebbb3fa",
                     "username": "ndodanli14",
-                    "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                    "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                     "schoolId": "schoolId1",
                     "__t": "User"
                 },
@@ -908,7 +908,7 @@ const doc = {
                         "_id": "62ab8a204166fd1eaebbb3fa",
                         "username": "ndodanli14",
                         "schoolId": "schoolId1",
-                        "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
+                        "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
                         "__t": "User"
                     },
                     "likeCount": 22,
@@ -929,7 +929,7 @@ const doc = {
                         "_id": "62ab8a204166fd1eaebbb3fa",
                         "username": "ndodanli14",
                         "schoolId": null,
-                        "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
+                        "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
                         "__t": "User"
                     },
                     "likeCount": 22,
@@ -973,7 +973,7 @@ const doc = {
                     "owner": {
                         "_id": "62ab8a204166fd1eaebbb3fa",
                         "username": "ndodanli14",
-                        "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                        "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                         "schoolId": "schoolId1",
                         "__t": "User"
                     },
@@ -988,7 +988,7 @@ const doc = {
                             "owner": {
                                 "_id": "62ab8a204166fd1eaebbb3fa",
                                 "username": "ndodanli14",
-                                "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                                "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                                 "__t": "User"
                             },
                             "likeCount": 22,
@@ -1002,7 +1002,7 @@ const doc = {
                             "owner": {
                                 "_id": "62ab8a204166fd1eaebbb3fa",
                                 "username": "ndodanli14",
-                                "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                                "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
                                 "__t": "User"
                             },
                             "likeCount": 22,

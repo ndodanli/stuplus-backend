@@ -144,6 +144,54 @@ export const constantRoutes = [
       }
     ]
   },
+  {
+    path: '/announcement-likes',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/announcement-like/index'),
+        name: 'Announcement Likes',
+        meta: { title: 'Announcement Likes', icon: 'el-icon-user', affix: true }
+      }
+    ]
+  },
+  {
+    path: '/announcement-comment-likes',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/announcement-comment-like/index'),
+        name: 'Announcement Comment Likes',
+        meta: { title: 'Announcement Comment Likes', icon: 'el-icon-user', affix: true }
+      }
+    ]
+  },
+  {
+    path: '/question-likes',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/question-like/index'),
+        name: 'Question Likes',
+        meta: { title: 'Question Likes', icon: 'el-icon-user', affix: true }
+      }
+    ]
+  },
+  {
+    path: '/question-comment-likes',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/question-comment-like/index'),
+        name: 'Question Comment Likes',
+        meta: { title: 'Question Comment Likes', icon: 'el-icon-user', affix: true }
+      }
+    ]
+  },
 
   {
     path: '/profile',

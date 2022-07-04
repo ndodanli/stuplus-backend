@@ -2096,7 +2096,7 @@
                   },
                   "profilePhotoUrl": {
                     "type": "string",
-                    "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                    "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
                   },
                   "isAccEmailConfirmed": {
                     "type": "boolean",
@@ -2859,7 +2859,7 @@
                   },
                   "profilePhotoUrl": {
                     "type": "string",
-                    "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                    "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
                   },
                   "schoolId": {
                     "type": "string",
@@ -3060,7 +3060,7 @@
                     "schoolId": {},
                     "profilePhotoUrl": {
                       "type": "string",
-                      "example": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg"
+                      "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg"
                     },
                     "__t": {
                       "type": "string",
@@ -3201,7 +3201,7 @@
                     },
                     "profilePhotoUrl": {
                       "type": "string",
-                      "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                      "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
                     },
                     "schoolId": {
                       "type": "string",
@@ -3255,7 +3255,7 @@
                           },
                           "profilePhotoUrl": {
                             "type": "string",
-                            "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                            "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
                           },
                           "__t": {
                             "type": "string",
@@ -3462,7 +3462,7 @@
           },
           "icon": {
             "type": "string",
-            "example": "http://fakultembucket.s3.amazonaws.com/public/interest_icons/interestId/icon.png"
+            "example": "http://stuplus-bucket.s3.amazonaws.com/public/interest_icons/interestId/icon.png"
           }
         },
         "xml": {
@@ -3604,7 +3604,7 @@
           },
           "coverImageUrl": {
             "type": "string",
-            "example": "https://fakultembucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg"
+            "example": "https://stuplus-bucket.s3.amazonaws.com/public/school_covers/62b0c8d63721b9b60d3585db/cover.jpg"
           }
         },
         "xml": {
@@ -3748,7 +3748,7 @@
                   },
                   "profilePhotoUrl": {
                     "type": "string",
-                    "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                    "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
                   },
                   "isAccEmailConfirmed": {
                     "type": "boolean",
@@ -4461,7 +4461,7 @@
                   },
                   "profilePhotoUrl": {
                     "type": "string",
-                    "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                    "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
                   },
                   "schoolId": {
                     "type": "string",
@@ -4662,7 +4662,7 @@
                     "schoolId": {},
                     "profilePhotoUrl": {
                       "type": "string",
-                      "example": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg"
+                      "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg"
                     },
                     "__t": {
                       "type": "string",
@@ -4803,7 +4803,7 @@
                     },
                     "profilePhotoUrl": {
                       "type": "string",
-                      "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                      "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
                     },
                     "schoolId": {
                       "type": "string",
@@ -4857,7 +4857,7 @@
                           },
                           "profilePhotoUrl": {
                             "type": "string",
-                            "example": "https://fakultembucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                            "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
                           },
                           "__t": {
                             "type": "string",

@@ -1,5 +1,5 @@
 module.exports = {
-  title: 'Vue Element Admin',
+  title: 'Stuplus Backoffice',
 
   /**
    * @type {boolean} true | false
