@@ -60,6 +60,22 @@ export function getQuestions(query) {
   })
 }
 
+export function getSchools(query) {
+  return request({
+    url: '/general/getSchools',
+    method: 'get',
+    params: query
+  })
+}
+
+export function getFaculties(query) {
+  return request({
+    url: '/general/getFaculties',
+    method: 'get',
+    params: query
+  })
+}
+
 export function getQuestionComments(query) {
   return request({
     url: '/general/getQuestionComments',

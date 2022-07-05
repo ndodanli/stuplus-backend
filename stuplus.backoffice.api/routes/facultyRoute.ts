@@ -4,7 +4,7 @@ import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
-import { AddUpdateSchoolDTO, SchoolListDTO } from "../dtos/school";
+import { AddUpdateFacultyDTO, FacultyListDTO } from "../dtos/faculty";
 import { authorize } from "../middlewares/auth";
 import { RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { SortOrder } from "mongoose";
@@ -12,7 +12,7 @@ import RedisService from "../../stuplus-lib/services/redisService";
 
 const router = Router();
 
-router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<SchoolListDTO>, res: any) => {
+router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<FacultyListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     let limit = parseInt(req.query.pageSize as string);
@@ -28,16 +28,18 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<SchoolLis
       search = search.toLowerCase();
     }
 
-    let temp = SchoolEntity.find({}).skip(skip).limit(limit).sort(sortFilter);
+    let temp = FacultyEntity.find({}).skip(skip).limit(limit).sort(sortFilter);
     if (search) {
       temp.or([
         { title: { $regex: search, $options: "i" } },
         { emailFormat: { $regex: search, $options: "i" } }
       ]);
     }
-    let schools = await temp;
-    const total = await SchoolEntity.countDocuments();
-    response.data = { items: schools, total: total };
+    let faculties = await temp;
+    const total = await FacultyEntity.countDocuments();
+    const schoolIds = faculties.map(faculty => faculty.schoolId);
+    const schools = await SchoolEntity.find({ _id: { $in: schoolIds } }, ["_id", "title"], { lean: true });
+    response.data = { items: faculties, schools: schools, total: total };
   } catch (err: any) {
     response.setErrorMessage(err.message)
 
@@ -48,24 +50,24 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<SchoolLis
   return Ok(res, response)
 });
 
-router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomRequest<AddUpdateSchoolDTO>, res: any) => {
+router.post("/addUpdateFaculty", authorize([Role.Admin]), async (req: CustomRequest<AddUpdateFacultyDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    const school = new AddUpdateSchoolDTO(req.body);
-    if (school._id) {
-      const schoolToUpdate = await SchoolEntity.findById(school._id);
-      if (!schoolToUpdate) {
-        response.setErrorMessage("School not found");
-        throw new NotValidError("School not found", 404);
+    const faculty = new AddUpdateFacultyDTO(req.body);
+    if (faculty._id) {
+      const facultyToUpdate = await FacultyEntity.findById(faculty._id);
+      if (!facultyToUpdate) {
+        response.setErrorMessage("Faculty not found");
+        throw new NotValidError("Faculty not found", 404);
       }
-      schoolToUpdate.title = school.title;
-      schoolToUpdate.emailFormat = school.emailFormat;
-      schoolToUpdate.coverImageUrl = school.coverImageUrl;
-      await schoolToUpdate.save();
+      facultyToUpdate.schoolId = faculty.schoolId;
+      facultyToUpdate.title = faculty.title;
+      facultyToUpdate.coverImageUrl = faculty.coverImageUrl;
+      await facultyToUpdate.save();
     }
     else {
-      const newSchool = new SchoolEntity(school);
-      await newSchool.save();
+      const newFaculty = new FacultyEntity(faculty);
+      await newFaculty.save();
     }
   } catch (err: any) {
 
@@ -74,48 +76,37 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
       return InternalError(res, response);
   }
 
-  await RedisService.updateSchools();
-
   return Ok(res, response)
 });
 
-router.delete("/deleteSchool", authorize([Role.Admin]), async (req: CustomRequest<SchoolListDTO>, res: any) => {
+router.delete("/deleteFaculty", authorize([Role.Admin]), async (req: CustomRequest<FacultyListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    const school = await SchoolEntity.findOne({ _id: req.body._id });
-    if (!school) {
-      throw new NotValidError("School not found", 404);
+    const faculty = await FacultyEntity.findOne({ _id: req.body._id });
+    if (!faculty) {
+      throw new NotValidError("Faculty not found", 404);
     }
-    school.recordStatus = RecordStatus.Deleted;
+    faculty.recordStatus = RecordStatus.Deleted;
 
     const bulkUserUpdateOps = [];
-    const usersWhoRelatedToSchool = await UserEntity.find({})
-      .or([
-        { schoolId: school._id },
-        { relatedSchoolIds: { $in: [school._id] } }
-      ]);
-    for (let user of usersWhoRelatedToSchool) {
-      user.schoolId = null;
-      user.relatedSchoolIds = user.relatedSchoolIds.filter(id => id != school._id.toString());
+    const usersWhoRelatedToFaculty = await UserEntity.find({ facultyId: faculty._id });
+    for (let user of usersWhoRelatedToFaculty) {
+      user.facultyId = null;
       bulkUserUpdateOps.push({
         updateOne: {
           filter: {
             _id: user._id.toString()
           },
           update: {
-            schoolId: user.schoolId,
-            relatedSchoolIds: user.relatedSchoolIds
+            facultyId: user.facultyId,
           }
         }
       })
     }
     await UserEntity.bulkWrite(bulkUserUpdateOps);
-    const relatedFaculties = await FacultyEntity.find({ schoolId: school._id }, ["_id"]);
-    const relatedFacultyIds = relatedFaculties.map(faculty => faculty._id);
-    await DepartmentEntity.updateMany({ facultyId: { $in: relatedFacultyIds } }, { recordStatus: RecordStatus.Deleted });
-    await FacultyEntity.updateMany({ schoolId: school._id }, { recordStatus: RecordStatus.Deleted });
-    await school.save();
-    for (let user of usersWhoRelatedToSchool) {
+    await DepartmentEntity.updateMany({ facultyId: faculty._id }, { recordStatus: RecordStatus.Deleted });
+    await faculty.save();
+    for (let user of usersWhoRelatedToFaculty) {
       await RedisService.updateUser(user)
     }
   } catch (err: any) {
@@ -124,8 +115,6 @@ router.delete("/deleteSchool", authorize([Role.Admin]), async (req: CustomReques
     if (err.status != 200)
       return InternalError(res, response);
   }
-
-  await RedisService.updateSchools();
 
   return Ok(res, response)
 });

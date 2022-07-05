@@ -35,59 +35,23 @@
           </span>
         </template>
       </el-table-column>
-      <el-table-column label="Title" prop="title" align="center">
+      <el-table-column label="Announcement" prop="announcementId" align="center">
         <template slot-scope="{ row }">
-          <span>{{ row.title }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="Cover Image" width="120px" prop="coverImageUrl" align="center">
-        <template slot-scope="{ row }">
-          <span><img
-              :src="row.coverImageUrl || 'https://www.ibavet.com.tr/wp-content/uploads/2021/11/a01.png'"
-              width="100px" height="100px" style="border: 0;"></span>
-        </template>
-      </el-table-column>
-      <el-table-column label="Related Schools" prop="relatedSchoolIds" align="center">
-        <template slot-scope="{ row }">
-          <span v-if="!anySchool(row.relatedSchoolIds)" style="font-size:14px;" class="m-1">
-            <el-tag type="info">
-              All
-            </el-tag>
-          </span>
-          <span v-else style="font-size:14px;" class="m-1" v-for="relatedSchoolId in row.relatedSchoolIds">
-            <el-tag type="light">
-              {{ schools.find(school => school._id === relatedSchoolId)?.title }}
+          <span style="font-size:14px;" class="m-1">
+            <el-tag type="success"> {{ announcements.find(announcement => announcement._id ===
+                row.announcementId)?.title
+            }}
             </el-tag>
           </span>
         </template>
       </el-table-column>
-      <el-table-column label="Text" prop="text" width="300px" align="center">
+      <el-table-column label="Comment" prop="comment" align="center">
         <template slot-scope="{ row }">
-          <span :inner-html.prop="row.text | truncate(250)"></span>
-        </template>
-      </el-table-column>
-      <el-table-column label="Is Active?" prop="isActive" align="center">
-        <template slot-scope="{ row }">
-          <span v-if="row.isActive">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="green" class="bi bi-check"
-              viewBox="0 0 16 16">
-              <path
-                d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z">
-              </path>
-            </svg></span>
-          <span v-else>
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="red" class="bi bi-x"
-              viewBox="0 0 16 16">
-              <path
-                d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
-            </svg>
+          <span class="m-1">
+            <v-clamp autoresize :max-lines="3">
+              {{ row.comment }}
+            </v-clamp>
           </span>
-        </template>
-      </el-table-column>
-      <el-table-column label="From/To" width="200px" align="center">
-        <template slot-scope="{ row }">
-          <span>{{ row.fromDate ? formatDate(row.fromDate) : 'N/A' }}</span> <br>
-          <span>{{ row.toDate ? formatDate(row.toDate) : 'N/A' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="Created/Updated At" width="250px" align="center">
@@ -120,36 +84,15 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="Title" prop="title">
-          <el-input v-model="temp.title" />
-        </el-form-item>
-        <el-form-item label="Cover Image" prop="coverImageUrl">
-          <el-upload name="file" class="avatar-uploader" :action="uploadFilePath" :show-file-list="false"
-            :headers="{ Authorization: 'Bearer ' + token }" :on-success="handleCoverImageUploadSuccess"
-            :before-upload="handleCoverImageUploadBefore">
-            <img v-if="temp.coverImageUrl" :src="temp.coverImageUrl" width="150px" height="150px">
-            <i v-else class="el-icon-plus avatar-uploader-icon" />
-          </el-upload>
-        </el-form-item>
-        <el-form-item label="Related Schools" prop="relatedSchoolIds">
-          <el-select v-model="temp.relatedSchoolIds" multiple filterable placeholder="Select a school...">
-            <el-option v-for="item in schools" :key="item._id" :label="item.title" :value="item._id">
+        <el-form-item label="Announcement" prop="announcementId">
+          <el-select v-model="temp.announcementId" filterable placeholder="Select announcement..." remote
+            reserve-keyword :remote-method="remoteMethodAnnouncement" :loading="remoteLoading">
+            <el-option v-for="item in searchedAnnouncements" :key="item._id" :label="item.title" :value="item._id">
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="Text" prop="text">
-          <ckeditor :editor="editor" v-model="temp.text" :config="editorConfig"></ckeditor>
-        </el-form-item>
-        <el-form-item label="Is Active?" prop="isActive">
-          <el-checkbox v-model="temp.isActive">Active</el-checkbox>
-        </el-form-item>
-        <el-form-item label="From" prop="fromDate">
-          <el-date-picker v-model="temp.fromDate" type="datetime" placeholder="Select date and time">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="To" prop="toDate">
-          <el-date-picker v-model="temp.toDate" type="datetime" placeholder="Select date and time">
-          </el-date-picker>
+        <el-form-item label="Comment" prop="comment">
+          <el-input type="textarea" rows="4" v-model="temp.comment" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -173,14 +116,14 @@
 </template>
 
 <script>
-import { fetchList, addUpdateAnnouncement, deleteAnnouncement } from '@/api/announcement'
-import { getAllSchools, getUsers } from '@/api/general'
+import { fetchList, fetchPv, addUpdateAnnouncementComment, deleteAnnouncementComment } from '@/api/announcementComment'
 import waves from '@/directive/waves' // waves directive
 import { formatDate, parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 import { getToken } from '@/utils/auth'
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { getUsers, getAnnouncements } from '@/api/general'
 import VClamp from 'vue-clamp'
+
 const calendarTypeOptions = [
   { key: 'CN', display_name: 'China' },
   { key: 'US', display_name: 'USA' },
@@ -213,14 +156,9 @@ export default {
   },
   data() {
     return {
-      editor: ClassicEditor,
-      editorData: '<p>Content of the editor.</p>',
-      editorConfig: {
-        // The configuration of the editor.
-      },
       token: getToken(),
       uploadFilePath:
-        'http://localhost:25050/general/uploadFile?uploadPath=announcement/cover_images',
+        'http://localhost:25050/general/uploadFile?uploadPath=school_images',
       tableKey: 0,
       list: null,
       total: 0,
@@ -242,13 +180,8 @@ export default {
       temp: {
         _id: null,
         ownerId: null,
-        title: null,
-        coverImageUrl: null,
-        relatedSchoolIds: null,
-        text: null,
-        isActive: null,
-        fromDate: null,
-        toDate: null,
+        announcementId: null,
+        comment: null
       },
       dialogFormVisible: false,
       dialogStatus: '',
@@ -259,44 +192,49 @@ export default {
       dialogPvVisible: false,
       pvData: [],
       rules: {
-        title: [
-          { required: true, message: 'Title is required', trigger: 'blur' }
-        ],
         ownerId: [
           { required: true, message: 'Owner is required', trigger: 'blur' }
         ],
-        text: [
-          { required: true, message: 'text is required', trigger: 'blur' }
+        announcementId: [
+          { required: true, message: 'Announcement is required', trigger: 'blur' }
+        ],
+        comment: [
+          { required: true, message: 'Comment is required', trigger: 'blur' }
         ]
       },
       downloadLoading: false,
-      schools: [],
-      users: [],
       owners: [],
+      users: [],
+      announcements: [],
+      searchedAnnouncements: [],
       remoteLoading: false,
     }
   },
-  async created() {
+  created() {
     this.getList()
-    const schoolResult = await getAllSchools();
-    this.schools = schoolResult?.data
   },
   methods: {
-    anySchool(relatedSchoolIds) {
-      console.log("anyschool", this.schools.map(x => x._id).some(x => relatedSchoolIds.includes(x)));
-      return this.schools.map(x => x._id).some(x => relatedSchoolIds.includes(x));
-    },
     async remoteMethod(query) {
       if (query !== '') {
         this.remoteLoading = true;
         const userResult = await getUsers({ search: query });
         this.users = userResult?.data
-        //concat two arrays without duplicates
         this.owners = this.users.concat(this.owners)
         this.remoteLoading = false;
         console.log(" this.owners: ", this.owners)
       } else {
         this.users = [];
+      }
+    },
+    async remoteMethodAnnouncement(query) {
+      if (query !== '') {
+        this.remoteLoading = true;
+        const annoResult = await getAnnouncements({ search: query });
+        this.searchedAnnouncements = annoResult?.data
+        this.announcements = this.searchedAnnouncements.concat(this.announcements)
+        this.remoteLoading = false;
+      } else {
+        this.announcements = [];
       }
     },
     handleCoverImageUploadSuccess(res, file) {
@@ -319,10 +257,14 @@ export default {
     getList() {
       this.listLoading = true
       fetchList(this.listQuery).then((response) => {
-        this.list = response.data.items
-        this.total = response.data.total
-        this.owners = response.data.owners
-        this.users = response.data.owners
+        console.log('response DD', response)
+        this.list = response.data.items;
+        this.total = response.data.total;
+        this.owners = response.data.owners;
+        this.users = response.data.owners;
+        this.announcements = response.data.announcements;
+        console.log('this.announcements', this.announcements)
+        this.searchedAnnouncements = response.data.announcements;
         this.listLoading = false
       })
     },
@@ -332,7 +274,7 @@ export default {
     },
     handleModifyStatus(row, status) {
       this.$message({
-        message: '操作Success',
+        message: 'Success',
         type: 'success'
       })
       row.status = status
@@ -355,13 +297,8 @@ export default {
       this.temp = {
         _id: null,
         ownerId: null,
-        title: null,
-        coverImageUrl: null,
-        relatedSchoolIds: null,
-        text: null,
-        isActive: null,
-        fromDate: null,
-        toDate: null,
+        announcementId: null,
+        comment: null
       }
     },
     handleCreate() {
@@ -375,7 +312,7 @@ export default {
     createData() {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
-          addUpdateAnnouncement(this.temp).then(() => {
+          addUpdateAnnouncementComment(this.temp).then(() => {
             this.temp.createdAt = new Date().toISOString()
             this.temp.updatedAt = new Date().toISOString()
             this.list.unshift(this.temp)
@@ -403,7 +340,7 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.temp)
           console.log('tempData', tempData)
-          addUpdateAnnouncement(tempData).then(() => {
+          addUpdateAnnouncementComment(tempData).then(() => {
             const index = this.list.findIndex((v) => v._id === this.temp._id)
             this.list.splice(index, 1, this.temp)
             this.dialogFormVisible = false
@@ -428,7 +365,7 @@ export default {
         reverseButtons: true
       }).then((result) => {
         if (result.isConfirmed) {
-          deleteAnnouncement({ _id: row._id }).then(() => {
+          deleteAnnouncementComment({ _id: row._id }).then(() => {
             this.$notify({
               title: 'Success',
               message: 'Deleted Successfully',
@@ -481,7 +418,7 @@ export default {
       const sort = this.listQuery.sort
       return sort === `+${key}` ? 'ascending' : 'descending'
     }
-  },
+  }
 }
 </script>
 <style>

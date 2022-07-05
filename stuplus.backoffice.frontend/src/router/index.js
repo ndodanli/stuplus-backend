@@ -109,26 +109,26 @@ export const constantRoutes = [
     ]
   },
   {
-    path: '/announcements',
+    path: '/faculties',
     component: Layout,
     children: [
       {
         path: 'index',
-        component: () => import('@/views/announcement/index'),
-        name: 'Announcements',
-        meta: { title: 'Announcements', icon: 'el-icon-school', affix: true }
+        component: () => import('@/views/faculty/index'),
+        name: 'Faculties',
+        meta: { title: 'Faculties', icon: 'el-icon-school', affix: true }
       }
     ]
   },
   {
-    path: '/questions',
+    path: '/departments',
     component: Layout,
     children: [
       {
         path: 'index',
-        component: () => import('@/views/question/index'),
-        name: 'Questions',
-        meta: { title: 'Questions', icon: 'el-icon-school', affix: true }
+        component: () => import('@/views/department/index'),
+        name: 'Departments',
+        meta: { title: 'Departments', icon: 'el-icon-school', affix: true }
       }
     ]
   },
@@ -145,6 +145,18 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/announcements',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/announcement/index'),
+        name: 'Announcements',
+        meta: { title: 'Announcements', icon: 'el-icon-school', affix: true }
+      }
+    ]
+  },
+  {
     path: '/announcement-likes',
     component: Layout,
     children: [
@@ -153,6 +165,18 @@ export const constantRoutes = [
         component: () => import('@/views/announcement-like/index'),
         name: 'Announcement Likes',
         meta: { title: 'Announcement Likes', icon: 'el-icon-user', affix: true }
+      }
+    ]
+  },
+  {
+    path: '/announcement-comments',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/announcement-comment/index'),
+        name: 'Announcement Comments',
+        meta: { title: 'Announcement Comments', icon: 'el-icon-user', affix: true }
       }
     ]
   },
@@ -169,6 +193,18 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/questions',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/question/index'),
+        name: 'Questions',
+        meta: { title: 'Questions', icon: 'el-icon-school', affix: true }
+      }
+    ]
+  },
+  {
     path: '/question-likes',
     component: Layout,
     children: [
@@ -177,6 +213,18 @@ export const constantRoutes = [
         component: () => import('@/views/question-like/index'),
         name: 'Question Likes',
         meta: { title: 'Question Likes', icon: 'el-icon-user', affix: true }
+      }
+    ]
+  },
+  {
+    path: '/question-comments',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/question-comment/index'),
+        name: 'Question Comments',
+        meta: { title: 'Question Comments', icon: 'el-icon-user', affix: true }
       }
     ]
   },

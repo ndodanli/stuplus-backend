@@ -4,6 +4,7 @@ import BaseEntity from "./BaseEntity";
 export interface Faculty extends BaseEntity {
   schoolId: string;
   title: string;
+  coverImageUrl: string;
 }
 
 export interface FacultyDocument extends Faculty, Document {
@@ -12,7 +13,8 @@ export interface FacultyDocument extends Faculty, Document {
 
 export const FacultySchema: Schema = new Schema({
   schoolId: { type: String, required: true },
-  title: { type: String, required: true, default: null },
+  title: { type: String, required: true },
+  coverImageUrl: { type: String, required: false, default: null },
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -34,6 +36,7 @@ FacultySchema.methods.minify = async function (
     recordStatus: this.recordStatus,
     schoolId: this.schoolId,
     title: this.title,
+    coverImageUrl: this.coverImageUrl,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

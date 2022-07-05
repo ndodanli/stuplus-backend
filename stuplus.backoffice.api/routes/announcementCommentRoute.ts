@@ -8,7 +8,6 @@ import { AddUpdateAnnouncementCommentDTO, AnnouncementCommentListDTO } from "../
 import { authorize } from "../middlewares/auth";
 import { RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { SortOrder } from "mongoose";
-import RedisService from "../../stuplus-lib/services/redisService";
 
 const router = Router();
 
@@ -31,7 +30,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<Announcem
     let temp = AnnouncementCommentEntity.find({}).skip(skip).limit(limit).sort(sortFilter);
     if (search) {
       temp.or([
-        { type: { $regex: search, $options: "i" } },
+        { comment: { $regex: search, $options: "i" } },
       ]);
     }
     let announcementComments = await temp;
@@ -56,20 +55,18 @@ router.post("/addUpdateAnnouncementComment", authorize([Role.Admin]), async (req
   try {
     const announcementComment = new AddUpdateAnnouncementCommentDTO(req.body);
     if (announcementComment._id) {
-      const AnnouncementCommentToUpdate = await AnnouncementCommentEntity.findById(announcementComment._id);
-      if (!AnnouncementCommentToUpdate) {
+      const announcementCommentToUpdate = await AnnouncementCommentEntity.findById(announcementComment._id);
+      if (!announcementCommentToUpdate) {
         response.setErrorMessage("AnnouncementComment not found");
         throw new NotValidError("AnnouncementComment not found", 404);
       }
-      AnnouncementCommentToUpdate.ownerId = announcementComment.ownerId;
-      AnnouncementCommentToUpdate.announcementId = announcementComment.announcementId;
-      AnnouncementCommentToUpdate.comment = announcementComment.comment;
+      announcementCommentToUpdate.ownerId = announcementComment.ownerId;
+      announcementCommentToUpdate.announcementId = announcementComment.announcementId;
+      announcementCommentToUpdate.comment = announcementComment.comment;
 
-      await AnnouncementCommentToUpdate.save();
+      await announcementCommentToUpdate.save();
     }
     else {
-      if (await AnnouncementCommentEntity.findOne({ ownerId: announcementComment.ownerId, announcementId: announcementComment.announcementId }))
-        throw new NotValidError("This user already liked/dislike this announcement");
       const newAnnouncementComment = new AnnouncementCommentEntity(announcementComment);
       await newAnnouncementComment.save();
     }
@@ -87,7 +84,7 @@ router.delete("/deleteAnnouncementComment", authorize([Role.Admin]), async (req:
   try {
     const announcementComment = await AnnouncementCommentEntity.findOne({ _id: req.body._id });
     if (!announcementComment) {
-      throw new NotValidError("Interest not found", 404);
+      throw new NotValidError("Announcement not found");
     }
     announcementComment.recordStatus = RecordStatus.Deleted;
 
@@ -103,7 +100,6 @@ router.delete("/deleteAnnouncementComment", authorize([Role.Admin]), async (req:
       return InternalError(res, response);
   }
 
-  await RedisService.updateInterests();
   return Ok(res, response)
 });
 

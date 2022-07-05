@@ -174,6 +174,58 @@ router.get("/getQuestions", authorize([Role.Admin]), async (req: CustomRequest<o
   return Ok(res, response);
 });
 
+router.get("/getSchools", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+  const response = new BaseResponse<object>();
+  try {
+    let search = req.query.search as string;
+    if (search) {
+      search = search.toLowerCase();
+    }
+
+    let temp = SchoolEntity.find({}, ["_id", "title"], { lean: true })
+    if (search) {
+      temp.or([
+        { title: { $regex: search, $options: "i" } },
+      ]);
+    }
+    response.data = await temp;
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.get("/getFaculties", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+  const response = new BaseResponse<object>();
+  try {
+    let search = req.query.search as string;
+    if (search) {
+      search = search.toLowerCase();
+    }
+
+    let temp = FacultyEntity.find({}, ["_id", "title"], { lean: true })
+    if (search) {
+      temp.or([
+        { title: { $regex: search, $options: "i" } },
+      ]);
+    }
+    response.data = await temp;
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
 router.get("/getQuestionComments", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {

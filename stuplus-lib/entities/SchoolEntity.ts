@@ -13,7 +13,7 @@ export interface SchoolDocument extends School, Document {
 
 export const SchoolSchema: Schema = new Schema({
   emailFormat: { type: String, required: true },
-  title: { type: String, required: false, default: null },
+  title: { type: String, required: true },
   coverImageUrl: { type: String, required: false, default: null },
 });
 
