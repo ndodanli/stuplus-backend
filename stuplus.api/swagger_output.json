@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://46.101.160.93:25010/",
+      "url": "http://212.98.224.208:25010/",
       "description": "Canli API"
     },
     {

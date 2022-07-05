@@ -74,6 +74,8 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
       return InternalError(res, response);
   }
 
+  await RedisService.updateSchools();
+
   return Ok(res, response)
 });
 
@@ -118,6 +120,8 @@ router.delete("/deleteSchool", authorize([Role.Admin]), async (req: CustomReques
     if (err.status != 200)
       return InternalError(res, response);
   }
+
+  await RedisService.updateSchools();
 
   return Ok(res, response)
 });

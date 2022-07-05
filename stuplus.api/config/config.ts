@@ -1,5 +1,5 @@
 let config = {
-    DOMAIN: process.env.DOMAIN || "http://46.101.160.93",
+    DOMAIN: process.env.DOMAIN || "http://212.98.224.208",
     EMAIL_SERVICE: {
         HOST_EMAIL: "fakultemdestekmail@gmail.com",
         HOST_EMAIL_PASSWORD: "yqplxujmtvszkwmx"

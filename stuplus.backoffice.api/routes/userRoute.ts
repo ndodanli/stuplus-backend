@@ -9,6 +9,7 @@ import { RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { SortOrder } from "mongoose";
 import { UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import bcrypt from "bcryptjs"
+import RedisService from "../../stuplus-lib/services/redisService";
 
 const router = Router();
 
@@ -99,6 +100,7 @@ router.post("/addUpdateUser", authorize([Role.Admin]), async (req: CustomRequest
       userToUpdate.about = user.about;
       userToUpdate.privacySettings = user.privacySettings;
       await userToUpdate.save();
+      await RedisService.updateUser(userToUpdate);
     }
     else {
       const newUser = new UserEntity(user);

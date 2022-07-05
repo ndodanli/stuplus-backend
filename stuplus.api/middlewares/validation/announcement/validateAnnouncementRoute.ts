@@ -102,10 +102,6 @@ export const validateGetCommentsAnnouncement = [
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail(),
-    check('page')
-        .notEmpty()
-        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(),
     check('pageSize')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
@@ -119,10 +115,6 @@ export const validateGetCommentsAnnouncement = [
 ];
 
 export const validateGetAnnouncementsAnnouncement = [
-    check('page')
-        .notEmpty()
-        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(),
     check('pageSize')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))

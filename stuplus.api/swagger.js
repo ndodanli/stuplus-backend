@@ -6,7 +6,7 @@ const doc = {
         title: "Stuplus API",
         description: "Stuplus API Documentation."
     },
-    servers: [{ url: "http://46.101.160.93:25010/", description: "Canli API" }, { url: "http://127.0.0.1:25010/", description: "Local API" },],
+    servers: [{ url: "http://212.98.224.208:25010/", description: "Canli API" }, { url: "http://127.0.0.1:25010/", description: "Local API" },],
     basePath: "/",
     schemes: ['http'],
     consumes: ['application/json', 'multipart/form-data'],

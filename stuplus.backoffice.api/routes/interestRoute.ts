@@ -72,6 +72,8 @@ router.post("/addUpdateInterest", authorize([Role.Admin]), async (req: CustomReq
       return InternalError(res, response);
   }
 
+  await RedisService.updateInterests();
+
   return Ok(res, response)
 });
 
@@ -115,6 +117,7 @@ router.delete("/deleteInterest", authorize([Role.Admin]), async (req: CustomRequ
       return InternalError(res, response);
   }
 
+  await RedisService.updateInterests();
   return Ok(res, response)
 });
 
