@@ -1,6 +1,7 @@
 export enum Role {
-   Admin,
-   User
+   Admin = 0,
+   User = 1,
+   ContentCreator = 2
 }
 
 export enum Gender {

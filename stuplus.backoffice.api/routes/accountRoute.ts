@@ -12,7 +12,7 @@ import { authorize } from "../middlewares/auth";
 
 const router = Router();
 
-router.get("/user", authorize([Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     const user = await RedisService.acquireUser(res.locals.user._id, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",

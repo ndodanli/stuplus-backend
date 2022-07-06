@@ -70,7 +70,7 @@ router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadSingleFi
     return Ok(res, response)
 });
 
-router.post("/getQuestions", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateGetQuestionsQuestion, async (req: CustomRequest<QuestionGetMultipleDTO>, res: any) => {
+router.post("/getQuestions", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateGetQuestionsQuestion, async (req: CustomRequest<QuestionGetMultipleDTO>, res: any) => {
     /* #swagger.tags = ['Question']
         #swagger.description = 'Get questions.' */
     /*	#swagger.requestBody = {
@@ -96,7 +96,7 @@ router.post("/getQuestions", authorize([Role.ContentCreator, Role.User, Role.Adm
     return Ok(res, response)
 });
 
-router.get("/getQuestion/:id", authorize([Role.ContentCreator, Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getQuestion/:id", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<object>, res: any) => {
     /* #swagger.tags = ['Question']
         #swagger.description = 'Get question by id.' */
     /* #swagger.responses[200] = {
@@ -118,7 +118,7 @@ router.get("/getQuestion/:id", authorize([Role.ContentCreator, Role.User, Role.A
     return Ok(res, response)
 });
 
-router.post("/likeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateLikeDislikeQuestion, async (req: CustomRequest<QuestionLikeDislikeDTO>, res: any) => {
+router.post("/likeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateLikeDislikeQuestion, async (req: CustomRequest<QuestionLikeDislikeDTO>, res: any) => {
     /* #swagger.tags = ['Question']
     #swagger.description = 'Like or dislike an question.' */
     /*	#swagger.requestBody = {
@@ -144,7 +144,7 @@ router.post("/likeDislike", authorize([Role.ContentCreator, Role.User, Role.Admi
     return Ok(res, response)
 });
 
-router.post("/getComments", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateGetCommentsQuestion, async (req: CustomRequest<QuestionGetCommentsDTO>, res: any) => {
+router.post("/getComments", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateGetCommentsQuestion, async (req: CustomRequest<QuestionGetCommentsDTO>, res: any) => {
     /* #swagger.tags = ['Question']
         #swagger.description = 'Get comments of an question.' */
     /*	#swagger.requestBody = {
@@ -170,7 +170,7 @@ router.post("/getComments", authorize([Role.ContentCreator, Role.User, Role.Admi
     return Ok(res, response)
 });
 
-router.post("/comment", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentQuestion, async (req: CustomRequest<QuestionCommentDTO>, res: any) => {
+router.post("/comment", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateCommentQuestion, async (req: CustomRequest<QuestionCommentDTO>, res: any) => {
     /* #swagger.tags = ['Question']
 #swagger.description = 'Comment to an question.' */
     /*	#swagger.requestBody = {
@@ -196,7 +196,7 @@ router.post("/comment", authorize([Role.ContentCreator, Role.User, Role.Admin]),
     return Ok(res, response)
 });
 
-router.post("/commentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentLikeDislikeQuestion, async (req: CustomRequest<QuestionCommenLikeDisliketDTO>, res: any) => {
+router.post("/commentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateCommentLikeDislikeQuestion, async (req: CustomRequest<QuestionCommenLikeDisliketDTO>, res: any) => {
     /* #swagger.tags = ['Question']
 #swagger.description = 'Like or dislike a anouncement's comment.' */
     /*	#swagger.requestBody = {

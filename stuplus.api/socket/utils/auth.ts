@@ -5,6 +5,7 @@ import BaseResponse from "../../../stuplus-lib/utils/base/BaseResponse";
 import { Ok } from "../../../stuplus-lib/utils/base/ResponseObjectResults";
 
 export const authorizeSocket = (token: string) => {
+    // #swagger.ignore = true
     let decode;
     if (token) {
         const onlyToken = token.slice(7, token.length);
@@ -19,6 +20,7 @@ export const authorizeSocket = (token: string) => {
 }
 
 export const authorize = (role: Role[]) => {
+    // #swagger.ignore = true
     return (req: CustomRequest<object>, res: any, next: any) => {
         const token = req.headers.authorization;
         if (token) {

@@ -2,7 +2,7 @@ import { Document, Schema } from "mongoose";
 import BaseEntity from "./BaseEntity";
 export interface Chat extends BaseEntity {
   ownerId: string; //user id
-  participant: String;
+  participantId: string;
 }
 
 export interface ChatDocument extends Chat, Document {
@@ -11,7 +11,7 @@ export interface ChatDocument extends Chat, Document {
 
 export const ChatSchema: Schema = new Schema({
   ownerId: { type: String, required: true }, //user id
-  participant: { type: String, required: true },
+  participantId: { type: String, required: true },
 });
 
 ChatSchema.pre("save", function (next) {
@@ -33,7 +33,7 @@ ChatSchema.methods.minify = async function (
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     ownerId: this.ownerId,
-    participant: this.participant,
+    participantId: this.participantId,
   };
   return response;
 };

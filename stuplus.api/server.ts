@@ -11,6 +11,7 @@ import accountRoute from "./routes/accountRoute";
 import schoolRoute from "./routes/schoolRoute";
 import announcementRoute from "./routes/announcementRoute";
 import questionRoute from "./routes/questionRoute";
+import chatRoute from "./socket/index";
 import swaggerRoute from "./routes/swaggerRoute";
 import path from "path";
 import { config } from "./config/config";
@@ -45,6 +46,7 @@ app.use(function (error: any, req: any, res: any, next: any) {
   /* #swagger.security = [{
     "bearerAuth": []
 }] */
+  next();
 });
 app.get("/", async (req: Request, res: Response) => {
   return res.sendFile('index.html', { root: path.join(__dirname, './public') })
@@ -55,6 +57,7 @@ app.use("/school", schoolRoute);
 app.use("/interest", interestRoute);
 app.use("/announcement", announcementRoute);
 app.use("/question", questionRoute);
+app.use("/chat", chatRoute);
 
 app.use("/doc", swaggerRoute);
 

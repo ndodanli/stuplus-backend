@@ -64,7 +64,7 @@ export class QuestionAccess {
                     likeCount += await QuestionLikeEntity.countDocuments({ questionId: question._id, type: LikeType.Like })
                     return likeCount;
                 });
-                question.commentCount += await RedisService.acquire<number>(RedisKeyType.QuestionCommentCount + question._id, 30, async () => {
+                question.commentCount = await RedisService.acquire<number>(RedisKeyType.QuestionCommentCount + question._id, 30, async () => {
                     let commentCount = 0;
                     commentCount += await RedisService.client.lLen(RedisKeyType.DBQuestionComment + question._id.toString());
                     commentCount += await QuestionCommentEntity.countDocuments({ questionId: question._id });
@@ -95,7 +95,7 @@ export class QuestionAccess {
         let favoriteTake = 5;
         let comments: QuestionCommentDocument[] = [];
         let isFirstPage = !payload.lastRecordDate;
-        const redisMaxCommentCount = -30;
+        // const redisMaxCommentCount = -30;
 
         if (isFirstPage) {
             let favoriteComments = await QuestionCommentEntity.find({
@@ -111,16 +111,22 @@ export class QuestionAccess {
 
             console.time("getComments");
             const redisComments = await RedisService.client
-                .lRange(RedisKeyType.DBQuestionComment + payload.questionId, redisMaxCommentCount, -1).then(x => x.map(y => JSON.parse(y).e));
+                .lRange(RedisKeyType.DBQuestionComment + payload.questionId, 0, -1).then(x => x.map(y => JSON.parse(y).e));
 
             payload.take -= redisComments.length
             let newComments: QuestionCommentDocument[] = [];
-            if (payload.take > 0)
-                newComments = await QuestionCommentEntity.find({
+            if (payload.take > 0) {
+                let newCommentsQuery = QuestionCommentEntity.find({
                     questionId: payload.questionId,
                     _id: { $nin: favoriteCommentIds },
                     createdAt: { $lt: redisComments[0].createdAt }
-                }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+                });
+
+                if (redisComments.length > 0)
+                    newCommentsQuery = newCommentsQuery.where({ createdAt: { $lt: redisComments[0].createdAt } });
+
+                newComments = await newCommentsQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);
+            }
 
             for (let i = redisComments.length - 1; i >= 0; i--)
                 comments.push(redisComments[i]);

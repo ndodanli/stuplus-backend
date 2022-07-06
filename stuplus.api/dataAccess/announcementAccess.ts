@@ -83,7 +83,7 @@ export class AnnouncementAccess {
                     likeCount += await AnnouncementLikeEntity.countDocuments({ announcementId: announcement._id, type: LikeType.Like })
                     return likeCount;
                 });
-                announcement.commentCount += await RedisService.acquire<number>(RedisKeyType.AnnouncementCommentCount + announcement._id, 30, async () => {
+                announcement.commentCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementCommentCount + announcement._id, 30, async () => {
                     let commentCount = 0;
                     commentCount += await RedisService.client.lLen(RedisKeyType.DBAnnouncementComment + announcement._id.toString());
                     commentCount += await AnnouncementCommentEntity.countDocuments({ announcementId: announcement._id });
@@ -114,7 +114,7 @@ export class AnnouncementAccess {
         let favoriteTake = 5;
         let comments: AnnouncementCommentDocument[] = [];
         let isFirstPage = !payload.lastRecordDate;
-        const redisMaxCommentCount = -30;
+        // const redisMaxCommentCount = -30;
 
         if (isFirstPage) {
             let favoriteComments = await AnnouncementCommentEntity.find({
@@ -128,26 +128,27 @@ export class AnnouncementAccess {
             }
             const favoriteCommentIds = comments.map(x => x._id);
 
-            console.time("getComments");
             const redisComments = await RedisService.client
-                .lRange(RedisKeyType.DBAnnouncementComment + payload.announcementId, redisMaxCommentCount, -1).then(x => x.map(y => JSON.parse(y).e));
+                .lRange(RedisKeyType.DBAnnouncementComment + payload.announcementId, 0, -1).then(x => x.map(y => JSON.parse(y).e));
 
             payload.take -= redisComments.length
             let newComments: AnnouncementCommentDocument[] = [];
-            if (payload.take > 0)
-                newComments = await AnnouncementCommentEntity.find({
+            if (payload.take > 0) {
+                let newCommentsQuery = AnnouncementCommentEntity.find({
                     announcementId: payload.announcementId,
                     _id: { $nin: favoriteCommentIds },
-                    createdAt: { $lt: redisComments[0].createdAt }
-                }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+                });
 
+                if (redisComments.length > 0)
+                    newCommentsQuery = newCommentsQuery.where({ createdAt: { $lt: redisComments[0].createdAt } });
+
+                newComments = await newCommentsQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);;
+            }
             for (let i = redisComments.length - 1; i >= 0; i--)
                 comments.push(redisComments[i]);
 
             for (let i = 0; i < newComments.length; i++)
                 comments.push(newComments[i]);
-
-            console.timeEnd("getComments");
         } else {
             comments = await AnnouncementCommentEntity.find({
                 announcementId: payload.announcementId,

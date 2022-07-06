@@ -2,29 +2,26 @@ import ISocket from "./interfaces/socket";
 import { ChatEntity, GroupMessageForwardEntity, GroupMessageEntity, GroupMessageReadEntity, MessageEntity, UserEntity, GroupChatEntity, GroupChatUserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import "../../stuplus-lib/extensions/extensionMethods"
 require("dotenv").config();
-import cors from 'cors';
 import { RedisGroupMessageDTO, RedisGroupMessageForwardReadDTO, RedisMessageDTO, RedisMessageForwardReadDTO } from "./dtos/RedisChat";
 import { RedisPMOperationType, RedisKeyType, RedisGMOperationType, Role, WatchRoomTypes } from "../../stuplus-lib/enums/enums_socket";
-import CronService from "../../cron/cronService";
 import { authorize, authorizeSocket } from "./utils/auth";
 import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
-import customExtensions from "../../stuplus-lib/extensions/extensions";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { CreateGroupDTO, GetChatMessagesDTO, WatchUsersDTO } from "./dtos/Chat";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
-import bodyParser from "body-parser";
 import { groupChatName, userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 import RedisService from "../../stuplus-lib/services/redisService";
-import { httpServer, app } from "../server";
+import { httpServer } from "../server";
 import { stringify } from "../../stuplus-lib/utils/general";
 import { MessageDocument } from "../../stuplus-lib/entities/MessageEntity";
-app.use(customExtensions())
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+import { RecordStatus } from "../../stuplus-lib/enums/enums";
+import NotValidError from "../../stuplus-lib/errors/NotValidError";
+import { Router } from "express";
+import { uploadSingleFileS3 } from "../../stuplus-lib/services/fileService";
+const router = Router();
 let onlineUsers: Map<string, string>;
 setup();
-
 async function setup() {
     onlineUsers = new Map<string, string>();
 };
@@ -99,8 +96,8 @@ io.on("connection", async (socket: ISocket) => {
 
             if (!data.ci) {
                 const chatEntity = await ChatEntity.findOneAndUpdate(
-                    { ownerId: socket.data.user.id, participant: data.to },
-                    { $setOnInsert: { ownerId: socket.data.user.id, participant: data.to } },
+                    { ownerId: socket.data.user.id, participantId: data.to },
+                    { $setOnInsert: { ownerId: socket.data.user.id, participantId: data.to } },
                     { upsert: true, new: true });
                 data.ci = chatEntity.id; //may be null, catch it later
                 responseData["ci"] = data.ci;
@@ -323,7 +320,7 @@ io.on("connection", async (socket: ISocket) => {
     });
 });
 
-app.get("/", (req: any, res: any, next: any) => {
+router.get("/", (req: any, res: any) => {
     const count = io.engine.clientsCount;
     // may or may not be similar to the count of Socket instances in the main namespace, depending on your usage
     const count2 = io.of("/").sockets.size;
@@ -333,7 +330,7 @@ app.get("/", (req: any, res: any, next: any) => {
     });
 });
 
-app.post("/chat/createGroup", authorize([Role.User, Role.Admin]), async (req: CustomRequest<CreateGroupDTO>, res: any, next: any) => {
+router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<CreateGroupDTO>, res: any) => {
     const response = new BaseResponse<object>();
     try {
         //TODO: check if users who added can be added to group
@@ -385,39 +382,139 @@ app.post("/chat/createGroup", authorize([Role.User, Role.Admin]), async (req: Cu
     return Ok(res, response);
 });
 
-app.get("/chat/getMessages", authorize([Role.User, Role.Admin]), async (req: CustomRequest<GetChatMessagesDTO>, res: any, next: any) => {
+router.get("/getMessages", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<GetChatMessagesDTO>, res: any) => {
     const response = new BaseResponse<object>();
     try {
         const payload = new GetChatMessagesDTO(req.query);
+        if (!await ChatEntity.exists({
+            _id: payload.chatId,
+            recordStatus: RecordStatus.Active,
+            $or: [
+                { ownerId: res.locals.user._id },
+                { participantId: res.locals.user._id }
+            ]
+        })) {
+            throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
+        }
+
         let messages: MessageDocument[] = [];
         let isFirstPage = !payload.lastRecordDate;
-        const redisMaxMessageCount = -30;
+        // const redisMaxMessagesWithFRCount = -60;
 
+        const redisMessagesWithFR = await RedisService.client
+            .lRange(RedisKeyType.DBPrivateMessage + payload.chatId, 0, -1).then(x => x.map(y => JSON.parse(y)));
+        let forwards = redisMessagesWithFR.filter(x => x.t == RedisPMOperationType.UpdateForwarded).map(x => x.e);
+        let reads = redisMessagesWithFR.filter(x => x.t == RedisPMOperationType.UpdateReaded).map(x => x.e);
         if (isFirstPage) {
-            const redisMessages = await RedisService.client
-                .lRange(RedisKeyType.DBPrivateMessage + payload.chatId, redisMaxMessageCount, -1).then(x => x.map(y => JSON.parse(y).e));
+            let redisMessages = redisMessagesWithFR.filter(x => x.t == RedisPMOperationType.InsertMessage).map(x => x.e);
+            for (let i = 0; i < redisMessages.length; i++) {
+                const rM = redisMessages[i];
+                const forwarded = forwards.find(x => x._id == rM._id);
+                rM.forwarded = forwarded ? true : false;
+                if (rM.forwarded)
+                    rM.forwardedAt = forwarded.createdAt;
 
+                const readed = reads.find(x => x._id == rM._id);
+                rM.readed = readed ? true : false;
+                if (rM.readed)
+                    rM.readedAt = readed.createdAt;
+            }
             payload.take -= redisMessages.length
-            let newComments: AnnouncementCommentDocument[] = [];
-            if (payload.take > 0)
-                newComments = await AnnouncementCommentEntity.find({
-                    announcementId: payload.announcementId,
-                    _id: { $nin: favoriteCommentIds },
-                    createdAt: { $lt: redisMessages[0].createdAt }
-                }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+            let newMessages: MessageDocument[] = [];
+            if (payload.take > 0) {
 
+                let newMessagesQuery = MessageEntity.find({
+                    chatId: payload.chatId,
+                });
+
+                if (redisMessages.length > 0)
+                    newMessagesQuery = newMessagesQuery.where({ createdAt: { $lt: redisMessages[0].createdAt } });
+
+                newMessages = await newMessagesQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);
+            }
             for (let i = redisMessages.length - 1; i >= 0; i--)
                 messages.push(redisMessages[i]);
 
-            for (let i = 0; i < newComments.length; i++)
-                messages.push(newComments[i]);
+            for (let i = 0; i < newMessages.length; i++) {
+                const newM = newMessages[i];
+                const forwarded = forwards.find(x => x._id == newM._id.toString());
+                newM.forwarded = forwarded ? true : false;
+                if (newM.forwarded)
+                    newM.forwardedAt = forwarded.createdAt;
+
+                const readed = reads.find(x => x._id == newM._id.toString());
+                newM.readed = readed ? true : false;
+                if (newM.readed)
+                    newM.readedAt = readed.createdAt;
+                messages.push(newM);
+            }
 
         } else {
-            messages = await AnnouncementCommentEntity.find({
-                announcementId: payload.announcementId,
+            messages = await MessageEntity.find({
+                chatId: payload.chatId,
                 createdAt: { $lt: payload.lastRecordDate }
             }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+            for (let i = 0; i < messages.length; i++) {
+                const m = messages[i];
+                const forwarded = forwards.find(x => x._id == m._id.toString());
+                m.forwarded = forwarded ? true : false;
+                if (m.forwarded)
+                    m.forwardedAt = forwarded.createdAt;
+
+                const readed = reads.find(x => x._id == m._id.toString());
+                m.readed = readed ? true : false;
+                if (m.readed)
+                    m.readedAt = readed.createdAt;
+            }
         }
+
+        response.data = messages;
+    }
+    catch (err: any) {
+        response.setErrorMessage(err.message);
+
+        if (err.status != 200)
+            return InternalError(res, response);
+    }
+
+    return Ok(res, response);
+});
+
+
+router.post("/sendFileMessage", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadSingleFileS3.array("files", [".png", ".jpg", ".jpeg", ".svg"], 20, "profile_images/", 5242880), async (req: CustomRequest<GetChatMessagesDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+       #swagger.description = 'Send file message.' */
+    /*	#swagger.requestBody = {
+   required: true,
+  "@content": {
+                 "multipart/form-data": {
+                     schema: {
+                         type: "object",
+                         properties: {
+                             files: {
+                                 type: "array",
+                                    items: {
+                                        type: "string",
+                                        format: "binary"
+                                    },
+                             }
+                         },
+                         required: ["files"]
+                     }
+                 }
+             } 
+ } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/NullResponse"
+     }
+   } */
+
+    const response = new BaseResponse<object>();
+    try {
+        const payload = new GetChatMessagesDTO(req.query);
+
     }
     catch (err: any) {
         response.setErrorMessage(err.message);
@@ -430,5 +527,6 @@ app.get("/chat/getMessages", authorize([Role.User, Role.Admin]), async (req: Cus
 });
 
 export {
-    io
+    io,
+    router as default
 }
