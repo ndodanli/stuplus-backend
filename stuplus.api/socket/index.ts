@@ -11,13 +11,14 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import customExtensions from "../../stuplus-lib/extensions/extensions";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
-import { CreateGroupDTO, WatchUsersDTO } from "./dtos/Chat";
+import { CreateGroupDTO, GetChatMessagesDTO, WatchUsersDTO } from "./dtos/Chat";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import bodyParser from "body-parser";
 import { groupChatName, userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { httpServer, app } from "../server";
 import { stringify } from "../../stuplus-lib/utils/general";
+import { MessageDocument } from "../../stuplus-lib/entities/MessageEntity";
 app.use(customExtensions())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -51,7 +52,7 @@ io.on("connection", async (socket: ISocket) => {
         return;
     }
     const user = await UserEntity.findOne({ _id: decodedJwtUser["_id"] }, {
-        "_id": 0, "__t": 0, "blockedUserIds": 1, "firstName": 1, "lastName": 1
+        "_id": 0, "__t": 0, "blockedUserIds": 1, "firstName": 1, "lastName": 1, "profilePhotoUrl": 1
     }, { lean: true });
     if (!user) {
         socket.disconnect();
@@ -108,7 +109,10 @@ io.on("connection", async (socket: ISocket) => {
             const messageEntity = new MessageEntity({});
             const chatData: object = {
                 e: {
-                    _id: messageEntity.id, from: socket.data.user.id, message: data.m, chatId: data.ci,
+                    _id: messageEntity.id,
+                    from: socket.data.user.id,
+                    message: data.m,
+                    chatId: data.ci,
                     createdAt: now,
                     updatedAt: now,
                 }, t: RedisPMOperationType.InsertMessage
@@ -352,6 +356,7 @@ app.post("/chat/createGroup", authorize([Role.User, Role.Admin]), async (req: Cu
                     fN: socketUser.data.user.firstName, //first name
                     lN: socketUser.data.user.lastName, //last name
                     uId: socketUser.data.user.id, //user id
+                    ppUrl: socketUser.data.user.profilePhotoUrl, //profile picture url
                 });
             } else {
                 //TODO:offline send notification
@@ -380,20 +385,49 @@ app.post("/chat/createGroup", authorize([Role.User, Role.Admin]), async (req: Cu
     return Ok(res, response);
 });
 
-// app.get("/chat/getMessages", authorize([Role.User, Role.Admin]), async (req: CustomRequest<GetGroupChatsDTO>, res: any, next: any) => {
-//     const response = new BaseResponse<object>();
-//     try {
-//         const payload = new GetGroupChatsDTO(req.query);
-//     }
-//     catch (err: any) {
-//         response.setErrorMessage(err.message);
+app.get("/chat/getMessages", authorize([Role.User, Role.Admin]), async (req: CustomRequest<GetChatMessagesDTO>, res: any, next: any) => {
+    const response = new BaseResponse<object>();
+    try {
+        const payload = new GetChatMessagesDTO(req.query);
+        let messages: MessageDocument[] = [];
+        let isFirstPage = !payload.lastRecordDate;
+        const redisMaxMessageCount = -30;
 
-//         if (err.status != 200)
-//             return InternalError(res, response);
-//     }
+        if (isFirstPage) {
+            const redisMessages = await RedisService.client
+                .lRange(RedisKeyType.DBPrivateMessage + payload.chatId, redisMaxMessageCount, -1).then(x => x.map(y => JSON.parse(y).e));
 
-//     return Ok(res, response);
-// });
+            payload.take -= redisMessages.length
+            let newComments: AnnouncementCommentDocument[] = [];
+            if (payload.take > 0)
+                newComments = await AnnouncementCommentEntity.find({
+                    announcementId: payload.announcementId,
+                    _id: { $nin: favoriteCommentIds },
+                    createdAt: { $lt: redisMessages[0].createdAt }
+                }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+
+            for (let i = redisMessages.length - 1; i >= 0; i--)
+                messages.push(redisMessages[i]);
+
+            for (let i = 0; i < newComments.length; i++)
+                messages.push(newComments[i]);
+
+        } else {
+            messages = await AnnouncementCommentEntity.find({
+                announcementId: payload.announcementId,
+                createdAt: { $lt: payload.lastRecordDate }
+            }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+        }
+    }
+    catch (err: any) {
+        response.setErrorMessage(err.message);
+
+        if (err.status != 200)
+            return InternalError(res, response);
+    }
+
+    return Ok(res, response);
+});
 
 export {
     io

@@ -1,3 +1,4 @@
+import { BaseFilter } from "../../../stuplus-lib/dtos/baseFilter";
 import { GroupChatType } from "../../../stuplus-lib/enums/enums_socket";
 import { mapToDTO } from "../../../stuplus-lib/utils/general";
 
@@ -17,6 +18,16 @@ export class WatchUsersDTO {
     title: string = "";
     type: GroupChatType = GroupChatType.Private;
     constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class GetChatMessagesDTO extends BaseFilter {
+    chatId: string = "";
+    constructor(obj: any) {
+        super(obj);
         if (obj) {
             mapToDTO(this, obj);
         }
