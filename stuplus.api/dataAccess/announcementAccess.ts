@@ -276,6 +276,12 @@ export class AnnouncementAccess {
             likeCount += await AnnouncementLikeEntity.countDocuments({ announcementId: announcement._id, type: LikeType.Like });
             return likeCount;
         });
+        announcement.commentCount = await RedisService.acquire<number>(RedisKeyType.DBAnnouncementComment + announcement._id.toString(), 30, async () => {
+            let commentCount = 0;
+            commentCount += await RedisService.client.lLen(RedisKeyType.DBAnnouncementComment + announcement._id.toString());
+            commentCount += await AnnouncementCommentEntity.countDocuments({ announcementId: announcement._id });
+            return commentCount;
+        });
         let likeType;
         likeType = redisAnnouncementLikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
         if (!likeType) {
