@@ -6,7 +6,7 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { authorize } from "../middlewares/auth";
 import { Role } from "../../stuplus-lib/enums/enums";
-import { uploadSingleFileS3 } from "../../stuplus-lib/services/fileService";
+import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { SchoolDocument } from "../../stuplus-lib/entities/SchoolEntity";
 import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
@@ -14,7 +14,7 @@ import { AnnouncementCommentEntity, AnnouncementEntity, DepartmentEntity, Facult
 
 const router = Router();
 
-router.post("/uploadFile", authorize([Role.Admin]), uploadSingleFileS3.single("file", [], null, 5242880), async (req: CustomRequest<object>, res: any) => {
+router.post("/uploadFile", authorize([Role.Admin]), uploadFileS3.single("file", [], null, 5242880), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     if (req.fileValidationErrors?.length) {

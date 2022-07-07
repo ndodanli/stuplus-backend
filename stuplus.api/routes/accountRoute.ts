@@ -9,7 +9,7 @@ import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFoll
 import { CustomRequest, CustomResponse } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import path from "path";
-import { uploadSingleFileS3 } from "../../stuplus-lib/services/fileService";
+import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
@@ -294,7 +294,7 @@ schema: { $ref: "#/definitions/AccountSendConfirmationEmailRequest" }
   return Ok(res, response);
 });
 
-router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadSingleFileS3.single("profilePhoto", [".png", ".jpg", ".jpeg", ".svg"], "profile_images/", 5242880), async (req: CustomRequest<object>, res: any) => {
+router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("profilePhoto", [".png", ".jpg", ".jpeg", ".svg"], "profile_images/", 5242880), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
          #swagger.description = 'Update user's profile photo(accepts only with one of ".png", ".jpg", ".jpeg", ".svg" extensions and 5MB size limit).' */
   /*	#swagger.requestBody = {

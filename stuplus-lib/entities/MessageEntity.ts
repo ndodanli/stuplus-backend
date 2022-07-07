@@ -3,14 +3,22 @@ import BaseEntity from "./BaseEntity";
 
 export interface Message extends BaseEntity {
   from: string; //user id
-  message: String;
-  forwarded: Boolean;
+  message: string;
+  forwarded: boolean;
   forwardedAt: Date;
-  readed: Boolean;
+  readed: boolean;
   readedAt: Date;
-  chatId: String;
+  files: MessageFiles[]
+  chatId: string;
 }
-
+export class MessageFiles {
+  url: string | null;
+  mimeType: string | null;
+  constructor() {
+    this.url = null
+    this.mimeType = null
+  }
+}
 export interface MessageDocument extends Message, Document {
   minify(): unknown;
 }
@@ -23,6 +31,12 @@ export const MessageSchema: Schema = new Schema({
   readed: { type: Boolean, required: true, default: false },
   readedAt: { type: Date, required: false },
   chatId: { type: String, required: true },
+  files: {
+    type: Array.of(new Schema({
+      url: { type: String, required: true },
+      mimeType: { type: String, required: true },
+    })), required: false, default: []
+  }
 });
 
 MessageSchema.pre("save", function (next) {
@@ -49,6 +63,7 @@ MessageSchema.methods.minify = async function (
     forwardedAt: this.forwardedAt,
     readed: this.readed,
     readedAt: this.readedAt,
+    files: this.files,
     chatId: this.chatId
   };
   return response;

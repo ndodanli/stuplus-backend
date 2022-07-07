@@ -15,7 +15,7 @@ const BUCKET_NAME = process.env.BUCKET_NAME_S3 || config.S3.BUCKET_NAME_S3
 
 var s3 = new AWS.S3();
 
-export const uploadSingleFileS3 = {
+export const uploadFileS3 = {
   single: function (fileName: string, allowedExtensions: string[], filePath?: string | null, fileSizeLimit: number = 5242880) {
     return multer({
       storage: multerS3({

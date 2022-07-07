@@ -6,13 +6,13 @@ import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { validateAddAnnouncement, validateCommentAnnouncement, validateCommentLikeDislikeAnnouncement, validateGetAnnouncementsAnnouncement, validateGetCommentsAnnouncement, validateLikeDislikeAnnouncement } from "../middlewares/validation/announcement/validateAnnouncementRoute";
 import { authorize } from "../middlewares/auth";
 import { Role } from "../../stuplus-lib/enums/enums";
-import { uploadSingleFileS3 } from "../../stuplus-lib/services/fileService";
+import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { AnnouncementAddDTO, AnnouncementCommenLikeDisliketDTO, AnnouncementCommentDTO, AnnouncementLikeDislikeDTO, AnnouncementGetMultipleDTO, AnnouncementGetSingleDTO, AnnouncementGetCommentsDTO } from "../dtos/AnnouncementDTOs";
 import { AnnouncementAccess } from "../dataAccess/announcementAccess";
 const router = Router();
 
-router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadSingleFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "announcement/cover_images/", 5242880), validateAddAnnouncement, async (req: CustomRequest<AnnouncementAddDTO>, res: any) => {
+router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "announcement/cover_images/", 5242880), validateAddAnnouncement, async (req: CustomRequest<AnnouncementAddDTO>, res: any) => {
     /* #swagger.tags = ['Announcement']
        #swagger.description = 'Add an announcement.' */
     /*	#swagger.requestBody = {

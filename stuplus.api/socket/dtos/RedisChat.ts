@@ -53,3 +53,15 @@ export class RedisMessageReceiptUpdateDTO {
         }
     }
 }
+
+export class RedisFileMessageDTO {
+    m: string = "";
+    ci: string = "";
+    to: string = "";
+
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}

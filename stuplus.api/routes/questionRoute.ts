@@ -6,13 +6,13 @@ import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { validateAddQuestion, validateCommentQuestion, validateCommentLikeDislikeQuestion, validateGetQuestionsQuestion, validateGetCommentsQuestion, validateLikeDislikeQuestion } from "../middlewares/validation/question/validateQuestionRoute";
 import { authorize } from "../middlewares/auth";
 import { Role } from "../../stuplus-lib/enums/enums";
-import { uploadSingleFileS3 } from "../../stuplus-lib/services/fileService";
+import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { QuestionAddDTO, QuestionCommenLikeDisliketDTO, QuestionCommentDTO, QuestionLikeDislikeDTO, QuestionGetMultipleDTO, QuestionGetSingleDTO, QuestionGetCommentsDTO } from "../dtos/QuestionDTOs";
 import { QuestionAccess } from "../dataAccess/questionAccess";
 const router = Router();
 
-router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadSingleFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "question/cover_images/", 5242880), validateAddQuestion, async (req: CustomRequest<QuestionAddDTO>, res: any) => {
+router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "question/cover_images/", 5242880), validateAddQuestion, async (req: CustomRequest<QuestionAddDTO>, res: any) => {
     /* #swagger.tags = ['Question']
        #swagger.description = 'Add an question.' */
     /*	#swagger.requestBody = {

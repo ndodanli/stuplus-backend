@@ -2,7 +2,7 @@ import ISocket from "./interfaces/socket";
 import { ChatEntity, GroupMessageForwardEntity, GroupMessageEntity, GroupMessageReadEntity, MessageEntity, UserEntity, GroupChatEntity, GroupChatUserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import "../../stuplus-lib/extensions/extensionMethods"
 require("dotenv").config();
-import { RedisGroupMessageDTO, RedisGroupMessageForwardReadDTO, RedisMessageDTO, RedisMessageForwardReadDTO } from "./dtos/RedisChat";
+import { RedisFileMessageDTO, RedisGroupMessageDTO, RedisGroupMessageForwardReadDTO, RedisMessageDTO, RedisMessageForwardReadDTO } from "./dtos/RedisChat";
 import { RedisPMOperationType, RedisKeyType, RedisGMOperationType, Role, WatchRoomTypes } from "../../stuplus-lib/enums/enums_socket";
 import { authorize, authorizeSocket } from "./utils/auth";
 import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
@@ -18,7 +18,8 @@ import { MessageDocument } from "../../stuplus-lib/entities/MessageEntity";
 import { RecordStatus } from "../../stuplus-lib/enums/enums";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { Router } from "express";
-import { uploadSingleFileS3 } from "../../stuplus-lib/services/fileService";
+import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
+import { validateSendFileMessage } from "../middlewares/validation/chat/validateChatRoute";
 const router = Router();
 let onlineUsers: Map<string, string>;
 setup();
@@ -480,8 +481,7 @@ router.get("/getMessages", authorize([Role.User, Role.Admin, Role.ContentCreator
     return Ok(res, response);
 });
 
-
-router.post("/sendFileMessage", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadSingleFileS3.array("files", [".png", ".jpg", ".jpeg", ".svg"], 20, "profile_images/", 5242880), async (req: CustomRequest<GetChatMessagesDTO>, res: any) => {
+router.post("/sendPMFileMessage", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("files", [".png", ".jpg", ".jpeg", ".svg", ".gif", ".pdf", ".doc", ".docx", ".txt"], "chat/message_files/", 5242880), validateSendFileMessage, async (req: CustomRequest<RedisFileMessageDTO>, res: any) => {
     /* #swagger.tags = ['Chat']
        #swagger.description = 'Send file message.' */
     /*	#swagger.requestBody = {
@@ -492,11 +492,8 @@ router.post("/sendFileMessage", authorize([Role.User, Role.Admin, Role.ContentCr
                          type: "object",
                          properties: {
                              files: {
-                                 type: "array",
-                                    items: {
-                                        type: "string",
-                                        format: "binary"
-                                    },
+                                type: "string",
+                                format: "binary"
                              }
                          },
                          required: ["files"]
@@ -511,12 +508,48 @@ router.post("/sendFileMessage", authorize([Role.User, Role.Admin, Role.ContentCr
      }
    } */
 
-    const response = new BaseResponse<object>();
+    const response = new BaseResponse<any>();
     try {
-        const payload = new GetChatMessagesDTO(req.query);
+        if (req.fileValidationErrors?.length) {
+            response.validationErrors = req.fileValidationErrors;
+            throw new NotValidError(getMessage("fileError", req.selectedLangs()))
+        }
 
-    }
-    catch (err: any) {
+        const payload = new RedisFileMessageDTO(req.body);
+
+        //TODO: offline durumu
+
+        response.data["success"] = true;
+
+        if (!payload.ci) {
+            const chatEntity = await ChatEntity.findOneAndUpdate(
+                { ownerId: res.locals.user._id, participantId: payload.to },
+                { $setOnInsert: { ownerId: res.locals.user._id, participantId: payload.to } },
+                { upsert: true, new: true });
+            payload.ci = chatEntity.id; //may be null, catch it later
+            response.data["ci"] = payload.ci;
+        }
+        const now = new Date();
+        const messageEntity = new MessageEntity({});
+        const chatData: object = {
+            e: {
+                _id: messageEntity.id,
+                from: res.locals.user._id,
+                message: payload.m,
+                chatId: payload.ci,
+                createdAt: now,
+                updatedAt: now,
+            }, t: RedisPMOperationType.InsertMessage
+        }
+
+        response.data["mi"] = messageEntity.id;
+
+        await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + payload.ci, stringify(chatData));
+
+        io.to(payload.to).emit("c-pm-send", { m: payload.m, mi: messageEntity.id, ci: payload.ci });
+
+
+    } catch (err: any) {
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
