@@ -75,6 +75,8 @@ const systemLangs: Record<string, Function> = {
             noUserToUnfollow: "Takibi bırakacak kimseyi bulunamadık. Yok olmuş olabilir.",
             noUserToRemoveFollow: "Takibi silinecek kimseyi bulunamadık. Yok olmuş olabilir.",
             notValidDate: "Geçersiz tarih.",
+            messageNotFound: "Mesaj bulunamadı.",
+            incorrectId: "Bulunamadı.",
         }
     },
     "en": function (args: string[] = []) {

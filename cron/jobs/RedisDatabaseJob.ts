@@ -1,5 +1,5 @@
 import AsyncLock from "async-lock";
-import { RedisMessageReceiptUpdateDTO } from "../../stuplus.api/socket/dtos/RedisChat";
+import { RedisFileMessageUpdateDTO, RedisMessageReceiptUpdateDTO } from "../../stuplus.api/socket/dtos/RedisChat";
 import { config } from "../../stuplus-lib/config/config";
 import { AnnouncementCommentEntity, AnnouncementCommentLikeEntity, AnnouncementLikeEntity, GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, MessageEntity, QuestionCommentEntity, QuestionCommentLikeEntity, QuestionLikeEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { LikeType } from "../../stuplus-lib/enums/enums";
@@ -26,8 +26,11 @@ export default class RedisDatabaseJob implements IBaseCronJob {
     }
     async run(): Promise<void> {
         console.log("RedisDatabaseJob Cron job started");
+        const totalKeySize = await RedisService.client.dbSize();
+        let currentKeySize = 0;
         do {
             const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { MATCH: "d*", COUNT: 100 });
+            currentKeySize += keys.length;
             RedisDatabaseJob.currentCursor = cursor;
             for (let i = 0; i < keys.length; i++) {
                 const currentKey = keys[i];
@@ -58,7 +61,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 }
 
             }
-        } while (RedisDatabaseJob.currentCursor != 0);
+        } while (RedisDatabaseJob.currentCursor != 0 && currentKeySize < totalKeySize);
         console.log("RedisDatabaseJob Cron job finished");
 
         async function handlePMOperations(currentKey: string) {
@@ -67,6 +70,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 const privateMessageBatches: Array<Array<object>> = [];
                 const readedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
                 const forwardedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
+                const updateSendFileBatches: Array<Array<RedisFileMessageUpdateDTO>> = [];
                 const batchSize = config.BATCH_SIZES.PM_BATCH_SIZE;
                 let iterator = 0;
                 for (let i = 0; i < data.length; i += batchSize) {
@@ -74,6 +78,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     privateMessageBatches[iterator] = new Array<object>();
                     readedBatches[iterator] = new Array<RedisMessageReceiptUpdateDTO>();
                     forwardedBatches[iterator] = new Array<RedisMessageReceiptUpdateDTO>();
+                    updateSendFileBatches[iterator] = new Array<RedisFileMessageUpdateDTO>();
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         switch (query.t) {
@@ -85,6 +90,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                 break;
                             case RedisPMOperationType.UpdateForwarded:
                                 forwardedBatches[iterator].push({ ...query.e, forwarded: true });
+                                break;
+                            case RedisPMOperationType.UpdateSendFileMessage:
+                                updateSendFileBatches[iterator].push(query.e);
                                 break;
                             default:
                                 break;
@@ -144,6 +152,32 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                             })
                             await MessageEntity.bulkWrite(bulkForwardUpdateOp);
                             console.timeEnd("PM updateReaded Bulk operation time");
+
+                        }
+                    }
+                }
+
+                if (updateSendFileBatches.length > 0) {
+                    for (let i = 0; i < updateSendFileBatches.length; i++) {
+                        if (updateSendFileBatches[i].length > 0) {
+                            console.time("PM updateSendFile Bulk operation time");
+                            const bulkForwardUpdateOp = updateSendFileBatches[i].map(obj => {
+                                return {
+                                    updateOne: {
+                                        filter: {
+                                            _id: obj.mi
+                                        },
+
+                                        update: {
+                                            $push: {
+                                                "files": obj.file
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                            await MessageEntity.bulkWrite(bulkForwardUpdateOp);
+                            console.timeEnd("PM updateSendFile Bulk operation time");
 
                         }
                     }

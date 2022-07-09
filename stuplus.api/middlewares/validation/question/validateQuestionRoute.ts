@@ -1,4 +1,5 @@
 import { check, validationResult } from "express-validator"
+import { isValidObjectId } from "mongoose";
 import { getMessage } from "../../../../stuplus-lib/localization/responseMessages";
 import { CustomRequest } from "../../../../stuplus-lib/utils/base/baseOrganizers";
 import BaseResponse from "../../../../stuplus-lib/utils/base/BaseResponse";
@@ -25,7 +26,12 @@ export const validateLikeDislikeQuestion = [
     check('questionId')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(),
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
     check('type')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
@@ -50,7 +56,12 @@ export const validateCommentQuestion = [
     check('questionId')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(),
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
     check('comment')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
@@ -67,11 +78,21 @@ export const validateCommentLikeDislikeQuestion = [
     check('questionId')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(),
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
     check('commentId')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(),
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
     check('type')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
@@ -97,12 +118,12 @@ export const validateGetCommentsQuestion = [
     check('questionId')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(),
-    // check('lastRecordDate')
-    //     .if((value: any, { req }: any) => value)
-    //     .isDate()
-    //     .withMessage((value: any, { req }: any) => getMessage("notValidDate", req.selectedLangs()))
-    //     .bail(),
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
     check('pageSize')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
@@ -116,11 +137,6 @@ export const validateGetCommentsQuestion = [
 ];
 
 export const validateGetQuestionsQuestion = [
-    // check('lastRecordDate')
-    //     .if((value: any, { req }: any) => value)
-    //     .isDate()
-    //     .withMessage((value: any, { req }: any) => getMessage("notValidDate", req.selectedLangs()))
-    //     .bail(),
     check('pageSize')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))

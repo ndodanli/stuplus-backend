@@ -1953,7 +1953,7 @@
         ]
       }
     },
-    "/chat/sendFileMessage": {
+    "/chat/sendPMFileMessage": {
       "post": {
         "tags": [
           "Chat"
@@ -1989,12 +1989,18 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "m": {
+                    "type": "string",
+                    "description": "Message",
+                    "example": "Hello"
+                  },
+                  "to": {
+                    "type": "string",
+                    "description": "Recipient ID"
+                  },
                   "files": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "format": "binary"
-                    }
+                    "type": "string",
+                    "format": "binary"
                   }
                 },
                 "required": [

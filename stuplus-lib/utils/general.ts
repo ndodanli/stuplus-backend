@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 
 export const mapToDTO = (oldObject: Record<string, any>, newObject: Record<string, any>) => {
     for (const oldKey in oldObject) {
@@ -27,3 +28,5 @@ export const reverseArray = (arr: any[]): any[] => {
     }
     return newArr;
 }
+
+export const isValidObjectId = (id: string): Boolean => ObjectId.isValid(id);

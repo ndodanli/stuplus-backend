@@ -4,6 +4,7 @@ export class RedisMessageDTO {
     m?: string;
     ci?: string;
     to?: string;
+    rToId?: string;
 
     constructor(obj: any) {
         if (obj) {
@@ -15,6 +16,7 @@ export class RedisMessageDTO {
 export class RedisGroupMessageDTO {
     m?: string;
     gCi?: string;
+    rToId?: string;
 
     constructor(obj: any) {
         if (obj) {
@@ -54,11 +56,32 @@ export class RedisMessageReceiptUpdateDTO {
     }
 }
 
-export class RedisFileMessageDTO {
+export class RedisFileMessageUpdateDTO {
+    mi?: string;
+    file?: any;
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+
+export class RedisSendFileMessageDTO {
     m: string = "";
     ci: string = "";
     to: string = "";
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
 
+export class RedisUpdateFileMessageDTO {
+    mi: string = "";
+    ci: string = "";
+    to: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

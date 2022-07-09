@@ -5,6 +5,7 @@ import { CustomRequest } from "../../../../stuplus-lib/utils/base/baseOrganizers
 import BaseResponse from "../../../../stuplus-lib/utils/base/BaseResponse";
 import { Ok } from "../../../../stuplus-lib/utils/base/ResponseObjectResults";
 import { noUsage } from "../customValidators";
+import { isValidObjectId } from "mongoose";
 
 export const validateUpdateProfile = [
     check('firstName')
@@ -172,7 +173,12 @@ export const validateEmailConfirmation = [
     query("uid")
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("userNotFound", req.selectedLangs()))
-        .bail(),
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
     query("code")
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("codeNotFound", req.selectedLangs()))
@@ -189,7 +195,12 @@ export const validateFollowUser = [
     check('requestedId')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(),
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
@@ -202,7 +213,12 @@ export const validateChangeFollowStatus = [
     check('followId')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(),
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())

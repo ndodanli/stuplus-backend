@@ -33,3 +33,25 @@ export class GetChatMessagesDTO extends BaseFilter {
         }
     }
 }
+
+export class GetSearchedChatMessagesDTO extends BaseFilter {
+    chatId: string = "";
+    searchedText: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class GetSearchedChatMessageDTO extends BaseFilter {
+    chatId: string = "";
+    messageCreatedAt: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}

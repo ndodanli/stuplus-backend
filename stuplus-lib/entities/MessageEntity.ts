@@ -8,15 +8,20 @@ export interface Message extends BaseEntity {
   forwardedAt: Date;
   readed: boolean;
   readedAt: Date;
-  files: MessageFiles[]
+  files: MessageFiles[];
+  replyToId?: string; //message id
   chatId: string;
+  //ignore
+  replyTo?: Message | null;
 }
 export class MessageFiles {
   url: string | null;
   mimeType: string | null;
-  constructor() {
-    this.url = null
-    this.mimeType = null
+  size: number | null;
+  constructor(url: string, mimeType: string, size: number) {
+    this.url = url;
+    this.mimeType = mimeType;
+    this.size = size;
   }
 }
 export interface MessageDocument extends Message, Document {
@@ -36,8 +41,11 @@ export const MessageSchema: Schema = new Schema({
       url: { type: String, required: true },
       mimeType: { type: String, required: true },
     })), required: false, default: []
-  }
+  },
+  replyTo: { type: String, required: false, default: null },
 });
+
+MessageSchema.index({ message: 'text' });
 
 MessageSchema.pre("save", function (next) {
   //
@@ -64,7 +72,10 @@ MessageSchema.methods.minify = async function (
     readed: this.readed,
     readedAt: this.readedAt,
     files: this.files,
-    chatId: this.chatId
+    replyToId: this.replyToId,
+    chatId: this.chatId,
+    //ignore
+    replyTo: null, //ignore
   };
   return response;
 };

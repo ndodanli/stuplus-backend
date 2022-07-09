@@ -19,7 +19,8 @@ export enum GroupChatType {
 export enum RedisPMOperationType {
    InsertMessage = 0,
    UpdateReaded = 1,
-   UpdateForwarded = 2
+   UpdateForwarded = 2,
+   UpdateSendFileMessage = 3
 }
 
 export enum RedisGMOperationType {
