@@ -38,3 +38,9 @@ export enum RedisAcquireEntityFilterOrder {
    ASC = 1,
    DESC = -1
 }
+
+export enum RedisMessagesNotFoundType {
+   Reply = 0,
+   Forward = 1,
+   Read = 2
+}

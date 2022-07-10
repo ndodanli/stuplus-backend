@@ -77,6 +77,8 @@ const systemLangs: Record<string, Function> = {
             notValidDate: "Geçersiz tarih.",
             messageNotFound: "Mesaj bulunamadı.",
             incorrectId: "Bulunamadı.",
+            groupUsersRemovedSuccess: "Kullanıcıları başarıyla uçurduk. Uçan kullanıcılarda bir sorun varsa bize bildir ki bir daha konamasınlar. :)",
+            groupAdminsAddedSuccess: "Yöneticileri başarıyla ekledik.",
         }
     },
     "en": function (args: string[] = []) {

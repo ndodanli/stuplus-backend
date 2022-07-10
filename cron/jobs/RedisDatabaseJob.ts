@@ -25,7 +25,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
         this.description = description;
     }
     async run(): Promise<void> {
-        console.log("RedisDatabaseJob Cron job started");
+        // console.log("RedisDatabaseJob Cron job started");
         const totalKeySize = await RedisService.client.dbSize();
         let currentKeySize = 0;
         do {
@@ -35,34 +35,34 @@ export default class RedisDatabaseJob implements IBaseCronJob {
             for (let i = 0; i < keys.length; i++) {
                 const currentKey = keys[i];
                 if (currentKey.startsWith(RedisKeyType.DBPrivateMessage)) {
-                    await handlePMOperations(currentKey);
+                    handlePMOperations(currentKey);
                 } else if (currentKey.startsWith(RedisKeyType.DBGroupMessage)) {
-                    await handleGroupMessageOperations(currentKey);
+                    handleGroupMessageOperations(currentKey);
                 } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementLike)) {
-                    await handleAnnouncementLikeOperations(currentKey);
+                    handleAnnouncementLikeOperations(currentKey);
                 } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementDislike)) {
-                    await handleAnnouncementDislikeOperations(currentKey);
+                    handleAnnouncementDislikeOperations(currentKey);
                 } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementComment)) {
-                    await handleAnnouncementCommentOperations(currentKey);
+                    handleAnnouncementCommentOperations(currentKey);
                 } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementCommentLike)) {
-                    await handleAnnouncementCommentLikeOperations(currentKey);
+                    handleAnnouncementCommentLikeOperations(currentKey);
                 } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementCommentDislike)) {
-                    await handleAnnouncementCommentDislikeOperations(currentKey);
+                    handleAnnouncementCommentDislikeOperations(currentKey);
                 } else if (currentKey.startsWith(RedisKeyType.DBQuestionLike)) {
-                    await handleQuestionLikeOperations(currentKey);
+                    handleQuestionLikeOperations(currentKey);
                 } else if (currentKey.startsWith(RedisKeyType.DBQuestionDislike)) {
-                    await handleQuestionDislikeOperations(currentKey);
+                    handleQuestionDislikeOperations(currentKey);
                 } else if (currentKey.startsWith(RedisKeyType.DBQuestionComment)) {
-                    await handleQuestionCommentOperations(currentKey);
+                    handleQuestionCommentOperations(currentKey);
                 } else if (currentKey.startsWith(RedisKeyType.DBQuestionCommentLike)) {
-                    await handleQuestionCommentLikeOperations(currentKey);
+                    handleQuestionCommentLikeOperations(currentKey);
                 } else if (currentKey.startsWith(RedisKeyType.DBQuestionCommentDislike)) {
-                    await handleQuestionCommentDislikeOperations(currentKey);
+                    handleQuestionCommentDislikeOperations(currentKey);
                 }
 
             }
         } while (RedisDatabaseJob.currentCursor != 0 && currentKeySize < totalKeySize);
-        console.log("RedisDatabaseJob Cron job finished");
+        // console.log("RedisDatabaseJob Cron job finished");
 
         async function handlePMOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
@@ -194,6 +194,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 const groupMessageBatches: Array<Array<object>> = [];
                 const readedBatches: Array<Array<object>> = [];
                 const forwardedBatches: Array<Array<object>> = [];
+                const updateSendFileBatches: Array<Array<RedisFileMessageUpdateDTO>> = [];
                 const batchSize = config.BATCH_SIZES.GM_BATCH_SIZE;
                 let iterator = 0;
                 for (let i = 0; i < data.length; i += batchSize) {
@@ -201,6 +202,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     groupMessageBatches[iterator] = new Array<object>();
                     readedBatches[iterator] = new Array<object>();
                     forwardedBatches[iterator] = new Array<object>();
+                    updateSendFileBatches[iterator] = new Array<RedisFileMessageUpdateDTO>();
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         switch (query.t) {
@@ -212,6 +214,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                 break;
                             case RedisGMOperationType.InsertForwarded:
                                 forwardedBatches[iterator].push(query.e);
+                                break;
+                            case RedisGMOperationType.UpdateSendFileMessage:
+                                updateSendFileBatches[iterator].push(query.e);
                                 break;
                             default:
                                 break;
@@ -249,6 +254,31 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     }
                 }
 
+                if (updateSendFileBatches.length > 0) {
+                    for (let i = 0; i < updateSendFileBatches.length; i++) {
+                        if (updateSendFileBatches[i].length > 0) {
+                            console.time("GM updateSendFile Bulk operation time");
+                            const bulkForwardUpdateOp = updateSendFileBatches[i].map(obj => {
+                                return {
+                                    updateOne: {
+                                        filter: {
+                                            _id: obj.mi
+                                        },
+
+                                        update: {
+                                            $push: {
+                                                "files": obj.file
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                            await GroupMessageEntity.bulkWrite(bulkForwardUpdateOp);
+                            console.timeEnd("GM updateSendFile Bulk operation time");
+
+                        }
+                    }
+                }
                 await RedisService.client.lTrim(currentKey, data.length, -1);
                 resolve(true);
             });

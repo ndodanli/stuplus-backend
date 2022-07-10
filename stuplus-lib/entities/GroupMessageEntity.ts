@@ -1,14 +1,19 @@
 import { Document, Schema } from "mongoose";
 import BaseEntity from "./BaseEntity";
+import { MessageFiles, ReplyToDTO } from "./MessageEntity";
 
 export interface GroupMessage extends BaseEntity {
-  from: string; //user id
-  message: String;
-  forwarded: Boolean;
+  fromId: string; //user id
+  text: string;
+  forwarded: boolean;
   forwardedAt: Date;
-  readed: Boolean;
+  readed: boolean;
   readedAt: Date;
-  groupChatId: String;
+  replyToId?: string; //message id
+  files: MessageFiles[];
+  groupChatId: string;
+  //ignore
+  replyTo?: ReplyToDTO | null;
 }
 
 export interface GroupMessageDocument extends GroupMessage, Document {
@@ -16,12 +21,20 @@ export interface GroupMessageDocument extends GroupMessage, Document {
 }
 
 export const GroupMessageSchema: Schema = new Schema({
-  from: { type: String, required: true },
-  message: { type: String, required: true },
+  fromId: { type: String, required: true },
+  text: { type: String, required: true },
   forwarded: { type: Boolean, required: true, default: false },
   forwardedAt: { type: Date, required: false },
   readed: { type: Boolean, required: true, default: false },
   readedAt: { type: Date, required: false },
+  files: {
+    type: Array.of(new Schema({
+      url: { type: String, required: true },
+      mimeType: { type: String, required: true },
+      size: { type: Number, required: true },
+    })), required: false, default: []
+  },
+  replyToId: { type: String, required: false, default: null },
   groupChatId: { type: String, required: true },
 });
 
@@ -43,12 +56,14 @@ GroupMessageSchema.methods.minify = async function (
     recordStatus: this.recordStatus,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
-    from: this.from,
-    message: this.message,
+    fromId: this.fromId,
+    text: this.text,
     forwarded: this.forwarded,
     forwardedAt: this.forwardedAt,
     readed: this.readed,
     readedAt: this.readedAt,
+    replyToId: this.replyToId,
+    files: this.files,
     groupChatId: this.groupChatId
   };
   return response;

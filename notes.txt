@@ -5,6 +5,5 @@
 
 
 
-+like ve dislike ayir(redis)
-+like'larin acquire(caching) edildigi sorguyu degistir(redisi de kat)
--acquireEntity'i access icerisine al ve scoreu redisten say
++-sockete gelen object idleri kontrol et *hepsi edilmeli-sonradan gelenler de
+-get pm chat ve group chat icin cron islemleri(last update date)

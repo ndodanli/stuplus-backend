@@ -1,8 +1,15 @@
 import { Document, Schema } from "mongoose";
 import BaseEntity from "./BaseEntity";
+import { Message, MessageDocument } from "./MessageEntity";
+import { User, UserDocument } from "./UserEntity";
 export interface Chat extends BaseEntity {
   ownerId: string; //user id
   participantId: string;
+  //ignore
+  owner?: UserDocument | null; //ignore
+  participant?: UserDocument | null; //ignore
+  unreadMessageCount: number;
+  lastMessage?: MessageDocument | null;
 }
 
 export interface ChatDocument extends Chat, Document {
@@ -33,7 +40,12 @@ ChatSchema.methods.minify = async function (
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     ownerId: this.ownerId,
-    participantId: this.participantId,
+    participantId: this.participantId, //ignore
+    //ignore
+    owner: null, //ignore
+    participant: null, //ignore
+    unreadMessageCount: 0, //ignore
+    lastMessage: null, //ignore
   };
   return response;
 };

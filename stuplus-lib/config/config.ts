@@ -4,6 +4,7 @@ let config = {
         HOST_EMAIL: "fakultemdestekmail@gmail.com",
         HOST_EMAIL_PASSWORD: "yqplxujmtvszkwmx"
     },
+    LOGGER_NAME: "",
     S3: {
         ACCESS_KEY_ID_S3: "AKIAZSLROSSN45L3NX63",
         SECRET_ACCESS_KEY_S3: "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",

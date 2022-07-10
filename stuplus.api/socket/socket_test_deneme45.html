@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <title>Socket Test</title>
+    <title>deneme45</title>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
 
@@ -15,7 +15,7 @@
     <section class="msger">
         <header class="msger-header">
             <div class="msger-header-title">
-                <i class="fas fa-comment-alt"></i> chat
+                <i class="fas fa-comment-alt"></i> chat-deneme45
                 <button onclick="createGroup()">Create new group</button>
                 <button onclick="watchUsers()">Watch users-2</button>
                 <button onclick="watchUsers()">Watch users-1</button>
@@ -37,10 +37,10 @@
         integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh"
         crossorigin="anonymous"></script>
     <script>
-        const host = "http://localhost:3010";
+        const host = "http://localhost:3000";
 
         const socket = io(host, {
-            auth: { token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFhMzU5NzFjMWRmMGFhZWE5NDlkZmUiLCJyb2xlIjoxLCJpYXQiOjE2NTUzMjIwNTMsImV4cCI6MTY1NzkxNDA1M30.78F2Y1RICHsDCpFeSeWzOzsYVldyoUo3WzJZIsj3jqQ" },
+            auth: { token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFkOGY3MDZjYzQyZjNlNTRlM2QxZTgiLCJyb2xlIjoxLCJpYXQiOjE2NTY3NzQ4MTksImV4cCI6MTY1OTM2NjgxOX0.626-M9EG24tHS-UFY_fHUN2litqgc7Tpqa4uNqHIVQA" },
             // query: { token: "dweqfweq" },
             transports: ["websocket", "polling"], // use WebSocket first, if available
             upgrade: true,
@@ -80,7 +80,7 @@
 
         socket.emit("client-to-server", { data1: 232, data2: "dasds" });
     </script>
-    <script src="./chat.js">
+    <script src="./chat_deneme45.js">
     </script>
 </body>
 

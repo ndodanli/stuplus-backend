@@ -14,12 +14,14 @@ import { config } from "../config/config";
 import axios from "axios";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { UserProfileResponseDTO } from "../dtos/response/UserResponseDTOs";
-import { RedisKeyType, RedisSubKeyType } from "../../stuplus-lib/enums/enums_socket";
+import { RedisKeyType, RedisSubKeyType, WatchRoomTypes } from "../../stuplus-lib/enums/enums_socket";
 import cronTimes from "../../stuplus-lib/constants/cronTimes";
 import redisTTL from "../../stuplus-lib/constants/redisTTL";
 import { FollowRequestDocument } from "../../stuplus-lib/entities/FollowRequestEntity";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { FollowDocument } from "../../stuplus-lib/entities/FollowEntity";
+import { io } from "../socket";
+import { userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 export class UserAccess {
     public static async getUserProfile(acceptedLanguages: Array<string>, userId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
         const response = new UserProfileResponseDTO();
@@ -67,6 +69,18 @@ export class UserAccess {
 
         await RedisService.updateUser(user);
 
+        io.in(userWatchRoomName(user.id)).emit("c-watch-users", {
+            id: user.id,
+            t: WatchRoomTypes.UserProfileChanged,
+            data: {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                about: user.about,
+                avatarKey: user.avatarKey,
+                username: user.username
+            }
+        });
+
         return user;
     }
 
@@ -89,6 +103,14 @@ export class UserAccess {
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
         await RedisService.updateUser(user);
+
+        io.in(userWatchRoomName(user.id)).emit("c-watch-users", {
+            id: user.id,
+            t: WatchRoomTypes.UserPPChanged,
+            data: {
+                profilePhotoUrl: newPPUrl
+            }
+        });
 
         return user;
     }

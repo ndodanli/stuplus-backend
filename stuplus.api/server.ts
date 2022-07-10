@@ -1,4 +1,3 @@
-import logger from "./config/logger";
 import "../stuplus-lib/extensions/extensionMethods"
 import express, { Request, Response, } from "express";
 import { initializeDatabese } from "./config/database";
@@ -17,17 +16,18 @@ import path from "path";
 import { config } from "./config/config";
 import interestRoute from "./routes/interestRoute";
 import customExtensions from "../stuplus-lib/extensions/extensions";
+import logger, { setLogger } from "../stuplus-lib/config/logger";
 
 dotenv.config();
 
 const app = express();
-
 setup();
-
+setLogger("Stuplus API-SOCKET");
 async function setup() {
   await initializeDatabese();
   import("../cron/index");
 }
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -64,6 +64,7 @@ app.use("/doc", swaggerRoute);
 const httpServer = app.listen((process.env.PORT || config.PORT), () => {
   logger.info("API-SOCKET Server started at http://localhost:" + (process.env.PORT || config.PORT));
   console.log("API-SOCKET Server started at http://localhost:" + (process.env.PORT || config.PORT));
+  import("./socket/index");
 });
 
 export {
@@ -71,5 +72,5 @@ export {
   app,
 }
 
-import "./socket/index";
+
 

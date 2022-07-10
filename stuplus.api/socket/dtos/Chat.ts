@@ -6,6 +6,19 @@ export class CreateGroupDTO {
     userIds: string[] = [];
     title: string = "";
     type: GroupChatType = GroupChatType.Private;
+    avatarKey: string = "";
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class UpdateGroupInfoDTO {
+    groupChatId: string = "";
+    title: string = "";
+    type: GroupChatType = GroupChatType.Private;
+    avatarKey: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);
@@ -50,6 +63,46 @@ export class GetSearchedChatMessageDTO extends BaseFilter {
     messageCreatedAt: string = "";
     constructor(obj: any) {
         super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class GetGroupChatMessagesDTO extends BaseFilter {
+    groupChatId: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class AddToGroupChatDTO {
+    groupChatId: string = "";
+    userIds: string[] = [];
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class RemoveFromGroupChatDTO {
+    groupChatId: string = "";
+    userIds: string[] = [];
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class MakeUsersGroupAdminDTO {
+    groupChatId: string = "";
+    userIds: string[] = [];
+    constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);
         }

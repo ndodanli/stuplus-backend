@@ -1,6 +1,6 @@
 import path from 'path';
 import { createClient } from 'redis';
-import logger from '../../stuplus.api/config/logger';
+import logger from '../config/logger';
 import { AnnouncementEntity, DepartmentEntity, FacultyEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
 import { User, UserDocument } from '../entities/UserEntity';
 import { RedisKeyType } from '../enums/enums_socket';
@@ -44,7 +44,7 @@ export default class RedisService {
         }
     }
 
-    static async acquireUser(userId: string, project?: string[]): Promise<UserDocument> {
+    static async acquireUser(userId: string, project?: string[] | object): Promise<UserDocument> {
         const redisUser = await this.acquire<UserDocument>(RedisKeyType.User + userId, 60 * 120, async () => {
 
             const user = await UserEntity.findOne({ _id: userId }, {}, { lean: true })
@@ -67,10 +67,17 @@ export default class RedisService {
             return user;
         });
 
-        if (project && project.length > 0) {
-            for (const key in redisUser) {
-                if (!project.includes(key))
-                    delete redisUser[key];
+        if (project) {
+            if (Array.isArray(project) && project.length > 0) {
+                for (const key in redisUser) {
+                    if (!project.includes(key))
+                        delete redisUser[key];
+                }
+            } else {
+                for (const key in redisUser) {
+                    if (!project.hasOwnProperty(key))
+                        delete redisUser[key];
+                }
             }
         }
 

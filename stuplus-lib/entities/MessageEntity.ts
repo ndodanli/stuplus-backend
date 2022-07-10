@@ -1,9 +1,10 @@
 import { Document, Schema } from "mongoose";
 import BaseEntity from "./BaseEntity";
+import { User } from "./UserEntity";
 
 export interface Message extends BaseEntity {
-  from: string; //user id
-  message: string;
+  fromId: string; //user id
+  text: string;
   forwarded: boolean;
   forwardedAt: Date;
   readed: boolean;
@@ -12,7 +13,20 @@ export interface Message extends BaseEntity {
   replyToId?: string; //message id
   chatId: string;
   //ignore
-  replyTo?: Message | null;
+  from?: User | null; //ignore
+  replyTo?: ReplyToDTO | null; //ignore
+}
+export class ReplyToDTO {
+  messageId: string;
+  messageOwnerId: string;
+  text: string;
+  files: MessageFiles[];
+  constructor(messageId: string, messageOwnerId: string, text: string, files: MessageFiles[]) {
+    this.messageId = messageId;
+    this.messageOwnerId = messageOwnerId;
+    this.text = text;
+    this.files = files;
+  }
 }
 export class MessageFiles {
   url: string | null;
@@ -29,23 +43,24 @@ export interface MessageDocument extends Message, Document {
 }
 
 export const MessageSchema: Schema = new Schema({
-  from: { type: String, required: true },
-  message: { type: String, required: true },
+  fromId: { type: String, required: true },
+  text: { type: String, required: true },
   forwarded: { type: Boolean, required: true, default: false },
-  forwardedAt: { type: Date, required: false },
+  forwardedAt: { type: Date, required: false, default: null },
   readed: { type: Boolean, required: true, default: false },
-  readedAt: { type: Date, required: false },
+  readedAt: { type: Date, required: false, default: null },
   chatId: { type: String, required: true },
   files: {
     type: Array.of(new Schema({
       url: { type: String, required: true },
       mimeType: { type: String, required: true },
+      size: { type: Number, required: true },
     })), required: false, default: []
   },
-  replyTo: { type: String, required: false, default: null },
+  replyToId: { type: String, required: false, default: null },
 });
 
-MessageSchema.index({ message: 'text' });
+MessageSchema.index({ text: 'text' });
 
 MessageSchema.pre("save", function (next) {
   //
@@ -65,8 +80,8 @@ MessageSchema.methods.minify = async function (
     recordStatus: this.recordStatus,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
-    from: this.from,
-    message: this.message,
+    fromId: this.fromId,
+    text: this.text,
     forwarded: this.forwarded,
     forwardedAt: this.forwardedAt,
     readed: this.readed,

@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <title>Socket Test</title>
+    <title>ndodanli14</title>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
 
@@ -15,10 +15,11 @@
     <section class="msger">
         <header class="msger-header">
             <div class="msger-header-title">
-                <i class="fas fa-comment-alt"></i> chat
+                <i class="fas fa-comment-alt"></i> chat-ndodanli14
                 <button onclick="createGroup()">Create new group</button>
                 <button onclick="watchUsers()">Watch users-2</button>
                 <button onclick="watchUsers()">Watch users-1</button>
+                <button id="get-old-messages">Get old messages</button>
             </div>
             <div class="msger-header-options">
                 <span><i class="fas fa-cog"></i></span>
@@ -37,10 +38,10 @@
         integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh"
         crossorigin="anonymous"></script>
     <script>
-        const host = "http://localhost:25010";
+        const host = "http://localhost:3000";
 
         const socket = io(host, {
-            auth: { token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmI0NDUyZDY1YjBkMWUwZjY0ZTA4ODEiLCJyb2xlIjoxLCJpYXQiOjE2NTU5ODE0MjMsImV4cCI6MTY1ODU3MzQyM30.bRERvbMl_0q_dVdQIJ3k_hbcSUCmClPQJPOmM5DOTb8" },
+            auth: { token: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFiOGEyMDQxNjZmZDFlYWViYmIzZmEiLCJyb2xlIjowLCJpYXQiOjE2NTczNjc5NjIsImV4cCI6MTY4ODQ3MTk2Mn0.U3N6QR4fakNtpLHwEhkKpG3-Cf997Pwkb7Q4fsCbu1w" },
             // query: { token: "dweqfweq" },
             transports: ["websocket", "polling"], // use WebSocket first, if available
             upgrade: true,
@@ -80,7 +81,7 @@
 
         socket.emit("client-to-server", { data1: 232, data2: "dasds" });
     </script>
-    <script src="./chat.js">
+    <script src="./chat_ndodanli14.js">
     </script>
 </body>
 

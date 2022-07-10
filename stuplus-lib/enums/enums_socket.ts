@@ -26,7 +26,8 @@ export enum RedisPMOperationType {
 export enum RedisGMOperationType {
    InsertMessage = 0,
    InsertReaded = 1,
-   InsertForwarded = 2
+   InsertForwarded = 2,
+   UpdateSendFileMessage = 3
 }
 export const RedisPrefixKeyType = {
    DBOperations: "d"
@@ -65,5 +66,7 @@ export const SocketRoomTypes = {
 
 export enum WatchRoomTypes {
    UserOnline = 0,
-   UserOffline = 1
+   UserOffline = 1,
+   UserPPChanged = 3,
+   UserProfileChanged = 4,
 }
