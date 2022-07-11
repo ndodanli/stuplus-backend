@@ -1,13 +1,17 @@
 import { Document, Schema } from "mongoose";
 import { GroupChatType } from "../../stuplus-lib/enums/enums_socket";
 import BaseEntity from "./BaseEntity";
+import { GroupMessage } from "./GroupMessageEntity";
 export interface GroupChat extends BaseEntity {
   ownerId: string; //user id
   title: string;
   type: GroupChatType;
+  about: string;
   coverImageUrl: string;
   adminIds: string[];
   avatarKey: string;
+  //ignore
+  lastMessage?: GroupMessage | null; //ignore
 }
 
 export interface GroupChatDocument extends GroupChat, Document {
@@ -21,6 +25,7 @@ export const GroupChatSchema: Schema = new Schema({
   coverImageUrl: { type: String, required: false, default: null },
   adminIds: { type: Array.of(String), required: false, default: [] },
   avatarKey: { type: String, required: false, default: null },
+  about: { type: String, required: false, default: null },
 });
 
 GroupChatSchema.pre("save", function (next) {
@@ -47,6 +52,10 @@ GroupChatSchema.methods.minify = async function (
     adminIds: this.adminIds,
     avatarKey: this.avatarKey,
     coverImageUrl: this.coverImageUrl,
+    recordDeletionDate: this.recordDeletionDate,
+    about: this.about,
+    //ignore
+    lastMessage: null, //ignore
   };
   return response;
 };

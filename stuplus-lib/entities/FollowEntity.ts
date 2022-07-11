@@ -37,6 +37,7 @@ FollowSchema.methods.minify = async function (
     recordStatus: this.recordStatus,
     followerId: this.followerId,
     followingId: this.followingId,
+    recordDeletionDate: this.recordDeletionDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     //ignore

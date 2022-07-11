@@ -37,6 +37,7 @@ FacultySchema.methods.minify = async function (
     schoolId: this.schoolId,
     title: this.title,
     coverImageUrl: this.coverImageUrl,
+    recordDeletionDate: this.recordDeletionDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

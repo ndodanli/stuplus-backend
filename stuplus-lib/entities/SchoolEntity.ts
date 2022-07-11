@@ -40,6 +40,7 @@ SchoolSchema.methods.minify = async function (
     coverImageUrl: this.coverImageUrl,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
+    recordDeletionDate: this.recordDeletionDate,
   };
 
   return response;

@@ -64,7 +64,8 @@ GroupMessageSchema.methods.minify = async function (
     readedAt: this.readedAt,
     replyToId: this.replyToId,
     files: this.files,
-    groupChatId: this.groupChatId
+    groupChatId: this.groupChatId,
+    recordDeletionDate: this.recordDeletionDate,
   };
   return response;
 };

@@ -27,7 +27,7 @@ export class UserAccess {
         const response = new UserProfileResponseDTO();
         response.user = await RedisService.acquireUser(targetUserId, ["_id", "firstName", "lastName", "profilePhotoUrl",
             "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
-            "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings"]);
+            "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings", "lastSeenDate"]);
 
         response.user.followerCount = await RedisService.acquire(RedisKeyType.User + targetUserId + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
             return await FollowEntity.countDocuments({ followingId: targetUserId });
@@ -69,7 +69,7 @@ export class UserAccess {
 
         await RedisService.updateUser(user);
 
-        io.in(userWatchRoomName(user.id)).emit("c-watch-users", {
+        io.in(userWatchRoomName(user.id)).emit("cWatchUsers", {
             id: user.id,
             t: WatchRoomTypes.UserProfileChanged,
             data: {
@@ -104,7 +104,7 @@ export class UserAccess {
 
         await RedisService.updateUser(user);
 
-        io.in(userWatchRoomName(user.id)).emit("c-watch-users", {
+        io.in(userWatchRoomName(user.id)).emit("cWatchUsers", {
             id: user.id,
             t: WatchRoomTypes.UserPPChanged,
             data: {
@@ -172,7 +172,8 @@ export class UserAccess {
             ...payload,
             username: username,
             avatarKey: username,
-            role: Role.User
+            role: Role.User,
+            lastSeenDate: now,
         });
 
         const verifyLink = config.DOMAIN + `/account/emailConfirmation?uid=${createdUser._id}&code=${code}&t=${isStudentEmail ? "1" : "0"}`
@@ -399,8 +400,8 @@ export class UserAccess {
                     externalLogins: [{
                         providerId: sub,
                         providerName: "google"
-                    }]
-
+                    }],
+                    lastSeenDate: new Date(),
                 });
 
                 return { token: getNewToken(createdUser) };

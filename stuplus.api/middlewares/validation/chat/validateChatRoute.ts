@@ -6,15 +6,86 @@ import { CustomRequest } from "../../../../stuplus-lib/utils/base/baseOrganizers
 import BaseResponse from "../../../../stuplus-lib/utils/base/BaseResponse";
 import { Ok } from "../../../../stuplus-lib/utils/base/ResponseObjectResults";
 
+export const validateBlockUser = [
+    check('userId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
+export const validateDeleteSinglePM = [
+    check('messageId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('chatId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('deleteFor')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
+export const validateClearPMChat = [
+    check('chatId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('deleteFor')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
 export const validateUpdateGroupInfo = [
     check('title')
         .isArray({ min: 0 })
         .withMessage((value: any, { req }: any) => getMessage("mustBeArray", req.selectedLangs()))
-        .bail(),,
+        .bail(), ,
     check('type')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(), 
+        .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
@@ -27,15 +98,22 @@ export const validateCreateGroup = [
     check('userIds')
         .isArray({ min: 0 })
         .withMessage((value: any, { req }: any) => getMessage("mustBeArray", req.selectedLangs()))
-        .bail(),,
+        .bail()
+        .custom(async (value, { req }) => {
+            for (let i = 0; i < value.length; i++) {
+                if (!isValidObjectId(value[i])) {
+                    throw new Error(getMessage("incorrectId", req.selectedLangs()));
+                }
+            }
+        }),
     check('title')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(), 
+        .bail(),
     check('type')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(), 
+        .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
@@ -57,7 +135,7 @@ export const validateSendFileMessage = [
                 throw new Error(getMessage("incorrectId", req.selectedLangs()));
             }
         })
-        .bail(), 
+        .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())

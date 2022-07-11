@@ -44,7 +44,8 @@ export default class RedisService {
         }
     }
 
-    static async acquireUser(userId: string, project?: string[] | object): Promise<UserDocument> {
+    //TODO: fix project type
+    static async acquireUser(userId: string, project?: string[] | any): Promise<UserDocument> {
         const redisUser = await this.acquire<UserDocument>(RedisKeyType.User + userId, 60 * 120, async () => {
 
             const user = await UserEntity.findOne({ _id: userId }, {}, { lean: true })
@@ -75,7 +76,8 @@ export default class RedisService {
                 }
             } else {
                 for (const key in redisUser) {
-                    if (!project.hasOwnProperty(key))
+                    const hasOwnProperty = project.hasOwnProperty(key);
+                    if (!hasOwnProperty || (hasOwnProperty && project[key] === 0))
                         delete redisUser[key];
                 }
             }

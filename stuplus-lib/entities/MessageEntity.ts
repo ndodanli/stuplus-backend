@@ -11,11 +11,15 @@ export interface Message extends BaseEntity {
   readedAt: Date;
   files: MessageFiles[];
   replyToId?: string; //message id
+  deletedForUserIds: string[];
+  deletedForUserDate?: Date;
   chatId: string;
   //ignore
   from?: User | null; //ignore
   replyTo?: ReplyToDTO | null; //ignore
 }
+
+
 export class ReplyToDTO {
   messageId: string;
   messageOwnerId: string;
@@ -58,9 +62,11 @@ export const MessageSchema: Schema = new Schema({
     })), required: false, default: []
   },
   replyToId: { type: String, required: false, default: null },
+  deletedForUserIds: { type: Array.of(String), required: false, default: [] },
+  deletedForUserDate: { type: Date, required: false, default: null },
 });
 
-MessageSchema.index({ text: 'text' });
+// MessageSchema.index({ text: "text", description: "text" });
 
 MessageSchema.pre("save", function (next) {
   //
@@ -89,6 +95,9 @@ MessageSchema.methods.minify = async function (
     files: this.files,
     replyToId: this.replyToId,
     chatId: this.chatId,
+    deletedForUserIds: this.deletedForUserIds,
+    deletedForUserDate: this.deletedForUserDate,
+    recordDeletionDate: this.recordDeletionDate,
     //ignore
     replyTo: null, //ignore
   };

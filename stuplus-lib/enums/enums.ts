@@ -34,6 +34,11 @@ export enum FollowLimitation {
    None = 0,
    ByRequest = 1
 }
+
+export enum MessageLimitation {
+   None = 0,
+   OnlyWhoUserFollows = 1
+}
 export enum RedisAcquireEntityFilterOrder {
    ASC = 1,
    DESC = -1
@@ -43,4 +48,9 @@ export enum RedisMessagesNotFoundType {
    Reply = 0,
    Forward = 1,
    Read = 2
+}
+
+export enum DeleteChatForType {
+   Me = 0,
+   Both = 1,
 }

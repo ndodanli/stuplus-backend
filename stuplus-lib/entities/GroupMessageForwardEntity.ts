@@ -35,6 +35,7 @@ GroupMessageForwardSchema.methods.minify = async function (
     updatedAt: this.updatedAt,
     messageId: this.messageId,
     forwardedTo: this.forwardedTo,
+    recordDeletionDate: this.recordDeletionDate,
   };
   return response;
 };

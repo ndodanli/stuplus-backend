@@ -72,6 +72,7 @@ QuestionSchema.methods.minify = async function (
     score: this.score,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
+    recordDeletionDate: this.recordDeletionDate,
     //ignore
     owner: null, // ignore
     relatedSchools: null, // ignore

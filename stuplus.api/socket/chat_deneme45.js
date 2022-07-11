@@ -98,41 +98,41 @@ $(document).ready(async function () {
         //     });
         // });
     });
-    socket.on("c-pm-send", data => {
+    socket.on("cPmSend", data => {
         appendMessage(BOT_NAME, BOT_IMG, "left", data.t, data.mi);
     });
-    socket.on("c-pm-forwarded", data => {
+    socket.on("cPmForwarded", data => {
         const messageIds = data.mids;
         console.log('messageIds :', messageIds)
         messageIds.forEach(x => {
             $(`<span style="color:green;">forwarded</span>`).appendTo(`#${x}`)
         })
     });
-    socket.on("c-pm-readed", data => {
+    socket.on("cPmReaded", data => {
         const messageIds = data.mids;
         messageIds.forEach(x => {
             $(`<span style="color:blue;">readed</span>`).appendTo(`#${x}`)
         })
     });
-    socket.on("c-group-created", data => {
+    socket.on("cGroupCreated", data => {
         console.log('data', data);
-        appendMessage(BOT_NAME, BOT_IMG, "left", `c-group-created: ${JSON.stringify(data)}`);
+        appendMessage(BOT_NAME, BOT_IMG, "left", `cGroupCreated: ${JSON.stringify(data)}`);
     });
-    socket.on("c-gm-send", data => {
+    socket.on("cGmSend", data => {
         // console.log('data', data);
-        appendMessage(BOT_NAME, BOT_IMG, "left", `c-gm-send: ${JSON.stringify(data)}`);
+        appendMessage(BOT_NAME, BOT_IMG, "left", `cGmSend: ${JSON.stringify(data)}`);
     });
-    socket.on("c-gm-forwarded", data => {
+    socket.on("cGmForwarded", data => {
         // console.log('data', data);
-        appendMessage(BOT_NAME, BOT_IMG, "left", `c-gm-forwarded: ${JSON.stringify(data)}`);
+        appendMessage(BOT_NAME, BOT_IMG, "left", `cGmForwarded: ${JSON.stringify(data)}`);
     });
-    socket.on("c-gm-readed", data => {
+    socket.on("cGmReaded", data => {
         // console.log('data', data);
-        appendMessage(BOT_NAME, BOT_IMG, "left", `c-gm-readed: ${JSON.stringify(data)}`);
+        appendMessage(BOT_NAME, BOT_IMG, "left", `cGmReaded: ${JSON.stringify(data)}`);
     });
-    socket.on("c-watch-users", data => {
+    socket.on("cWatchUsers", data => {
         // console.log('data', data);
-        appendMessage(BOT_NAME, BOT_IMG, "left", `c-watch-users: ${JSON.stringify(data)}`);
+        appendMessage(BOT_NAME, BOT_IMG, "left", `cWatchUsers: ${JSON.stringify(data)}`);
     });
     function appendMessage(name, img, side, text, id) {
         //   Simple solution for small apps

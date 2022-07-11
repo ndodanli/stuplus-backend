@@ -41,6 +41,7 @@ AnnouncementCommentLikeSchema.methods.minify = async function (
     commentId: this.commentId,
     announcementId: this.announcementId,
     type: this.type,
+    recordDeletionDate: this.recordDeletionDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

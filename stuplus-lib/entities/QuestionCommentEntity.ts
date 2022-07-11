@@ -51,6 +51,7 @@ QuestionCommentSchema.methods.minify = async function (
     score: this.score,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
+    recordDeletionDate: this.recordDeletionDate,
     //ignore
     likeType: LikeType.None, // ignore
     likeCount: 0, // ignore

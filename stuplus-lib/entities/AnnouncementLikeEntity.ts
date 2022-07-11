@@ -38,6 +38,7 @@ AnnouncementLikeSchema.methods.minify = async function (
     ownerId: this.ownerId,
     announcementId: this.announcementId,
     type: this.type,
+    recordDeletionDate: this.recordDeletionDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

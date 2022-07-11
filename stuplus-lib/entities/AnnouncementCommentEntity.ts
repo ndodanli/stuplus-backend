@@ -49,6 +49,7 @@ AnnouncementCommentSchema.methods.minify = async function (
     announcementId: this.announcementId,
     comment: this.comment,
     score: this.score,
+    recordDeletionDate: this.recordDeletionDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     //ignore

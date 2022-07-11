@@ -40,6 +40,7 @@ DepartmentSchema.methods.minify = async function (
     grade: this.grade,
     title: this.title,
     coverImageUrl: this.coverImageUrl,
+    recordDeletionDate: this.recordDeletionDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

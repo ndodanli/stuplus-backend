@@ -70,6 +70,7 @@ AnnouncementSchema.methods.minify = async function (
     fromDate: this.fromDate,
     toDate: this.toDate,
     score: this.score,
+    recordDeletionDate: this.recordDeletionDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     //ignore

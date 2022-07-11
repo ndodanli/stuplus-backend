@@ -41,6 +41,7 @@ FollowRequestSchema.methods.minify = async function (
     ownerId: this.ownerId,
     requestedId: this.requestedId,
     status: this.status,
+    recordDeletionDate: this.recordDeletionDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     //ignore

@@ -43,6 +43,7 @@ QuestionCommentLikeSchema.methods.minify = async function (
     type: this.type,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
+    recordDeletionDate: this.recordDeletionDate,
   };
   return response;
 };

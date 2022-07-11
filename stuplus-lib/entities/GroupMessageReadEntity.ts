@@ -35,6 +35,7 @@ GroupMessageReadSchema.methods.minify = async function (
     updatedAt: this.updatedAt,
     messageId: this.messageId,
     readedBy: this.readedBy,
+    recordDeletionDate: this.recordDeletionDate,
   };
   return response;
 };

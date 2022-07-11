@@ -26,6 +26,7 @@ import { UserDocument, UserSchema } from "./UserEntity";
 export default interface BaseEntity {
   [key: string]: any;
   recordStatus: RecordStatus;
+  recordDeletionDate: Date;
   createdAt: Date;
   updatedAt: Date;
 }

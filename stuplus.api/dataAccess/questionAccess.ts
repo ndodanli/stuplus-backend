@@ -254,12 +254,7 @@ export class QuestionAccess {
         if (!question.isActive || ((question.fromDate && question.fromDate > now)
             || (question.toDate && question.toDate < now))) throw new NotValidError(getMessage("questionNotAvailable", acceptedLanguages));
 
-        const comments = await QuestionCommentEntity.find({ questionId: question._id }, { ownerId: 1, comment: 1 }, { lean: true, sort: { score: -1 }, limit: 20 });
-        const requiredUserIds = comments.map(x => x.ownerId);
-        requiredUserIds.push(question.ownerId);
-        const requiredUsers = await UserEntity.find({ _id: { $in: requiredUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
-
-        question.owner = requiredUsers.find(x => x._id.toString() === question.ownerId);
+        question.owner = await UserEntity.findOne({ _id: question.ownerId }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
         const redisQuestionLikes = await RedisService.client.lRange(RedisKeyType.DBQuestionLike + question._id.toString(), 0, -1);
         const redisQuestionDislikes = await RedisService.client.lRange(RedisKeyType.DBQuestionDislike + question._id.toString(), 0, -1);
         question.likeCount = await RedisService.acquire<number>(RedisKeyType.QuestionLikeCount + question._id.toString(), 30, async () => {

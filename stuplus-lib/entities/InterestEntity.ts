@@ -35,6 +35,7 @@ InterestSchema.methods.minify = async function (
     title: this.title,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
+    recordDeletionDate: this.recordDeletionDate,
   };
   return response;
 };

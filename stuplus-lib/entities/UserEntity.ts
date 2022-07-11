@@ -1,5 +1,5 @@
 import { Document, Schema } from "mongoose";
-import { FollowLimitation, Gender, RecordStatus } from "../enums/enums";
+import { FollowLimitation, Gender, MessageLimitation, RecordStatus } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 
 export interface User extends BaseEntity {
@@ -31,16 +31,19 @@ export interface User extends BaseEntity {
   avatarKey: string;
   about: string;
   privacySettings: PrivacySettings;
+  lastSeenDate: Date;
   //ignore
   schoolName: string | null; //ignore
   facultyName: string | null; //ignore
   departmentName: string | null; //ignore
   followerCount: number; //ignore
   followingCount: number; //ignore
+  isAdminOfThisGroup: boolean; //ignore
 }
 
 export class PrivacySettings {
   followLimitation: FollowLimitation = FollowLimitation.None;
+  messageLimitation: MessageLimitation = MessageLimitation.None;
 }
 export class ExternalLogin {
   providerId: string | null;
@@ -135,6 +138,7 @@ export const UserSchema: Schema = new Schema({
     required: false,
     default: { followLimitation: FollowLimitation.None }
   },
+  lastSeenDate: { type: Date, required: true },
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -186,12 +190,15 @@ UserSchema.methods.minify = async function (
     avatarKey: this.avatarKey,
     about: this.about,
     privacySettings: this.privacySettings,
+    recordDeletionDate: this.recordDeletionDate,
+    lastSeenDate: this.lastSeenDate,
     //ignore
     schoolName: null, //ignore
     facultyName: null, //ignore
     departmentName: null, //ignore
     followerCount: 0, //ignore
     followingCount: 0, //ignore
+    isAdminOfThisGroup: false, //ignore
   };
   return response;
 };

@@ -33,6 +33,7 @@ GroupChatUserSchema.methods.minify = async function (
     recordStatus: this.recordStatus,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
+    recordDeletionDate: this.recordDeletionDate,
     userId: this.userId,
     groupChatId: this.groupChatId,
   };

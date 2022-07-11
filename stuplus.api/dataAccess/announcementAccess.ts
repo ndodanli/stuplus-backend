@@ -262,12 +262,8 @@ export class AnnouncementAccess {
         if (!announcement.isActive || ((announcement.fromDate && announcement.fromDate > now)
             || (announcement.toDate && announcement.toDate < now))) throw new NotValidError(getMessage("announcementNotAvailable", acceptedLanguages));
 
-        const comments = await AnnouncementCommentEntity.find({ announcementId: announcement._id }, { ownerId: 1, comment: 1 }, { lean: true, sort: { score: -1 }, limit: 20 });
-        const requiredUserIds = comments.map(x => x.ownerId);
-        requiredUserIds.push(announcement.ownerId);
-        const requiredUsers = await UserEntity.find({ _id: { $in: requiredUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
+        announcement.owner = await UserEntity.findOne({ _id: announcement.ownerId }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
 
-        announcement.owner = requiredUsers.find(x => x._id.toString() === announcement.ownerId);
         const redisAnnouncementLikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementLike + announcement._id.toString(), 0, -1);
         const redisAnnouncementDislikes = await RedisService.client.lRange(RedisKeyType.DBAnnouncementDislike + announcement._id.toString(), 0, -1);
         announcement.likeCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementLikeCount + announcement._id.toString(), 30, async () => {
@@ -276,7 +272,7 @@ export class AnnouncementAccess {
             likeCount += await AnnouncementLikeEntity.countDocuments({ announcementId: announcement._id, type: LikeType.Like });
             return likeCount;
         });
-        announcement.commentCount = await RedisService.acquire<number>(RedisKeyType.DBAnnouncementComment + announcement._id.toString(), 30, async () => {
+        announcement.commentCount = await RedisService.acquire<number>(RedisKeyType.AnnouncementCommentCount + announcement._id.toString(), 30, async () => {
             let commentCount = 0;
             commentCount += await RedisService.client.lLen(RedisKeyType.DBAnnouncementComment + announcement._id.toString());
             commentCount += await AnnouncementCommentEntity.countDocuments({ announcementId: announcement._id });

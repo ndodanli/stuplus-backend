@@ -38,6 +38,7 @@ QuestionLikeSchema.methods.minify = async function (
     ownerId: this.ownerId,
     questionId: this.questionId,
     type: this.type,
+    recordDeletionDate: this.recordDeletionDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

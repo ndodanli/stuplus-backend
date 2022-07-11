@@ -1,4 +1,5 @@
 import { BaseFilter } from "../../../stuplus-lib/dtos/baseFilter";
+import { DeleteChatForType } from "../../../stuplus-lib/enums/enums";
 import { GroupChatType } from "../../../stuplus-lib/enums/enums_socket";
 import { mapToDTO } from "../../../stuplus-lib/utils/general";
 
@@ -69,6 +70,38 @@ export class GetSearchedChatMessageDTO extends BaseFilter {
     }
 }
 
+export class GetSearchedGroupChatMessagesDTO extends BaseFilter {
+    groupChatId: string = "";
+    searchedText: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class GetSearchedGroupChatMessageDTO extends BaseFilter {
+    groupChatId: string = "";
+    messageCreatedAt: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class GetGroupUsersDTO extends BaseFilter {
+    groupChatId: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
 export class GetGroupChatMessagesDTO extends BaseFilter {
     groupChatId: string = "";
     constructor(obj: any) {
@@ -102,6 +135,36 @@ export class RemoveFromGroupChatDTO {
 export class MakeUsersGroupAdminDTO {
     groupChatId: string = "";
     userIds: string[] = [];
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class ClearPMChatHistoryDTO {
+    chatId: string = "";
+    deleteFor: DeleteChatForType = DeleteChatForType.Me;
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class DeleteSinglePMDTO {
+    chatId: string = "";
+    messageId: string = "";
+    deleteFor: DeleteChatForType = DeleteChatForType.Me;
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class BlockUserDTO {
+    userId: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

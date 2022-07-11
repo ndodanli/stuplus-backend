@@ -30,3 +30,13 @@ export const reverseArray = (arr: any[]): any[] => {
 }
 
 export const isValidObjectId = (id: string): Boolean => ObjectId.isValid(id);
+
+export const sortByDate = (arr: any[], key: string): any[] => {
+    return arr.sort((a, b) => {
+        a[key] = new Date(a[key]);
+        b[key] = new Date(b[key]);
+        if (a[key] < b[key]) return 1;
+        if (a[key] > b[key]) return -1;
+        return 0;
+    });
+}
