@@ -113,8 +113,16 @@
             v-model="department.about" />
           <el-input-number style="flex: 0 0 15%;" placeholde="Grade" v-model="department.grade" :min="1" :max="10">
           </el-input-number>
-          <label>Preparation</label>
-          <el-checkbox v-model="department.preparation">Option</el-checkbox>
+          <div class="d-flex flex-column">
+            <div>
+              <label>Preparation</label>
+              <el-checkbox v-model="department.preparation">PreFparation</el-checkbox>
+            </div>
+            <div>
+              <label>Secondary Education</label>
+              <el-checkbox v-model="department.secondaryEducation">Secondary Education</el-checkbox>
+            </div>
+          </div>
           <button class="el-button el-button--primary el-button--mini" type="button" style="flex: 0 0 15%;"
             @click="handleAddDepartment">Add Department</button>
         </div>
@@ -234,7 +242,8 @@ export default {
         title: null,
         about: "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
         coverImageUrl: null,
-        preparation: false
+        preparation: false,
+        secondaryEducation: false
       }
     }
   },
@@ -248,7 +257,8 @@ export default {
         title: null,
         about: "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
         coverImageUrl: null,
-        preparation: false
+        preparation: false,
+        secondaryEducation: false
       }
     },
     handleCoverImageUploadSuccess(res, file) {

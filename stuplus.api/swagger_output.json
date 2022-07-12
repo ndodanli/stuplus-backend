@@ -972,6 +972,184 @@
         }
       }
     },
+    "/account/report": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Report something(user, comment, announcement, message",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountReportRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountReportRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/getNotificationHistory": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Get notification history",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetNotificationHistoryResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetNotificationHistoryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/removeNotification/{notificationId}": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Remove notification by id.",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/account/notifyReadNotifications": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Notify readed notifications by sending their ids.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountNotifyReadNotificationsRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountNotifyReadNotificationsRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/login/": {
       "post": {
         "tags": [
@@ -1181,7 +1359,7 @@
         ]
       }
     },
-    "/school/getDepartments/{facultyId}": {
+    "/school/getDepartments/{schoolId}": {
       "get": {
         "tags": [
           "School"
@@ -1189,7 +1367,7 @@
         "description": "Get departments by faculty id",
         "parameters": [
           {
-            "name": "facultyId",
+            "name": "schoolId",
             "in": "path",
             "required": true,
             "schema": {
@@ -1913,8 +2091,146 @@
         }
       }
     },
-    "/chat/": {
-      "get": {
+    "/search/people": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "description": "Get searched results(only users).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchPeopleResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchPeopleResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchPeopleRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchPeopleRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/groupChats": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "description": "Get searched results(only group chats).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchGroupChatsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchGroupChatsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchGroupChatsRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchGroupChatsRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/peopleAndGroupChats": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "description": "Get searched results(people and group chats).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchPeopleAndGroupChatsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchPeopleAndGroupChatsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchPeopleAndGroupChatsRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchPeopleAndGroupChatsRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/general/updateImageStats": {
+      "post": {
         "description": "",
         "parameters": [],
         "responses": {
@@ -1922,6 +2238,107 @@
             "description": "OK"
           }
         },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "example": "any"
+                  },
+                  "stats": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/unblockUser": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/getBlockedUsers": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/blockuser": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/deleteSinglePM": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/clearPMChatHistory": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/getPMChats": {
+      "get": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/getGroupChats": {
+      "get": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
         "security": [
           {
             "bearerAuth": []
@@ -1941,8 +2358,8 @@
         ]
       }
     },
-    "/chat/getMessages": {
-      "get": {
+    "/chat/updateGroupInfo": {
+      "post": {
         "description": "",
         "parameters": [],
         "responses": {},
@@ -1953,7 +2370,55 @@
         ]
       }
     },
-    "/chat/sendPMFileMessage": {
+    "/chat/getMessages": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/getSearchedPMs": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/getSearchedPM": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/getSearchedGMs": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/sendPMFile": {
       "post": {
         "tags": [
           "Chat"
@@ -1989,7 +2454,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "m": {
+                  "message": {
                     "type": "string",
                     "description": "Message",
                     "example": "Hello"
@@ -2012,6 +2477,278 @@
         }
       }
     },
+    "/chat/updatePMFile": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "description": "Send file message.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mi": {
+                    "type": "string",
+                    "description": "Message ID",
+                    "example": "62ab8a204166fd1eaebbb3fa"
+                  },
+                  "ci": {
+                    "type": "string",
+                    "description": "Chat ID",
+                    "example": "62ab8a204166fd1eaebbb3fa"
+                  },
+                  "files": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "files"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/getGroupMessages": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/getGroupUsers": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/sendGMFile": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "description": "Send file message.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "description": "Message",
+                    "example": "Hello"
+                  },
+                  "to": {
+                    "type": "string",
+                    "description": "Recipient ID"
+                  },
+                  "files": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "files"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/updateGMFile": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "description": "Send file message.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mi": {
+                    "type": "string",
+                    "description": "Message ID",
+                    "example": "62ab8a204166fd1eaebbb3fa"
+                  },
+                  "ci": {
+                    "type": "string",
+                    "description": "Chat ID",
+                    "example": "62ab8a204166fd1eaebbb3fa"
+                  },
+                  "files": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "files"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/addToGroup": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/makeUsersGroupAdmin": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/removeFromGroup": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/getGroupProfile/{groupChatId}": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "groupChatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/leaveGroup": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/doc/": {
       "get": {
         "description": "",
@@ -2027,6 +2764,839 @@
   },
   "components": {
     "schemas": {
+      "SearchPeopleRequest": {
+        "type": "object",
+        "properties": {
+          "searchString": {
+            "type": "string",
+            "example": "test"
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "searchString",
+          "page",
+          "pageSize"
+        ],
+        "xml": {
+          "name": "SearchPeopleRequest"
+        }
+      },
+      "SearchPeopleResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62ab41a460884a883ed78080"
+                },
+                "username": {
+                  "type": "string",
+                  "example": "test1013"
+                },
+                "firstName": {
+                  "type": "string",
+                  "example": "test1013"
+                },
+                "lastName": {
+                  "type": "string",
+                  "example": "test1013"
+                },
+                "profilePhotoUrl": {},
+                "__t": {
+                  "type": "string",
+                  "example": "User"
+                },
+                "confidenceScore": {
+                  "type": "number",
+                  "example": 42.900000000000006
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "SearchPeopleResponse"
+        }
+      },
+      "SearchGroupChatsRequest": {
+        "type": "object",
+        "properties": {
+          "searchString": {
+            "type": "string",
+            "example": "uni"
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "searchString",
+          "page",
+          "pageSize"
+        ],
+        "xml": {
+          "name": "SearchGroupChatsRequest"
+        }
+      },
+      "SearchGroupChatsResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62cc9ca25c9816cc1e36880d"
+                },
+                "title": {
+                  "type": "string",
+                  "example": "Muhasebe ve Vergi Uygulamaları 2. Sınıf"
+                },
+                "type": {
+                  "type": "number",
+                  "example": 0
+                },
+                "coverImageUrl": {
+                  "type": "string",
+                  "example": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657574858083-4379-muhabasebe.jpg"
+                },
+                "about": {
+                  "type": "string",
+                  "example": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün."
+                },
+                "hashTags": {
+                  "type": "array",
+                  "example": [
+                    "muhasebevevergiuygulamalari2sinif",
+                    "Muhasebe",
+                    "ve",
+                    "Vergi",
+                    "Uygulamaları",
+                    "2.",
+                    "Sınıf",
+                    "ataturkuniversitesi",
+                    "Atatürk",
+                    "Üniversitesi",
+                    ""
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "schoolId": {
+                  "type": "string",
+                  "example": "62cc9c8f5c9816cc1e36858d"
+                },
+                "departmentId": {
+                  "type": "string",
+                  "example": "62cc9ca25c9816cc1e3687f9"
+                },
+                "grade": {
+                  "type": "number",
+                  "example": 2
+                },
+                "__t": {
+                  "type": "string",
+                  "example": "GroupChat"
+                },
+                "confidenceScore": {
+                  "type": "number",
+                  "example": 3.3000000000000003
+                },
+                "school": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62cc9c8f5c9816cc1e36858d"
+                    },
+                    "emailFormat": {
+                      "type": "string",
+                      "example": "atauni.edu.tr"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Atatürk Üniversitesi"
+                    },
+                    "coverImageUrl": {
+                      "type": "string",
+                      "example": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/school_images/1657578697785-2773-ataturk_uni.png"
+                    },
+                    "type": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "recordStatus": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "__t": {
+                      "type": "string",
+                      "example": "School"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "2022-07-11T22:35:13.961Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "example": "2022-07-11T22:35:13.961Z"
+                    }
+                  }
+                },
+                "department": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62cc9ca25c9816cc1e3687f9"
+                    },
+                    "facultyId": {},
+                    "schoolId": {
+                      "type": "string",
+                      "example": "62cc9c8f5c9816cc1e36858d"
+                    },
+                    "grade": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Muhasebe ve Vergi Uygulamaları"
+                    },
+                    "coverImageUrl": {
+                      "type": "string",
+                      "example": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657574858083-4379-muhabasebe.jpg"
+                    },
+                    "about": {
+                      "type": "string",
+                      "example": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün."
+                    },
+                    "avatarKey": {},
+                    "recordStatus": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "__t": {
+                      "type": "string",
+                      "example": "Department"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "2022-07-11T21:56:50.330Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "example": "2022-07-11T21:56:50.330Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "SearchGroupChatsResponse"
+        }
+      },
+      "SearchPeopleAndGroupChatsRequest": {
+        "type": "object",
+        "properties": {
+          "searchString": {
+            "type": "string",
+            "example": "tes"
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "searchString",
+          "page",
+          "pageSize"
+        ],
+        "xml": {
+          "name": "SearchPeopleAndGroupChatsRequest"
+        }
+      },
+      "SearchPeopleAndGroupChatsResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62cc9c945c9816cc1e36860e"
+                },
+                "title": {
+                  "type": "string",
+                  "example": "Kamu Yönetimi 2. Sınıf"
+                },
+                "type": {
+                  "type": "number",
+                  "example": 0
+                },
+                "coverImageUrl": {
+                  "type": "string",
+                  "example": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657570576441-4039-kamu%20y%C3%83%C2%B6netimi.jpg"
+                },
+                "about": {
+                  "type": "string",
+                  "example": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün."
+                },
+                "hashTags": {
+                  "type": "array",
+                  "example": [
+                    "kamuyonetimi2sinif",
+                    "Kamu",
+                    "Yönetimi",
+                    "2.",
+                    "Sınıf",
+                    "ataturkuniversitesi",
+                    "Atatürk",
+                    "Üniversitesi",
+                    ""
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "schoolId": {
+                  "type": "string",
+                  "example": "62cc9c8f5c9816cc1e36858d"
+                },
+                "departmentId": {
+                  "type": "string",
+                  "example": "62cc9c945c9816cc1e368604"
+                },
+                "grade": {
+                  "type": "number",
+                  "example": 2
+                },
+                "__t": {
+                  "type": "string",
+                  "example": "GroupChat"
+                },
+                "confidenceScore": {
+                  "type": "number",
+                  "example": 3.3000000000000003
+                },
+                "school": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62cc9c8f5c9816cc1e36858d"
+                    },
+                    "emailFormat": {
+                      "type": "string",
+                      "example": "atauni.edu.tr"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Atatürk Üniversitesi"
+                    },
+                    "coverImageUrl": {
+                      "type": "string",
+                      "example": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/school_images/1657578697785-2773-ataturk_uni.png"
+                    },
+                    "type": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "recordStatus": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "__t": {
+                      "type": "string",
+                      "example": "School"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "2022-07-11T22:35:13.961Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "example": "2022-07-11T22:35:13.961Z"
+                    }
+                  }
+                },
+                "department": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62cc9c945c9816cc1e368604"
+                    },
+                    "facultyId": {},
+                    "schoolId": {
+                      "type": "string",
+                      "example": "62cc9c8f5c9816cc1e36858d"
+                    },
+                    "grade": {
+                      "type": "number",
+                      "example": 4
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Kamu Yönetimi"
+                    },
+                    "coverImageUrl": {
+                      "type": "string",
+                      "example": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657570576441-4039-kamu%20y%C3%83%C2%B6netimi.jpg"
+                    },
+                    "about": {
+                      "type": "string",
+                      "example": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün."
+                    },
+                    "avatarKey": {},
+                    "recordStatus": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "__t": {
+                      "type": "string",
+                      "example": "Department"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "2022-07-11T21:56:36.162Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "example": "2022-07-11T21:56:36.162Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "SearchPeopleAndGroupChatsResponse"
+        }
+      },
+      "AccountReportRequest": {
+        "type": "object",
+        "properties": {
+          "reportType": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "JustDontLike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "BullyingOrHarassment": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "FalseInformation": {
+                    "type": "number",
+                    "example": 2
+                  },
+                  "Spam": {
+                    "type": "number",
+                    "example": 3
+                  },
+                  "NudityOrSexualActivity": {
+                    "type": "number",
+                    "example": 4
+                  },
+                  "HateSpeechOrSymbols": {
+                    "type": "number",
+                    "example": 5
+                  },
+                  "ViolanceOrDangerousOrganizations": {
+                    "type": "number",
+                    "example": 6
+                  },
+                  "ScamOrFraud": {
+                    "type": "number",
+                    "example": 7
+                  },
+                  "IntellectualPropertyViolation": {
+                    "type": "number",
+                    "example": 8
+                  },
+                  "SaleOfIllegalOrRegulatedGoods": {
+                    "type": "number",
+                    "example": 9
+                  },
+                  "SuicideOrSelfInjury": {
+                    "type": "number",
+                    "example": 10
+                  },
+                  "EatingDisorders": {
+                    "type": "number",
+                    "example": 11
+                  },
+                  "Other": {
+                    "type": "number",
+                    "example": 12
+                  }
+                }
+              }
+            }
+          },
+          "details": {
+            "type": "string",
+            "example": "xxx"
+          },
+          "userId": {
+            "type": "string",
+            "example": "62ab8a204166fd1eaebbb3fa"
+          },
+          "messageId": {
+            "type": "string",
+            "example": "62ab8a204166fd1eaebbb3fa"
+          },
+          "messageText": {
+            "type": "string",
+            "example": "xxx"
+          },
+          "commentId": {
+            "type": "string",
+            "example": "62ab8a204166fd1eaebbb3fa"
+          },
+          "commentText": {
+            "type": "string",
+            "example": "xxx"
+          },
+          "announcementId": {
+            "type": "string",
+            "example": "62ab8a204166fd1eaebbb3fa"
+          },
+          "announcementText": {
+            "type": "string",
+            "example": "xxx"
+          }
+        },
+        "required": [
+          "reportType"
+        ],
+        "xml": {
+          "name": "AccountReportRequest"
+        }
+      },
+      "GetNotificationHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "notes": {
+            "type": "object",
+            "properties": {
+              "NotificationType": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "example": "enum"
+                  },
+                  "values": {
+                    "type": "object",
+                    "properties": {
+                      "StartedFollowingYou": {
+                        "type": "number",
+                        "example": 0
+                      },
+                      "FollowRequestAccepted": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "AddedYouToGroupChat": {
+                        "type": "number",
+                        "example": 2
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62cdf2b616b915025c0627cf"
+                },
+                "ownerId": {
+                  "type": "string",
+                  "example": "62ab8a204166fd1eaebbb3fa"
+                },
+                "relatedUserId": {
+                  "type": "string",
+                  "example": "62ab3f45527e4cb74d06e967"
+                },
+                "groupChatId": {},
+                "readed": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "type": {
+                  "type": "number",
+                  "example": 1
+                },
+                "recordStatus": {
+                  "type": "number",
+                  "example": 1
+                },
+                "__t": {
+                  "type": "string",
+                  "example": "Notification"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2022-07-12T22:16:22.738Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "example": "2022-07-12T22:16:22.738Z"
+                },
+                "relatedUser": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62ab3f45527e4cb74d06e967"
+                    },
+                    "username": {
+                      "type": "string",
+                      "example": "test1008"
+                    },
+                    "firstName": {
+                      "type": "string",
+                      "example": "test1008"
+                    },
+                    "lastName": {
+                      "type": "string",
+                      "example": "test1008"
+                    },
+                    "profilePhotoUrl": {},
+                    "__t": {
+                      "type": "string",
+                      "example": "User"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "GetNotificationHistoryResponse"
+        }
+      },
+      "AccountNotifyReadNotificationsRequest": {
+        "type": "object",
+        "properties": {
+          "notificationIds": {
+            "type": "array",
+            "example": [
+              "62cdf2b616b915025c0627d1",
+              "62cdf2b616b915025c0627cf"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "xml": {
+          "name": "AccountNotifyReadNotificationsRequest"
+        }
+      },
       "NullResponse": {
         "type": "object",
         "properties": {
@@ -2242,15 +3812,15 @@
       "AccountUpdateProfileRequest": {
         "type": "object",
         "properties": {
+          "username": {
+            "type": "string",
+            "example": "string"
+          },
           "firstName": {
             "type": "string",
             "example": "string"
           },
           "lastName": {
-            "type": "string",
-            "example": "string"
-          },
-          "phoneNumber": {
             "type": "string",
             "example": "string"
           },
@@ -2263,6 +3833,13 @@
             "example": "string"
           }
         },
+        "required": [
+          "username",
+          "firstName",
+          "lastName",
+          "avatarKey",
+          "about"
+        ],
         "xml": {
           "name": "AccountUpdateProfileRequest"
         }
@@ -2935,97 +4512,100 @@
             }
           },
           "data": {
-            "type": "object",
-            "properties": {
-              "_id": {
-                "type": "string",
-                "example": "62af8aade035eb1764400d30"
-              },
-              "ownerId": {
-                "type": "string",
-                "example": "62ab8a204166fd1eaebbb3fa"
-              },
-              "owner": {
-                "type": "object",
-                "properties": {
-                  "_id": {
-                    "type": "string",
-                    "example": "62ab8a204166fd1eaebbb3fa"
-                  },
-                  "username": {
-                    "type": "string",
-                    "example": "ndodanli14"
-                  },
-                  "profilePhotoUrl": {
-                    "type": "string",
-                    "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
-                  },
-                  "schoolId": {
-                    "type": "string",
-                    "example": "schoolId1"
-                  },
-                  "__t": {
-                    "type": "string",
-                    "example": "User"
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62af8aade035eb1764400d30"
+                },
+                "ownerId": {
+                  "type": "string",
+                  "example": "62ab8a204166fd1eaebbb3fa"
+                },
+                "owner": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62ab8a204166fd1eaebbb3fa"
+                    },
+                    "username": {
+                      "type": "string",
+                      "example": "ndodanli14"
+                    },
+                    "profilePhotoUrl": {
+                      "type": "string",
+                      "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                    },
+                    "schoolId": {
+                      "type": "string",
+                      "example": "schoolId1"
+                    },
+                    "__t": {
+                      "type": "string",
+                      "example": "User"
+                    }
                   }
+                },
+                "coverImageUrl": {},
+                "title": {
+                  "type": "string",
+                  "example": "das"
+                },
+                "relatedSchoolIds": {
+                  "type": "array",
+                  "example": [
+                    "string1",
+                    "string2"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "text": {
+                  "type": "string",
+                  "example": "dasdsa"
+                },
+                "isActive": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "fromDate": {},
+                "toDate": {},
+                "__t": {
+                  "type": "string",
+                  "example": "Announcement"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2022-06-19T20:44:29.536Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "example": "2022-06-19T20:44:29.536Z"
+                },
+                "__v": {
+                  "type": "number",
+                  "example": 0
+                },
+                "recordStatus": {
+                  "type": "number",
+                  "example": 1
+                },
+                "likeCount": {
+                  "type": "number",
+                  "example": 0
+                },
+                "commentCount": {
+                  "type": "number",
+                  "example": 0
+                },
+                "likeType": {
+                  "type": "number",
+                  "example": 1
                 }
-              },
-              "coverImageUrl": {},
-              "title": {
-                "type": "string",
-                "example": "das"
-              },
-              "relatedSchoolIds": {
-                "type": "array",
-                "example": [
-                  "string1",
-                  "string2"
-                ],
-                "items": {
-                  "type": "string"
-                }
-              },
-              "text": {
-                "type": "string",
-                "example": "dasdsa"
-              },
-              "isActive": {
-                "type": "boolean",
-                "example": true
-              },
-              "fromDate": {},
-              "toDate": {},
-              "__t": {
-                "type": "string",
-                "example": "Announcement"
-              },
-              "createdAt": {
-                "type": "string",
-                "example": "2022-06-19T20:44:29.536Z"
-              },
-              "updatedAt": {
-                "type": "string",
-                "example": "2022-06-19T20:44:29.536Z"
-              },
-              "__v": {
-                "type": "number",
-                "example": 0
-              },
-              "recordStatus": {
-                "type": "number",
-                "example": 1
-              },
-              "likeCount": {
-                "type": "number",
-                "example": 0
-              },
-              "commentCount": {
-                "type": "number",
-                "example": 0
-              },
-              "likeType": {
-                "type": "number",
-                "example": 1
               }
             }
           }

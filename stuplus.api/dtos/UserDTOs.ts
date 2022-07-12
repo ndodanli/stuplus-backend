@@ -10,6 +10,7 @@ export class UpdateUserProfileDTO {
     phoneNumber: string = "";
     avatarKey: string = "";
     about: string = "";
+    username: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

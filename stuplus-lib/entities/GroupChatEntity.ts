@@ -3,6 +3,8 @@ import { GroupChatType } from "../../stuplus-lib/enums/enums_socket";
 import BaseEntity from "./BaseEntity";
 import { GroupMessage } from "./GroupMessageEntity";
 import mongoose_fuzzy_searching from "@imranbarbhuiya/mongoose-fuzzy-searching";
+import { Department } from "./DepartmentEntity";
+import { School } from "./SchoolEntity";
 export interface GroupChat extends BaseEntity {
   ownerId: string; //user id
   title: string;
@@ -16,6 +18,8 @@ export interface GroupChat extends BaseEntity {
   grade: number;
   //ignore
   lastMessage?: GroupMessage | null; //ignore
+  school?: School | null;
+  department?: Department | null;
 }
 
 export interface GroupChatDocument extends GroupChat, Document {
@@ -82,6 +86,8 @@ GroupChatSchema.methods.minify = async function (
     grade: this.grade,
     //ignore
     lastMessage: null, //ignore
+    school: null,
+    department: null,
   };
   return response;
 };

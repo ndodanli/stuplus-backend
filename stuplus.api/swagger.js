@@ -41,7 +41,524 @@ const doc = {
         }
     },
     definitions: {
-        //Requests
+        //#region Search
+        SearchPeopleRequest: {
+            $searchString: "test",
+            $page: 1,
+            $pageSize: 20,
+        },
+        SearchPeopleResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: [
+                {
+                    "_id": "62ad8e696cc42f3e54e3d1cd",
+                    "username": "test1021",
+                    "firstName": "test1021",
+                    "lastName": "test1021",
+                    "profilePhotoUrl": null,
+                    "__t": "User",
+                    "confidenceScore": 42.900000000000006
+                },
+                {
+                    "_id": "62ad91716cc42f3e54e3d1fb",
+                    "username": "test1025",
+                    "firstName": "test1025",
+                    "lastName": "test1025",
+                    "profilePhotoUrl": null,
+                    "__t": "User",
+                    "confidenceScore": 42.900000000000006
+                },
+                {
+                    "_id": "62ab41a460884a883ed78080",
+                    "username": "test1013",
+                    "firstName": "test1013",
+                    "lastName": "test1013",
+                    "profilePhotoUrl": null,
+                    "__t": "User",
+                    "confidenceScore": 42.900000000000006
+                },
+            ],
+        },
+        SearchGroupChatsRequest: {
+            $searchString: "uni",
+            $page: 1,
+            $pageSize: 20,
+        },
+        SearchGroupChatsResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: [
+                {
+                    "_id": "62cc9c905c9816cc1e368592",
+                    "title": "Atatürk Üniversitesi ",
+                    "type": 0,
+                    "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/school_images/1657569337023-6615-a%C3%83%C2%A7%C3%84%C2%B1k%C3%83%C2%B6%C3%84%C2%9Fretim%20fak%C3%83%C2%BCltesi.png",
+                    "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                    "hashTags": [
+                        "ataturkuniversitesi",
+                        "Atatürk",
+                        "Üniversitesi",
+                        ""
+                    ],
+                    "schoolId": "62cc9c8f5c9816cc1e36858d",
+                    "departmentId": null,
+                    "grade": null,
+                    "__t": "GroupChat",
+                    "confidenceScore": 4.4,
+                    "school": {
+                        "_id": "62cc9c8f5c9816cc1e36858d",
+                        "emailFormat": "atauni.edu.tr",
+                        "title": "Atatürk Üniversitesi",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/school_images/1657578697785-2773-ataturk_uni.png",
+                        "type": 0,
+                        "recordStatus": 1,
+                        "__t": "School",
+                        "createdAt": "2022-07-11T22:35:13.961Z",
+                        "updatedAt": "2022-07-11T22:35:13.961Z"
+                    }
+                },
+                {
+                    "_id": "62cc9ca55c9816cc1e36889b",
+                    "title": "Sivil Hava Ulaştırma İşletmeciliği 2. Sınıf",
+                    "type": 0,
+                    "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657575612135-7343-u%C3%83%C2%A7ak.jpg",
+                    "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                    "hashTags": [
+                        "sivilhavaulastirmaisletmeciligi2sin",
+                        "Sivil",
+                        "Hava",
+                        "Ulaştırma",
+                        "İşletmeciliği",
+                        "2.",
+                        "Sınıf",
+                        "ataturkuniversitesi",
+                        "Atatürk",
+                        "Üniversitesi",
+                        ""
+                    ],
+                    "schoolId": "62cc9c8f5c9816cc1e36858d",
+                    "departmentId": "62cc9ca45c9816cc1e368887",
+                    "grade": 2,
+                    "__t": "GroupChat",
+                    "confidenceScore": 3.3000000000000003,
+                    "school": {
+                        "_id": "62cc9c8f5c9816cc1e36858d",
+                        "emailFormat": "atauni.edu.tr",
+                        "title": "Atatürk Üniversitesi",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/school_images/1657578697785-2773-ataturk_uni.png",
+                        "type": 0,
+                        "recordStatus": 1,
+                        "__t": "School",
+                        "createdAt": "2022-07-11T22:35:13.961Z",
+                        "updatedAt": "2022-07-11T22:35:13.961Z"
+                    },
+                    "department": {
+                        "_id": "62cc9ca45c9816cc1e368887",
+                        "facultyId": null,
+                        "schoolId": "62cc9c8f5c9816cc1e36858d",
+                        "grade": 2,
+                        "title": "Sivil Hava Ulaştırma İşletmeciliği",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657575612135-7343-u%C3%83%C2%A7ak.jpg",
+                        "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                        "avatarKey": null,
+                        "recordStatus": 1,
+                        "__t": "Department",
+                        "createdAt": "2022-07-11T21:56:52.809Z",
+                        "updatedAt": "2022-07-11T21:56:52.809Z"
+                    }
+                },
+                {
+                    "_id": "62cc9c9e5c9816cc1e368738",
+                    "title": "Emlak Yönetimi 1. Sınıf",
+                    "type": 0,
+                    "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657573549165-2171-emlak.jpg",
+                    "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                    "hashTags": [
+                        "emlakyonetimi1sinif",
+                        "Emlak",
+                        "Yönetimi",
+                        "1.",
+                        "Sınıf",
+                        "ataturkuniversitesi",
+                        "Atatürk",
+                        "Üniversitesi",
+                        ""
+                    ],
+                    "schoolId": "62cc9c8f5c9816cc1e36858d",
+                    "departmentId": "62cc9c9e5c9816cc1e368732",
+                    "grade": 1,
+                    "__t": "GroupChat",
+                    "confidenceScore": 3.3000000000000003,
+                    "school": {
+                        "_id": "62cc9c8f5c9816cc1e36858d",
+                        "emailFormat": "atauni.edu.tr",
+                        "title": "Atatürk Üniversitesi",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/school_images/1657578697785-2773-ataturk_uni.png",
+                        "type": 0,
+                        "recordStatus": 1,
+                        "__t": "School",
+                        "createdAt": "2022-07-11T22:35:13.961Z",
+                        "updatedAt": "2022-07-11T22:35:13.961Z"
+                    },
+                    "department": {
+                        "_id": "62cc9c9e5c9816cc1e368732",
+                        "facultyId": null,
+                        "schoolId": "62cc9c8f5c9816cc1e36858d",
+                        "grade": 2,
+                        "title": "Emlak Yönetimi",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657573549165-2171-emlak.jpg",
+                        "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                        "avatarKey": null,
+                        "recordStatus": 1,
+                        "__t": "Department",
+                        "createdAt": "2022-07-11T21:56:46.547Z",
+                        "updatedAt": "2022-07-11T21:56:46.547Z"
+                    }
+                },
+                {
+                    "_id": "62cc9ca25c9816cc1e36880d",
+                    "title": "Muhasebe ve Vergi Uygulamaları 2. Sınıf",
+                    "type": 0,
+                    "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657574858083-4379-muhabasebe.jpg",
+                    "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                    "hashTags": [
+                        "muhasebevevergiuygulamalari2sinif",
+                        "Muhasebe",
+                        "ve",
+                        "Vergi",
+                        "Uygulamaları",
+                        "2.",
+                        "Sınıf",
+                        "ataturkuniversitesi",
+                        "Atatürk",
+                        "Üniversitesi",
+                        ""
+                    ],
+                    "schoolId": "62cc9c8f5c9816cc1e36858d",
+                    "departmentId": "62cc9ca25c9816cc1e3687f9",
+                    "grade": 2,
+                    "__t": "GroupChat",
+                    "confidenceScore": 3.3000000000000003,
+                    "school": {
+                        "_id": "62cc9c8f5c9816cc1e36858d",
+                        "emailFormat": "atauni.edu.tr",
+                        "title": "Atatürk Üniversitesi",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/school_images/1657578697785-2773-ataturk_uni.png",
+                        "type": 0,
+                        "recordStatus": 1,
+                        "__t": "School",
+                        "createdAt": "2022-07-11T22:35:13.961Z",
+                        "updatedAt": "2022-07-11T22:35:13.961Z"
+                    },
+                    "department": {
+                        "_id": "62cc9ca25c9816cc1e3687f9",
+                        "facultyId": null,
+                        "schoolId": "62cc9c8f5c9816cc1e36858d",
+                        "grade": 2,
+                        "title": "Muhasebe ve Vergi Uygulamaları",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657574858083-4379-muhabasebe.jpg",
+                        "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                        "avatarKey": null,
+                        "recordStatus": 1,
+                        "__t": "Department",
+                        "createdAt": "2022-07-11T21:56:50.330Z",
+                        "updatedAt": "2022-07-11T21:56:50.330Z"
+                    }
+                },
+            ],
+        },
+        SearchPeopleAndGroupChatsRequest: {
+            $searchString: "tes",
+            $page: 1,
+            $pageSize: 20,
+        },
+        SearchPeopleAndGroupChatsResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: [
+                {
+                    "_id": "62ad8f096cc42f3e54e3d1dd",
+                    "username": "test1023",
+                    "firstName": "test1023",
+                    "lastName": "test1023",
+                    "profilePhotoUrl": null,
+                    "__t": "User",
+                    "confidenceScore": 14.3
+                },
+                {
+                    "_id": "62ad91716cc42f3e54e3d1fb",
+                    "username": "test1025",
+                    "firstName": "test1025",
+                    "lastName": "test1025",
+                    "profilePhotoUrl": null,
+                    "__t": "User",
+                    "confidenceScore": 14.3
+                },
+                {
+                    "_id": "62ad8e696cc42f3e54e3d1cd",
+                    "username": "test1021",
+                    "firstName": "test1021",
+                    "lastName": "test1021",
+                    "profilePhotoUrl": null,
+                    "__t": "User",
+                    "confidenceScore": 14.3
+                },
+                {
+                    "_id": "62cc9c905c9816cc1e368592",
+                    "title": "Atatürk Üniversitesi ",
+                    "type": 0,
+                    "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/school_images/1657569337023-6615-a%C3%83%C2%A7%C3%84%C2%B1k%C3%83%C2%B6%C3%84%C2%9Fretim%20fak%C3%83%C2%BCltesi.png",
+                    "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                    "hashTags": [
+                        "ataturkuniversitesi",
+                        "Atatürk",
+                        "Üniversitesi",
+                        ""
+                    ],
+                    "schoolId": "62cc9c8f5c9816cc1e36858d",
+                    "departmentId": null,
+                    "grade": null,
+                    "__t": "GroupChat",
+                    "confidenceScore": 4.4,
+                    "school": {
+                        "_id": "62cc9c8f5c9816cc1e36858d",
+                        "emailFormat": "atauni.edu.tr",
+                        "title": "Atatürk Üniversitesi",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/school_images/1657578697785-2773-ataturk_uni.png",
+                        "type": 0,
+                        "recordStatus": 1,
+                        "__t": "School",
+                        "createdAt": "2022-07-11T22:35:13.961Z",
+                        "updatedAt": "2022-07-11T22:35:13.961Z"
+                    }
+                },
+                {
+                    "_id": "62cc9c975c9816cc1e368674",
+                    "title": "Sosyoloji",
+                    "type": 0,
+                    "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657571350220-5996-sosyoloji.jpg",
+                    "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                    "hashTags": [
+                        "sosyoloji",
+                        "Sosyoloji",
+                        "ataturkuniversitesi",
+                        "Atatürk",
+                        "Üniversitesi",
+                        ""
+                    ],
+                    "schoolId": "62cc9c8f5c9816cc1e36858d",
+                    "departmentId": "62cc9c975c9816cc1e368672",
+                    "grade": null,
+                    "__t": "GroupChat",
+                    "confidenceScore": 3.3000000000000003,
+                    "school": {
+                        "_id": "62cc9c8f5c9816cc1e36858d",
+                        "emailFormat": "atauni.edu.tr",
+                        "title": "Atatürk Üniversitesi",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/school_images/1657578697785-2773-ataturk_uni.png",
+                        "type": 0,
+                        "recordStatus": 1,
+                        "__t": "School",
+                        "createdAt": "2022-07-11T22:35:13.961Z",
+                        "updatedAt": "2022-07-11T22:35:13.961Z"
+                    },
+                    "department": {
+                        "_id": "62cc9c975c9816cc1e368672",
+                        "facultyId": null,
+                        "schoolId": "62cc9c8f5c9816cc1e36858d",
+                        "grade": 4,
+                        "title": "Sosyoloji",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657571350220-5996-sosyoloji.jpg",
+                        "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                        "avatarKey": null,
+                        "recordStatus": 1,
+                        "__t": "Department",
+                        "createdAt": "2022-07-11T21:56:39.930Z",
+                        "updatedAt": "2022-07-11T21:56:39.930Z"
+                    }
+                },
+                {
+                    "_id": "62cc9c945c9816cc1e36860e",
+                    "title": "Kamu Yönetimi 2. Sınıf",
+                    "type": 0,
+                    "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657570576441-4039-kamu%20y%C3%83%C2%B6netimi.jpg",
+                    "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                    "hashTags": [
+                        "kamuyonetimi2sinif",
+                        "Kamu",
+                        "Yönetimi",
+                        "2.",
+                        "Sınıf",
+                        "ataturkuniversitesi",
+                        "Atatürk",
+                        "Üniversitesi",
+                        ""
+                    ],
+                    "schoolId": "62cc9c8f5c9816cc1e36858d",
+                    "departmentId": "62cc9c945c9816cc1e368604",
+                    "grade": 2,
+                    "__t": "GroupChat",
+                    "confidenceScore": 3.3000000000000003,
+                    "school": {
+                        "_id": "62cc9c8f5c9816cc1e36858d",
+                        "emailFormat": "atauni.edu.tr",
+                        "title": "Atatürk Üniversitesi",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/school_images/1657578697785-2773-ataturk_uni.png",
+                        "type": 0,
+                        "recordStatus": 1,
+                        "__t": "School",
+                        "createdAt": "2022-07-11T22:35:13.961Z",
+                        "updatedAt": "2022-07-11T22:35:13.961Z"
+                    },
+                    "department": {
+                        "_id": "62cc9c945c9816cc1e368604",
+                        "facultyId": null,
+                        "schoolId": "62cc9c8f5c9816cc1e36858d",
+                        "grade": 4,
+                        "title": "Kamu Yönetimi",
+                        "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1657570576441-4039-kamu%20y%C3%83%C2%B6netimi.jpg",
+                        "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                        "avatarKey": null,
+                        "recordStatus": 1,
+                        "__t": "Department",
+                        "createdAt": "2022-07-11T21:56:36.162Z",
+                        "updatedAt": "2022-07-11T21:56:36.162Z"
+                    }
+                }
+            ],
+        },
+        //#endregion
+
+        //#region Account
+        AccountReportRequest: {
+            $reportType: {
+                type: "enum",
+                values: {
+                    JustDontLike: 0,
+                    BullyingOrHarassment: 1,
+                    FalseInformation: 2,
+                    Spam: 3,
+                    NudityOrSexualActivity: 4,
+                    HateSpeechOrSymbols: 5,
+                    ViolanceOrDangerousOrganizations: 6,
+                    ScamOrFraud: 7,
+                    IntellectualPropertyViolation: 8,
+                    SaleOfIllegalOrRegulatedGoods: 9,
+                    SuicideOrSelfInjury: 10,
+                    EatingDisorders: 11,
+                    Other: 12
+                }
+            },
+            details: "xxx",
+            userId: "62ab8a204166fd1eaebbb3fa",
+            messageId: "62ab8a204166fd1eaebbb3fa",
+            messageText: "xxx",
+            commentId: "62ab8a204166fd1eaebbb3fa",
+            commentText: "xxx",
+            announcementId: "62ab8a204166fd1eaebbb3fa",
+            announcementText: "xxx"
+        },
+        GetNotificationHistoryResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            notes: {
+                NotificationType: {
+                    type: "enum",
+                    values: {
+                        StartedFollowingYou: 0,
+                        FollowRequestAccepted: 1,
+                        AddedYouToGroupChat: 2,
+                    }
+                }
+            },
+            data: [
+                {
+                    "_id": "62cdf2b616b915025c0627d1",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "relatedUserId": "62ab3f45527e4cb74d06e967",
+                    "groupChatId": "62cc9c925c9816cc1e3685de",
+                    "readed": false,
+                    "type": 2,
+                    "recordStatus": 1,
+                    "__t": "Notification",
+                    "createdAt": "2022-07-12T22:16:22.813Z",
+                    "updatedAt": "2022-07-12T22:16:22.813Z",
+                    "relatedUser": {
+                        "_id": "62ab3f45527e4cb74d06e967",
+                        "username": "test1008",
+                        "firstName": "test1008",
+                        "lastName": "test1008",
+                        "profilePhotoUrl": null,
+                        "__t": "User"
+                    }
+                },
+                {
+                    "_id": "62cdf2b616b915025c0627cf",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "relatedUserId": "62ab3f45527e4cb74d06e967",
+                    "groupChatId": null,
+                    "readed": false,
+                    "type": 1,
+                    "recordStatus": 1,
+                    "__t": "Notification",
+                    "createdAt": "2022-07-12T22:16:22.738Z",
+                    "updatedAt": "2022-07-12T22:16:22.738Z",
+                    "relatedUser": {
+                        "_id": "62ab3f45527e4cb74d06e967",
+                        "username": "test1008",
+                        "firstName": "test1008",
+                        "lastName": "test1008",
+                        "profilePhotoUrl": null,
+                        "__t": "User"
+                    }
+                }
+            ],
+        },
+        AccountNotifyReadNotificationsRequest: {
+            notificationIds: ["62cdf2b616b915025c0627d1", "62cdf2b616b915025c0627cf"]
+        },
+        //#endregion
         NullResponse: {
             hasError: {
                 type: "boolean",
@@ -107,11 +624,11 @@ const doc = {
             }
         },
         AccountUpdateProfileRequest: {
-            firstName: "string",
-            lastName: "string",
-            phoneNumber: "string",
-            avatarKey: "string",
-            about: "string"
+            $username: "string",
+            $firstName: "string",
+            $lastName: "string",
+            $avatarKey: "string",
+            $about: "string"
         },
         AccountUpdateProfileResponse: {
             hasError: {
@@ -298,35 +815,37 @@ const doc = {
                 type: "string",
                 description: "Message describing the error."
             },
-            data: {
-                "_id": "62af8aade035eb1764400d30",
-                "ownerId": "62ab8a204166fd1eaebbb3fa",
-                "owner": {
-                    "_id": "62ab8a204166fd1eaebbb3fa",
-                    "username": "ndodanli14",
-                    "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
-                    "schoolId": "schoolId1",
-                    "__t": "User"
-                },
-                "coverImageUrl": null,
-                "title": "das",
-                "relatedSchoolIds": [
-                    "string1",
-                    "string2"
-                ],
-                "text": "dasdsa",
-                "isActive": true,
-                "fromDate": null,
-                "toDate": null,
-                "__t": "Announcement",
-                "createdAt": "2022-06-19T20:44:29.536Z",
-                "updatedAt": "2022-06-19T20:44:29.536Z",
-                "__v": 0,
-                "recordStatus": 1,
-                "likeCount": 0,
-                "commentCount": 0,
-                "likeType": 1
-            },
+            data: [
+                {
+                    "_id": "62af8aade035eb1764400d30",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "owner": {
+                        "_id": "62ab8a204166fd1eaebbb3fa",
+                        "username": "ndodanli14",
+                        "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
+                        "schoolId": "schoolId1",
+                        "__t": "User"
+                    },
+                    "coverImageUrl": null,
+                    "title": "das",
+                    "relatedSchoolIds": [
+                        "string1",
+                        "string2"
+                    ],
+                    "text": "dasdsa",
+                    "isActive": true,
+                    "fromDate": null,
+                    "toDate": null,
+                    "__t": "Announcement",
+                    "createdAt": "2022-06-19T20:44:29.536Z",
+                    "updatedAt": "2022-06-19T20:44:29.536Z",
+                    "__v": 0,
+                    "recordStatus": 1,
+                    "likeCount": 0,
+                    "commentCount": 0,
+                    "likeType": 1
+                }
+            ],
         },
         AnnouncementGetCommentsRequest: {
             lastRecordDate: "2022-07-02T20:12:59.891Z",

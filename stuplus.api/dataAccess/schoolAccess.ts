@@ -6,7 +6,7 @@ import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
 import RedisService from "../../stuplus-lib/services/redisService";
 
 export class SchoolAccess {
-    public static async getAllSchools(fields: Array<string>): Promise<SchoolDocument[] | null> {
+    public static async getAllSchools(): Promise<SchoolDocument[]> {
         return await RedisService.acquire<SchoolDocument[]>(RedisKeyType.Schools, 60 * 60 * 2, async () => await SchoolEntity.find({}, {}, { lean: true }));
     }
 
@@ -14,7 +14,7 @@ export class SchoolAccess {
         return await FacultyEntity.find({ schoolId: schoolId }, fields);
     }
 
-    public static async getDepartments(facultyId: any, fields: Array<string>): Promise<DepartmentDocument[] | null> {
-        return await DepartmentEntity.find({ facultyId: facultyId }, fields);
+    public static async getDepartments(schoolId: any, fields: Array<string>): Promise<DepartmentDocument[] | null> {
+        return await DepartmentEntity.find({ schoolId: schoolId }, fields);
     }
 }

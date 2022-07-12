@@ -1,6 +1,7 @@
 import { Document, Schema } from "mongoose";
 import { FollowLimitation, Gender, MessageLimitation, RecordStatus } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
+import mongoose_fuzzy_searching from "@imranbarbhuiya/mongoose-fuzzy-searching";
 
 export interface User extends BaseEntity {
   email: string;
@@ -19,12 +20,13 @@ export interface User extends BaseEntity {
   accEmailConfirmation: EmailConfirmation;
   schoolEmailConfirmation: EmailConfirmation;
   fpEmailConfirmation: EmailConfirmation;
+  updateTimeLimits: UpdateTimeLimits;
   grade: Number;
   profilePhotoUrl: string;
   gender: Gender;
   chatSettings: object;
   notificationSettings: NotificationSettings;
-  blockedUserIds: Array<string>;
+  blockedUserIds: string[];
   interestIds: Array<string>;
   externalLogins: Array<ExternalLogin>;
   relatedSchoolIds: Array<string>;
@@ -41,6 +43,11 @@ export interface User extends BaseEntity {
   isAdminOfThisGroup: boolean; //ignore
 }
 
+export class UpdateTimeLimits {
+  lastUsernameUpdate?: Date | null;
+  lastFirstNameUpdate?: Date | null;
+  lastLastNameUpdate?: Date | null;
+}
 export class PrivacySettings {
   followLimitation: FollowLimitation = FollowLimitation.None;
   messageLimitation: MessageLimitation = MessageLimitation.None;
@@ -90,8 +97,8 @@ export const UserSchema: Schema = new Schema({
   facultyId: { type: String, required: false, default: null },
   departmentId: { type: String, required: false, default: null },
   grade: { type: Number, required: false, default: null },
-  firstName: { type: String, required: false, default: null },
-  lastName: { type: String, required: false, default: null },
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
   phoneNumber: { type: String, required: false, default: null },
   profilePhotoUrl: { type: String, required: false, default: null },
   gender: { type: Number, required: true },
@@ -117,6 +124,13 @@ export const UserSchema: Schema = new Schema({
       expiresAt: { type: Date, required: false, default: null },
     }, { _id: false }), required: false, default: { code: null, expiresAt: null }
   },
+  updateTimeLimits: {
+    type: new Schema({
+      lastUsernameUpdate: { type: Date, required: false, default: null },
+      lastFirstNameUpdate: { type: Date, required: false, default: null },
+      lastLastNameUpdate: { type: Date, required: false, default: null },
+    }, { _id: false }), required: false, default: { lastUsernameUpdate: null, lastFirstNameUpdate: null, lastLastNameUpdate: null }
+  },
   blockedUserIds: { type: Array.of(String), required: false, default: [] },
   interestIds: { type: Array.of(String), required: false, default: [] },
   externalLogins: {
@@ -138,8 +152,29 @@ export const UserSchema: Schema = new Schema({
     required: false,
     default: { followLimitation: FollowLimitation.None }
   },
-  lastSeenDate: { type: Date, required: true },
+  lastSeenDate: { type: Date, required: false, default: null },
 });
+
+UserSchema.plugin(mongoose_fuzzy_searching,
+  {
+    fields: [
+      {
+        name: 'username',
+        minSize: 3,
+        weight: 3,
+      },
+      {
+        name: 'firstName',
+        minSize: 3,
+        weight: 1,
+      },
+      {
+        name: 'lastName',
+        minSize: 3,
+        weight: 2,
+      },
+    ]
+  });
 
 // Just to prove that hooks are still functioning as expected
 UserSchema.pre("save", function (next) {
@@ -192,6 +227,7 @@ UserSchema.methods.minify = async function (
     privacySettings: this.privacySettings,
     recordDeletionDate: this.recordDeletionDate,
     lastSeenDate: this.lastSeenDate,
+    updateTimeLimits: this.updateTimeLimits,
     //ignore
     schoolName: null, //ignore
     facultyName: null, //ignore

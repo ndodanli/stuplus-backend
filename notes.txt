@@ -6,4 +6,3 @@
 
 
 +-sockete gelen object idleri kontrol et *hepsi edilmeli-sonradan gelenler de
--get pm chat ve group chat icin cron islemleri(last update date)

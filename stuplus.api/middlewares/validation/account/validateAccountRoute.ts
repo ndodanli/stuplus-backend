@@ -9,12 +9,10 @@ import { isValidObjectId } from "mongoose";
 
 export const validateUpdateProfile = [
     check('firstName')
-        .if((value: any, { req }: any) => value)
         .isLength({ min: 1, max: 50 })
         .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.selectedLangs(), ["İsim"]))
         .bail(),
     check('lastName')
-        .if((value: any, { req }: any) => value)
         .isLength({ min: 1, max: 50 })
         .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.selectedLangs(), ["Soyisim"]))
         .bail(),
@@ -25,7 +23,11 @@ export const validateUpdateProfile = [
         .withMessage("Telefon numarası geçerli değil. Lütfen belirtilen formatta giriş yapınız.")
         .bail(),
     check('avatarKey')
-        .if((value: any, { req }: any) => value)
+        .isString()
+        .not()
+        .withMessage("avatarKey string olmalidir.")
+        .bail(),
+    check('username')
         .isString()
         .not()
         .withMessage("avatarKey string olmalidir.")

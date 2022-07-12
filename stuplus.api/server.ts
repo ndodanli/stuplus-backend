@@ -10,6 +10,7 @@ import accountRoute from "./routes/accountRoute";
 import schoolRoute from "./routes/schoolRoute";
 import announcementRoute from "./routes/announcementRoute";
 import questionRoute from "./routes/questionRoute";
+import searchRoute from "./routes/searchRoute";
 import generalRoute from "./routes/generalRoute";
 import chatRoute from "./socket/index";
 import swaggerRoute from "./routes/swaggerRoute";
@@ -27,6 +28,7 @@ setLogger("Stuplus API-SOCKET");
 async function setup() {
   await initializeDatabese();
   import("../cron/index");
+  import("../stuplus-lib/services/redisService");
 }
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -58,6 +60,7 @@ app.use("/school", schoolRoute);
 app.use("/interest", interestRoute);
 app.use("/announcement", announcementRoute);
 app.use("/question", questionRoute);
+app.use("/search", searchRoute);
 app.use("/general", generalRoute);
 app.use("/chat", chatRoute);
 

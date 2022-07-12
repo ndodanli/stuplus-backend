@@ -24,6 +24,7 @@ import generalRoute from "./routes/generalRoute";
 import path from "path";
 import { config } from "./config/config";
 import customExtensions from "../stuplus-lib/extensions/extensions";
+import { setLogger } from "../stuplus-lib/config/logger";
 
 dotenv.config({ path: ".env" });
 
@@ -32,7 +33,9 @@ const app = express();
 setup();
 
 async function setup() {
+    setLogger("Stuplus Backoffice API");
     await initializeDatabese();
+
 }
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

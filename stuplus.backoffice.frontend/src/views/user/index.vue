@@ -371,6 +371,7 @@ export default {
         { key: "Admin", value: 0 },
         { key: "User", value: 1 },
         { key: "ContentCreator", value: 2 },
+        { key: "GroupGuard", value: 3 },
       ],
       genders: [
         { key: "NotSpecified", value: 0 },

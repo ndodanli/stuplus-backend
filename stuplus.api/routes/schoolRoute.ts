@@ -17,7 +17,7 @@ router.get("/getAllSchools", async (req: CustomRequest<object>, res: any) => {
  } */
   const response = new BaseResponse<object>();
   try {
-    response.data = await SchoolAccess.getAllSchools(["_id", "title"]);
+    response.data = await SchoolAccess.getAllSchools();
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
@@ -52,7 +52,7 @@ router.get("/getFaculties/:schoolId", validategetFaculties, async (req: CustomRe
   return Ok(res, response);
 });
 
-router.get("/getDepartments/:facultyId", validategetDepartments, async (req: CustomRequest<object>, res: any) => {
+router.get("/getDepartments/:schoolId", validategetDepartments, async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['School']
 #swagger.description = 'Get departments by faculty id' */
   /* #swagger.responses[200] = {
@@ -63,7 +63,7 @@ router.get("/getDepartments/:facultyId", validategetDepartments, async (req: Cus
  } */
   const response = new BaseResponse<object>();
   try {
-    response.data = await SchoolAccess.getDepartments(req.params.facultyId, ["_id", "title", "facultyId", "grade"]);
+    response.data = await SchoolAccess.getDepartments(req.params.schoolId, ["_id", "title", "schoolId", "grade"]);
 
   } catch (err: any) {
     response.setErrorMessage(err.message);

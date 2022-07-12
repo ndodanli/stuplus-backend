@@ -605,6 +605,18 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
 });
 
 router.post("/report", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateReport, async (req: CustomRequest<ReportDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+    #swagger.description = 'Report something(user, comment, announcement, message' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountReportRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/NullResponse"
+   }
+ } */
   const response = new BaseResponse<any>();
   try {
     await UserAccess.report(req.selectedLangs(), res.locals.user._id, new ReportDTO(req.body));
@@ -621,6 +633,18 @@ router.post("/report", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
 });
 
 router.post("/getNotificationHistory", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+  /* #swagger.tags = ['Account']
+  #swagger.description = 'Get notification history' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/BasePaginationRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/GetNotificationHistoryResponse"
+   }
+ } */
   const response = new BaseResponse<any>();
   try {
     response.data = await UserAccess.getNotificationHistory(req.selectedLangs(), res.locals.user._id, new BaseFilter(req.body));
@@ -635,6 +659,14 @@ router.post("/getNotificationHistory", authorize([Role.User, Role.Admin, Role.Co
 });
 
 router.get("/removeNotification/:notificationId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+  /* #swagger.tags = ['Account']
+#swagger.description = 'Remove notification by id.' */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/NullResponse"
+   }
+ } */
   const response = new BaseResponse<any>();
   try {
     const notificationId = req.params.notificationId;
@@ -653,6 +685,18 @@ router.get("/removeNotification/:notificationId", authorize([Role.User, Role.Adm
 });
 
 router.post("/notifyReadNotifications", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateNotifyReadNotifications, async (req: CustomRequest<NotificationsReadedDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+#swagger.description = 'Notify readed notifications by sending their ids.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AccountNotifyReadNotificationsRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/NullResponse"
+   }
+ } */
   const response = new BaseResponse<any>();
   try {
     const payload = new NotificationsReadedDTO(req.body);

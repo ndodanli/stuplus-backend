@@ -1,12 +1,12 @@
 import path from 'path';
 import { createClient } from 'redis';
 import logger from '../config/logger';
-import { AnnouncementEntity, DepartmentEntity, FacultyEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
-import { User, UserDocument } from '../entities/UserEntity';
+import { DepartmentEntity, FacultyEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
+import { UserDocument } from '../entities/UserEntity';
 import { RedisKeyType } from '../enums/enums_socket';
 import NotValidError from '../errors/NotValidError';
 import { getMessage } from '../localization/responseMessages';
-import { Document, Schema } from "mongoose";
+import { Document } from "mongoose";
 import { RedisAcquireEntityFilterOrder } from '../enums/enums';
 
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
@@ -17,8 +17,8 @@ setup()
 
 async function setup() {
     try {
-        console.log("redis client created");
         await client.connect();
+        console.log("redis client created");
     } catch (error) {
         logger.error({ err: error }, "An error occurred while connecting to redis.");
         console.error({ err: error }, "An error occurred while connecting to redis.");

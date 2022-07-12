@@ -12,10 +12,9 @@ import { AddToGroupChatDTO, BlockUserDTO, ClearPMChatHistoryDTO, CreateGroupDTO,
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { groupChatName, userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 import RedisService from "../../stuplus-lib/services/redisService";
-import { httpServer } from "../server";
 import { hashtaggable, stringify } from "../../stuplus-lib/utils/general";
 import { MessageDocument, MessageFiles, ReplyToDTO } from "../../stuplus-lib/entities/MessageEntity";
-import { DeleteChatForType, FollowLimitation, GroupChatUserRole, MessageLimitation, NotificationType, RecordStatus, RedisMessagesNotFoundType } from "../../stuplus-lib/enums/enums";
+import { DeleteChatForType, GroupChatUserRole, MessageLimitation, NotificationType, RecordStatus, RedisMessagesNotFoundType } from "../../stuplus-lib/enums/enums";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { Router } from "express";
 import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
@@ -26,7 +25,6 @@ import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { ChatDocument } from "../../stuplus-lib/entities/ChatEntity";
 import { GroupChatDocument } from "../../stuplus-lib/entities/GroupChatEntity";
 import { isValidObjectId } from "mongoose";
-import { NotificationDocument } from "../../stuplus-lib/entities/NotificationEntity";
 const router = Router();
 let onlineUsers: Map<string, string>;
 setup();
@@ -120,15 +118,14 @@ io.on("connection", async (socket: ISocket) => {
             if (!toUser)
                 cb({ success: false, message: "User not found." });
 
-            if (toUser.privacySettings.messageLimitation == MessageLimitation.OnlyWhoUserFollows &&
-                !await FollowEntity.exists({ followerId: toUserId, followingId: socket.data.user._id, recordStatus: RecordStatus.Active }))
-                cb({ success: false, message: getMessage("cantSendMessageFollow", ["tr"], [toUser.username]) });
-
-
             if (toUser.blockedUserIds?.includes(socket.data.user._id)) {
                 cb({ success: false, message: getMessage("thisUserBlockedYou", ["tr"]) });
                 return;
             }
+
+            if (toUser.privacySettings.messageLimitation == MessageLimitation.OnlyWhoUserFollows &&
+                !await FollowEntity.exists({ followerId: toUserId, followingId: socket.data.user._id, recordStatus: RecordStatus.Active }))
+                cb({ success: false, message: getMessage("cantSendMessageFollow", ["tr"], [toUser.username]) });
 
             let responseData: any = { success: true };
 
@@ -383,16 +380,83 @@ io.on("connection", async (socket: ISocket) => {
     });
 });
 
+//TEST: PASSED
+router.post("/unblockUser", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BlockUserDTO>, res: any) => {
+    const response = new BaseResponse<any>();
+    try {
+        const payload = new BlockUserDTO(req.body);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        // const addedToUserBlockList = await UserEntity.findOneAndUpdate({ _id: res.locals.user._id }, { $push: { blockedUserIds: payload.userId } }, { new: true });
+        // if (!addedToUserBlockList)
+        //     throw new NotValidError(getMessage("userNotFound", req.selectedLangs()));
+        const user = await UserEntity.findOne({ _id: res.locals.user._id });
+        if (!user)
+            throw new NotValidError(getMessage("userNotFound", req.selectedLangs()));
+
+        user.blockedUserIds = user.blockedUserIds.filter(id => id !== payload.userId);
+        user.markModified("blockedUserIds");
+        await user.save();
+
+        await RedisService.updateUser(user);
+
+        response.setMessage(getMessage("userUnblockedSuccess", req.selectedLangs()));
+    } catch (err: any) {
+        response.setErrorMessage(err.message);
+
+        if (err.status != 200)
+            return InternalError(res, response);
+    }
+
+    return Ok(res, response);
+});
+
+//TEST: PASSED
+router.post("/getBlockedUsers", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+    const response = new BaseResponse<any>();
+    try {
+
+        const payload = new BaseFilter(req.body);
+        const blockedUserIds = await RedisService.acquireUser(res.locals.user._id, ["blockedUserIds"]);
+        let blockedUsersQuery = UserEntity.find({ _id: { $in: blockedUserIds.blockedUserIds } }, {
+            _id: 1, username: 1, firstName: 1, lastName: 1,
+            profilePhotoUrl: 1, avatarKey: 1
+        });
+
+        if (payload.lastRecordDate)
+            blockedUsersQuery = blockedUsersQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+
+        const blockedUsers = await blockedUsersQuery.sort({ createdAt: -1 }).limit(payload.take).lean();
+        response.data = blockedUsers;
+
+    } catch (err: any) {
+        response.setErrorMessage(err.message);
+
+        if (err.status != 200)
+            return InternalError(res, response);
+    }
+
+    return Ok(res, response);
+});
+
+//TEST: PASSED
 router.post("/blockuser", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateBlockUser, async (req: CustomRequest<BlockUserDTO>, res: any) => {
     const response = new BaseResponse<any>();
     try {
 
         const payload = new BlockUserDTO(req.body);
-        const addedToUserBlockList = await UserEntity.findOneAndUpdate({ _id: res.locals.user._id }, {
-            $push: { blockedUserIds: payload.userId },
-        });
-        if (!addedToUserBlockList)
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        // const addedToUserBlockList = await UserEntity.findOneAndUpdate({ _id: res.locals.user._id }, { $push: { blockedUserIds: payload.userId } }, { new: true });
+        // if (!addedToUserBlockList)
+        //     throw new NotValidError(getMessage("userNotFound", req.selectedLangs()));
+        const user = await UserEntity.findOne({ _id: res.locals.user._id });
+        if (!user)
             throw new NotValidError(getMessage("userNotFound", req.selectedLangs()));
+
+        user.blockedUserIds.push(payload.userId);
+        user.markModified("blockedUserIds");
+        await user.save();
 
         await FollowEntity.updateMany({
             $or: [
@@ -400,6 +464,8 @@ router.post("/blockuser", authorize([Role.User, Role.Admin, Role.ContentCreator]
                 { followerId: payload.userId, followingId: res.locals.user._id }
             ]
         }, { recordStatus: RecordStatus.Deleted });
+
+        await RedisService.updateUser(user);
 
         response.setMessage(getMessage("userBlockedSuccess", req.selectedLangs()));
     } catch (err: any) {
@@ -581,7 +647,7 @@ router.post("/clearPMChatHistory", authorize([Role.User, Role.Admin, Role.Conten
 router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
     const response = new BaseResponse<ChatDocument[]>();
     try {
-        const payload = new BaseFilter(req.body);
+        // const payload = new BaseFilter(req.body);
         let userPMChatsQuery = ChatEntity.find({
             $or: [
                 { ownerId: res.locals.user._id },
@@ -609,6 +675,7 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
         const redisPMReads: any = [];
         const redisPMs: any = [];
         const lastMessageUserIds: string[] = [];
+        const notFoundLastMessageChatIds: string[] = [];
         for (let i = 0; i < userPMChats.length; i++) {
             const userPMChat = userPMChats[i];
             const redisPMAll = await RedisService.client.lRange(RedisKeyType.DBPrivateMessage + userPMChat._id.toString(), 0, -1);
@@ -641,10 +708,12 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
             userPMChat.unreadMessageCount += redisPMs.filter((x: { fromId: any; readed: any; }) => !x.readed && x.fromId != res.locals.user._id).length;
 
             userPMChat.lastMessage = redisPMs.length ?
-                redisPMs[redisPMs.length - 1] :
-                await MessageEntity.findOne({ chatId: userPMChat._id }, {}, { sort: { createdAt: -1 } }).lean(true);;
+                redisPMs[redisPMs.length - 1] : null;
+
             if (userPMChat.lastMessage)
                 lastMessageUserIds.push(userPMChat.lastMessage.fromId);
+            else
+                notFoundLastMessageChatIds.push(userPMChat._id.toString());
 
             let user = users.find(x => x._id.toString() === userPMChat.ownerId);
             if (user) {
@@ -660,16 +729,37 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
         }
         pmIndexesToRemove.forEach(i => userPMChats.splice(i, 1));
 
+        const notFoundLastMessages: any = await MessageEntity.aggregate([
+            { $match: { chatId: { $in: notFoundLastMessageChatIds }, recordStatus: RecordStatus.Active } },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: "$chatId",
+                    fromId: { $first: "$fromId" },
+                    text: { $first: "$text" },
+                    forwarded: { $first: "$forwarded" },
+                    forwardedAt: { $first: "$forwardedAt" },
+                    readed: { $first: "$readed" },
+                    readedAt: { $first: "$readedAt" },
+                    files: { $first: "$files" },
+                    replyToId: { $first: "$replyToId" },
+                }
+            }
+        ]);
+        lastMessageUserIds.push(notFoundLastMessages.map((x: { fromId: string; }) => x.fromId));
+
         const lastMessageUsers = await UserEntity.find({ _id: { $in: lastMessageUserIds } }, {
             _id: 1, username: 1, firstName: 1, lastName: 1,
             avatarKey: 1, profilePhotoUrl: 1
         }).lean(true);
         for (let i = 0; i < userPMChats.length; i++) {
             const userPMChat = userPMChats[i];
+            if (!userPMChat.lastMessage)
+                userPMChat.lastMessage = notFoundLastMessages.find((x: { _id: any; }) => x._id.toString() === userPMChat._id.toString());
             const lastMessageUser = lastMessageUsers.find(x => x._id.toString() === userPMChat.lastMessage?.fromId.toString());
-            if (userPMChat.lastMessage) {
+            if (userPMChat.lastMessage)
                 userPMChat.lastMessage.from = lastMessageUser;
-            }
+
         }
 
         response.data = userPMChats.sort((a: any, b: any) => {
@@ -712,6 +802,7 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
         const redisGMReads: any = [];
         const redisGMs: any = [];
         const lastMessageUserIds: string[] = [];
+        const notFoundLastMessageChatIds: string[] = [];
         for (let i = 0; i < userGroupChats.length; i++) {
             const userGroupChat = userGroupChats[i];
             const redisGMAll = await RedisService.client.lRange(RedisKeyType.DBGroupMessage + userGroupChat._id.toString(), 0, -1);
@@ -744,11 +835,33 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
             userGroupChat.unreadMessageCount += redisGMs.filter((x: { fromId: any; readed: any; }) => !x.readed && x.fromId != res.locals.user._id).length;
 
             userGroupChat.lastMessage = redisGMs.length ?
-                redisGMs[redisGMs.length - 1] :
-                await GroupMessageEntity.findOne({ groupChatId: userGroupChat._id }, {}, { sort: { createdAt: -1 } }).lean(true);;
+                redisGMs[redisGMs.length - 1] : null;
+
             if (userGroupChat.lastMessage)
                 lastMessageUserIds.push(userGroupChat.lastMessage.fromId);
+            else
+                notFoundLastMessageChatIds.push(userGroupChat._id.toString());
+
         }
+
+        const notFoundLastMessages: any = await GroupMessageEntity.aggregate([
+            { $match: { groupChatId: { $in: notFoundLastMessageChatIds }, recordStatus: RecordStatus.Active } },
+            { $sort: { createdAt: -1 } },
+            {
+                $group: {
+                    _id: "$chatId",
+                    fromId: { $first: "$fromId" },
+                    text: { $first: "$text" },
+                    // forwarded: { $first: "$forwarded" },
+                    // forwardedAt: { $first: "$forwardedAt" },
+                    // readed: { $first: "$readed" },
+                    // readedAt: { $first: "$readedAt" },
+                    files: { $first: "$files" },
+                    replyToId: { $first: "$replyToId" },
+                }
+            }
+        ]);
+        lastMessageUserIds.push(notFoundLastMessages.map((x: { fromId: string; }) => x.fromId));
 
         const lastMessageUsers = await UserEntity.find({ _id: { $in: lastMessageUserIds } }, {
             _id: 1, username: 1, firstName: 1, lastName: 1,
@@ -756,6 +869,8 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
         }).lean(true);
         for (let i = 0; i < userGroupChats.length; i++) {
             const userGMChat = userGroupChats[i];
+            if (!userGMChat.lastMessage)
+                userGMChat.lastMessage = notFoundLastMessages.find((x: { _id: any; }) => x._id.toString() === userGMChat._id.toString());
             const lastMessageUser = lastMessageUsers.find(x => x._id.toString() === userGMChat.lastMessage?.fromId.toString());
             if (userGMChat.lastMessage) {
                 userGMChat.lastMessage.from = lastMessageUser;
@@ -792,6 +907,7 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
         payload.hashTags.forEach((x, index, arr) => {
             arr[index] = hashtaggable(x)
         });
+
         const groupChatEntity = await GroupChatEntity.create(
             {
                 title: payload.title,
@@ -801,6 +917,11 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
                 avatarKey: payload.avatarKey,
                 hashTags: payload.hashTags,
             });
+
+        const findGuardInPayloadUsers = payload.userIds.findIndex(userId => userId == "62ab8a204166fd1eaebbb3fa");
+        if (findGuardInPayloadUsers != -1)
+            payload.userIds.splice(findGuardInPayloadUsers, 1);
+
         let chatUsers = payload.userIds.map((userId: string) => {
             return new GroupChatUserEntity({ userId: userId, groupChatId: groupChatEntity._id.toString() });
         });
@@ -862,7 +983,10 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
             gCi: groupChatEntity.id,
         };
 
-        response.setMessage(getMessage("groupCreatedSuccess", req.selectedLangs()));
+        if (findGuardInPayloadUsers != -1)
+            response.setMessage(getMessage("groupCreatedGuardSuccess", req.selectedLangs()));
+        else
+            response.setMessage(getMessage("groupCreatedSuccess", req.selectedLangs()));
 
     } catch (err: any) {
         response.setErrorMessage(err.message);
@@ -1798,6 +1922,10 @@ router.post("/addToGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
             !await GroupChatUserEntity.exists({ groupChatId: payload.groupChatId, userId: res.locals.user._id, recordStatus: RecordStatus.Active })))
             throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
 
+        const findGuardInPayloadUsers = payload.userIds.findIndex(userId => userId == "62ab8a204166fd1eaebbb3fa");
+        if (findGuardInPayloadUsers != -1)
+            payload.userIds.splice(findGuardInPayloadUsers, 1);
+
         let chatUsers = payload.userIds.map((userId: string) => {
             return new GroupChatUserEntity({ userId: userId, groupChatId: groupChat._id.toString() });
         });
@@ -1886,7 +2014,10 @@ router.post("/addToGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
         }
         await NotificationEntity.insertMany(notifications);
 
-        response.setMessage(getMessage("groupCreatedSuccess", req.selectedLangs()));
+        if (findGuardInPayloadUsers != -1)
+            response.setMessage(getMessage("groupUsersAddedGuardSuccess", req.selectedLangs()));
+        else
+            response.setMessage(getMessage("groupUsersAddedSuccess", req.selectedLangs()));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -1910,6 +2041,10 @@ router.post("/makeUsersGroupAdmin", authorize([Role.User, Role.Admin, Role.Conte
 
         if (!groupChat || groupChat.ownerId != res.locals.user._id)
             throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
+
+        const findGuardInPayloadUsers = payload.userIds.findIndex(userId => userId == "62ab8a204166fd1eaebbb3fa");
+        if (findGuardInPayloadUsers != -1)
+            payload.userIds.splice(findGuardInPayloadUsers, 1);
 
         const bulkMakeAdminOp = payload.userIds.map(userId => {
             return {
@@ -1990,7 +2125,10 @@ router.post("/makeUsersGroupAdmin", authorize([Role.User, Role.Admin, Role.Conte
             });
         }
 
-        response.setMessage(getMessage("groupAdminsAddedSuccess", req.selectedLangs()));
+        if (findGuardInPayloadUsers != -1)
+            response.setMessage(getMessage("groupAdminsAddedGuardSuccess", req.selectedLangs()));
+        else
+            response.setMessage(getMessage("groupAdminsAddedSuccess", req.selectedLangs()));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -2015,6 +2153,11 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
         if (!groupChat || (groupChat.ownerId != res.locals.user._id &&
             !await GroupChatUserEntity.exists({ groupChatId: payload.groupChatId, userId: res.locals.user._id, recordStatus: RecordStatus.Active })))
             throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
+
+        const findGuardInDeletedUsers = payload.userIds.findIndex(userId => userId == "62ab8a204166fd1eaebbb3fa");
+        if (findGuardInDeletedUsers != -1)
+            payload.userIds.splice(findGuardInDeletedUsers, 1);
+
 
         await GroupChatUserEntity.updateMany({ groupChatId: groupChat._id.toString(), userId: { $in: payload.userIds } }, { recordStatus: RecordStatus.Deleted });
 
@@ -2089,7 +2232,11 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
             });
         }
 
-        response.setMessage(getMessage("groupUsersRemovedSuccess", req.selectedLangs()));
+        if (findGuardInDeletedUsers != -1)
+            response.setMessage(getMessage("groupUsersRemovedGuardSuccess", req.selectedLangs()));
+        else
+            response.setMessage(getMessage("groupUsersRemovedSuccess", req.selectedLangs()));
+
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -2199,6 +2346,7 @@ router.post("/leaveGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
 
     return Ok(res, response);
 });
+
 export {
     io,
     router as default

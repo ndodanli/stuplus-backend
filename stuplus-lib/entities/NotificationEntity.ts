@@ -1,11 +1,10 @@
 import { Document, Schema } from "mongoose";
 import { NotificationType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
-import { Message } from "./MessageEntity";
 import { User } from "./UserEntity";
 export interface Notification extends BaseEntity {
-  relatedUserId: string; //sender user id
   ownerId: string; //owner user id
+  relatedUserId: string; //sender user id
   groupChatId?: string | null; //group chat id
   readed: boolean; //is readed
   type: NotificationType;

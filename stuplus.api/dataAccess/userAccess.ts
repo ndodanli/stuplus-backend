@@ -6,7 +6,7 @@ import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { FollowLimitation, FollowStatus, NotificationType, RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { getNewToken } from "../utils/token";
 import EmailService from "../../stuplus-lib/services/emailService";
-import moment from "moment";
+import moment from "moment-timezone";
 import { checkIfStudentEmail, generateCode } from "../../stuplus-lib/utils/general";
 import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO } from "../dtos/UserDTOs";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
@@ -64,10 +64,44 @@ export class UserAccess {
     }
 
     public static async updateProfile(acceptedLanguages: Array<string>, id: string, payload: UpdateUserProfileDTO): Promise<UserDocument | null> {
-        const user = await UserEntity.findOneAndUpdate({ _id: id }, payload, { new: true });
+        const user = await UserEntity.findOne({ _id: id });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
+        if (user.username !== payload.username) {
+            let userWithSearchedUsername = await UserEntity.exists({ username: payload.username, recordStatus: RecordStatus.Active });
+            if (userWithSearchedUsername)
+                throw new NotValidError(getMessage("usernameAlreadyExists", acceptedLanguages));
+            if (user.updateTimeLimits.lastUsernameUpdate &&
+                user.updateTimeLimits.lastUsernameUpdate > moment().subtract(7, "days").toDate())
+                throw new NotValidError(`${getMessage("usernameUpdateLimit", acceptedLanguages)} ${moment(user.updateTimeLimits.lastUsernameUpdate).tz("Europe/Istanbul").add(7, "days").format("YYYY-MM-DD HH:mm:ss")}`);
+            else
+                user.updateTimeLimits.lastUsernameUpdate = new Date();
+        }
+
+        if (user.firstName !== payload.firstName) {
+            if (user.updateTimeLimits.lastFirstNameUpdate &&
+                user.updateTimeLimits.lastFirstNameUpdate > moment().subtract(1, "days").toDate())
+                throw new NotValidError(`${getMessage("firstNameUpdateLimit", acceptedLanguages)} ${moment(user.updateTimeLimits.lastFirstNameUpdate).tz("Europe/Istanbul").add(1, "days").format("YYYY-MM-DD HH:mm:ss")}`);
+            else
+                user.updateTimeLimits.lastFirstNameUpdate = new Date();
+        }
+
+        if (user.lastName !== payload.lastName) {
+            if (user.updateTimeLimits.lastLastNameUpdate &&
+                user.updateTimeLimits.lastLastNameUpdate > moment().subtract(1, "days").toDate())
+                throw new NotValidError(`${getMessage("lastNameUpdateLimit", acceptedLanguages)} ${moment(user.updateTimeLimits.lastLastNameUpdate).tz("Europe/Istanbul").add(1, "days").format("YYYY-MM-DD HH:mm:ss")}`);
+            else
+                user.updateTimeLimits.lastLastNameUpdate = new Date();
+        }
+
+        user.username = payload.username;
+        user.firstName = payload.firstName;
+        user.lastName = payload.lastName;
+        user.avatarKey = payload.avatarKey;
+        user.about = payload.about;
+
+        await user.save();
         await RedisService.updateUser(user);
 
         io.in(userWatchRoomName(user.id)).emit("cWatchUsers", {
@@ -659,10 +693,10 @@ export class UserAccess {
 
         if (notificationHistory.length > 0) {
             const notificationHistoryUserIds = notificationHistory.filter(x => x.relatedUserId).map(x => x.relatedUserId);
-            const requiredUsers = await UserEntity.find({ _id: { $in: notificationHistoryUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]);
+            const requiredUsers = await UserEntity.find({ _id: { $in: notificationHistoryUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]).lean(true);
             for (let i = 0; i < notificationHistory.length; i++) {
                 const notification = notificationHistory[i];
-                notification.relatedUser = requiredUsers.find(x => x.id == notification.relatedUserId);
+                notification.relatedUser = requiredUsers.find(x => x._id.toString() == notification.relatedUserId);
             }
         }
         return notificationHistory;

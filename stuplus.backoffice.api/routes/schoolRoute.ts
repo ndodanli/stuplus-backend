@@ -145,6 +145,27 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
               userId: groupGuard._id.toString(),
               groupRole: GroupChatUserRole.Guard
             });
+            if (department.secondaryEducation) {
+              const depSecondaryEducationGroupChatEntity = new GroupChatEntity({
+                schoolId: newSchool._id.toString(),
+                departmentId: departmentEntity._id.toString(),
+                title: departmentEntity.title + ` ${j}. Sınıf İÖ`,
+                about: departmentEntity.about,
+                coverImageUrl: departmentEntity.coverImageUrl,
+                avatarKey: departmentEntity.avatarKey,
+                grade: j,
+                type: GroupChatType.Public,
+                ownerId: groupGuard._id.toString(),
+                hashTags: generateHashtags(departmentEntity.title + ` ${j}. Sınıf İÖ`).concat(schoolHashtags)
+              });
+              await GroupChatEntity.create(depSecondaryEducationGroupChatEntity);
+
+              await GroupChatUserEntity.create({
+                groupChatId: depSecondaryEducationGroupChatEntity._id.toString(),
+                userId: groupGuard._id.toString(),
+                groupRole: GroupChatUserRole.Guard
+              });
+            }
           }
           if (department.preparation) {
             const departmentGradeGroupChatEntity = new GroupChatEntity({
@@ -164,6 +185,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
             await GroupChatUserEntity.create({
               groupChatId: departmentGradeGroupChatEntity._id.toString(),
               userId: groupGuard._id.toString(),
+              groupRole: GroupChatUserRole.Guard
             });
           }
           //#endregion
