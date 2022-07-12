@@ -285,7 +285,7 @@ export default {
       },
       token: getToken(),
       uploadFilePath:
-        'http://localhost:25050/general/uploadFile?uploadPath=profile_images',
+        'http://212.98.224.208:25050/general/uploadFile?uploadPath=profile_images',
       tableKey: 0,
       list: null,
       total: 0,
@@ -371,7 +371,6 @@ export default {
         { key: "Admin", value: 0 },
         { key: "User", value: 1 },
         { key: "ContentCreator", value: 2 },
-
       ],
       genders: [
         { key: "NotSpecified", value: 0 },

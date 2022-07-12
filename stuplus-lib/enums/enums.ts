@@ -6,7 +6,8 @@ export enum RecordStatus {
 export enum Role {
    Admin = 0,
    User = 1,
-   ContentCreator = 2
+   ContentCreator = 2,
+   GroupGuard = 3,
 }
 
 export enum Gender {
@@ -53,4 +54,38 @@ export enum RedisMessagesNotFoundType {
 export enum DeleteChatForType {
    Me = 0,
    Both = 1,
+}
+
+export enum SchoolType {
+   OpenEducation = 0,
+   Government = 1,
+   Special = 2
+}
+
+export enum GroupChatUserRole {
+   Participant = 0,
+   Admin = 1,
+   Guard = 2
+}
+
+export enum ReportType {
+   JustDontLike = 0,
+   BullyingOrHarassment = 1,
+   FalseInformation = 2,
+   Spam = 3,
+   NudityOrSexualActivity = 4,
+   HateSpeechOrSymbols = 5,
+   ViolanceOrDangerousOrganizations = 6,
+   ScamOrFraud = 7,
+   IntellectualPropertyViolation = 8,
+   SaleOfIllegalOrRegulatedGoods = 9,
+   SuicideOrSelfInjury = 10,
+   EatingDisorders = 11,
+   Other = 12
+}
+
+export enum NotificationType{
+   StartedFollowingYou = 0,
+   FollowRequestAccepted = 1,
+   AddedYouToGroupChat = 2,
 }

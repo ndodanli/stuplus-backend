@@ -1,14 +1,14 @@
 import bcrypt from "bcryptjs"
-import { FollowEntity, FollowRequestEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { FollowEntity, FollowRequestEntity, NotificationEntity, ReportEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { SchoolEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { ExternalLogin, UserDocument } from "../../stuplus-lib/entities/UserEntity";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
-import { FollowLimitation, FollowStatus, RecordStatus, Role } from "../../stuplus-lib/enums/enums";
+import { FollowLimitation, FollowStatus, NotificationType, RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { getNewToken } from "../utils/token";
 import EmailService from "../../stuplus-lib/services/emailService";
 import moment from "moment";
 import { checkIfStudentEmail, generateCode } from "../../stuplus-lib/utils/general";
-import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO } from "../dtos/UserDTOs";
+import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO } from "../dtos/UserDTOs";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { config } from "../config/config";
 import axios from "axios";
@@ -22,6 +22,7 @@ import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { FollowDocument } from "../../stuplus-lib/entities/FollowEntity";
 import { io } from "../socket";
 import { userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
+import { NotificationDocument } from "../../stuplus-lib/entities/NotificationEntity";
 export class UserAccess {
     public static async getUserProfile(acceptedLanguages: Array<string>, userId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
         const response = new UserProfileResponseDTO();
@@ -421,6 +422,7 @@ export class UserAccess {
     }
 
     public static async acceptFollowReq(acceptedLanguages: Array<string>, userId: string, payload: UserFollowReqDTO): Promise<boolean> {
+        //TODO: send notification
         const followRequest = await FollowRequestEntity.findOne({ _id: payload.followId, requestedId: userId });
         if (!followRequest)
             throw new NotValidError(getMessage("xNotFound", acceptedLanguages, ["Follow request"]));
@@ -437,10 +439,23 @@ export class UserAccess {
             followerId: followRequest.ownerId,
             followingId: followRequest.requestedId
         });
+
+        const notifications = [];
+        notifications.push(new NotificationEntity({
+            ownerId: followRequest.ownerId,
+            relatedUserId: followRequest.requestedId,
+            type: NotificationType.FollowRequestAccepted
+        }));
+        notifications.push(new NotificationEntity({
+            ownerId: followRequest.requestedId,
+            relatedUserId: followRequest.ownerId,
+            type: NotificationType.StartedFollowingYou
+        }));
         try {
             await Promise.all([
                 followRequest.save(),
-                FollowEntity.create(followEntity)
+                FollowEntity.create(followEntity),
+                NotificationEntity.insertMany(notifications)
             ]);
         } catch (error) {
             followRequest.status = rollbackStatus.status;
@@ -448,6 +463,16 @@ export class UserAccess {
             await followRequest.save();
             await FollowEntity.deleteOne({
                 _id: followEntity._id
+            });
+            await NotificationEntity.deleteOne({
+                relatedUserId: followRequest.requestedId,
+                ownerId: followRequest.ownerId,
+                type: NotificationType.FollowRequestAccepted
+            });
+            await NotificationEntity.deleteOne({
+                relatedUserId: followRequest.ownerId,
+                ownerId: followRequest.requestedId,
+                type: NotificationType.StartedFollowingYou
             });
             throw error;
         }
@@ -583,7 +608,7 @@ export class UserAccess {
 
         if (followers.length > 0) {
             const followerUserIds = followers.map(x => x.followerId);
-            const requiredUsers = await UserEntity.find({ _id: { $in: followerUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]);
+            const requiredUsers = await UserEntity.find({ _id: { $in: followerUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName", "lastSeenDate"]);
             for (let i = 0; i < followers.length; i++) {
                 const follow = followers[i];
                 follow.followerUser = requiredUsers.find(x => x.id == follow.followerId);
@@ -594,24 +619,68 @@ export class UserAccess {
 
     public static async getFollowing(acceptedLanguages: Array<string>, userId: string, payload: BaseFilter): Promise<FollowDocument[]> {
 
-        let followersQuery = FollowEntity.find({ followerId: userId }, { "followerId": 0 })
+        let followingQuery = FollowEntity.find({ followerId: userId })
 
         if (payload.lastRecordDate)
-            followersQuery = followersQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+            followingQuery = followingQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
 
-        const followers = await followersQuery
+        const following = await followingQuery
             .sort({ createdAt: -1 })
             .limit(payload.take)
             .lean(true);
 
-        if (followers.length > 0) {
-            const followingUserIds = followers.map(x => x.followingId);
-            const requiredUsers = await UserEntity.find({ _id: { $in: followingUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]);
-            for (let i = 0; i < followers.length; i++) {
-                const follow = followers[i];
+        if (following.length > 0) {
+            const followingUserIds = following.map(x => x.followingId);
+            const requiredUsers = await UserEntity.find({ _id: { $in: followingUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName", "lastSeenDate"]);
+            for (let i = 0; i < following.length; i++) {
+                const follow = following[i];
                 follow.followingUser = requiredUsers.find(x => x.id == follow.followingId);
             }
         }
-        return followers;
+        return following;
+    }
+
+    public static async report(acceptedLanguages: Array<string>, userId: string, payload: ReportDTO): Promise<boolean> {
+        await ReportEntity.create({ ...payload, userId: userId });
+        //TODO: send notification to admin and maybe to user
+        return true;
+    }
+
+    public static async getNotificationHistory(acceptedLanguages: Array<string>, userId: string, payload: BaseFilter): Promise<NotificationDocument[]> {
+        let notificationHistoryQuery = NotificationEntity.find({ ownerId: userId })
+
+        if (payload.lastRecordDate)
+            notificationHistoryQuery = notificationHistoryQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+
+        const notificationHistory = await notificationHistoryQuery
+            .sort({ createdAt: -1 })
+            .limit(payload.take)
+            .lean(true);
+
+        if (notificationHistory.length > 0) {
+            const notificationHistoryUserIds = notificationHistory.filter(x => x.relatedUserId).map(x => x.relatedUserId);
+            const requiredUsers = await UserEntity.find({ _id: { $in: notificationHistoryUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]);
+            for (let i = 0; i < notificationHistory.length; i++) {
+                const notification = notificationHistory[i];
+                notification.relatedUser = requiredUsers.find(x => x.id == notification.relatedUserId);
+            }
+        }
+        return notificationHistory;
+    }
+
+    public static async removeNotification(acceptedLanguages: Array<string>, userId: string, notificationId: string): Promise<boolean> {
+        const notificationDelete = await NotificationEntity.findOneAndUpdate({ _id: notificationId, ownerId: userId }, { recordStatus: RecordStatus.Deleted });
+
+        if (!notificationDelete)
+            throw new NotValidError(getMessage("xNotFound", acceptedLanguages, ["Bildirim"]));
+        return true;
+    }
+
+    public static async notifyReadNotifications(acceptedLanguages: Array<string>, userId: string, payload: NotificationsReadedDTO): Promise<boolean> {
+        const notificationsReaded = await NotificationEntity.updateMany({ _id: { $in: payload.notificationIds }, ownerId: userId }, { readed: true });
+
+        if (!notificationsReaded)
+            throw new NotValidError(getMessage("unknownError", acceptedLanguages));
+        return true;
     }
 }

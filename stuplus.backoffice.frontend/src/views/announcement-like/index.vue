@@ -160,7 +160,7 @@ export default {
     return {
       token: getToken(),
       uploadFilePath:
-        'http://localhost:25050/general/uploadFile?uploadPath=school_images',
+        'http://212.98.224.208:25050/general/uploadFile?uploadPath=school_images',
       tableKey: 0,
       list: null,
       total: 0,

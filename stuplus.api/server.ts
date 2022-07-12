@@ -10,6 +10,7 @@ import accountRoute from "./routes/accountRoute";
 import schoolRoute from "./routes/schoolRoute";
 import announcementRoute from "./routes/announcementRoute";
 import questionRoute from "./routes/questionRoute";
+import generalRoute from "./routes/generalRoute";
 import chatRoute from "./socket/index";
 import swaggerRoute from "./routes/swaggerRoute";
 import path from "path";
@@ -57,6 +58,7 @@ app.use("/school", schoolRoute);
 app.use("/interest", interestRoute);
 app.use("/announcement", announcementRoute);
 app.use("/question", questionRoute);
+app.use("/general", generalRoute);
 app.use("/chat", chatRoute);
 
 app.use("/doc", swaggerRoute);

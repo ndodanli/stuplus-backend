@@ -5,6 +5,7 @@ import multerS3 from "multer-s3"
 import path from "path";
 import { getMessage } from "../localization/responseMessages";
 import { CustomRequest } from "../utils/base/baseOrganizers";
+import { generateRandomNumber } from "../utils/general";
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 AWS.config.update({
@@ -25,7 +26,7 @@ export const uploadFileS3 = {
           cb(null, { fieldName: file.fieldname });
         },
         key: function (req: CustomRequest<object>, file, cb) {
-          var newFileName = Date.now().toString() + "-" + file.originalname;
+          var newFileName = Date.now().toString() + "-" + generateRandomNumber(0, 10000) + "-" + file.originalname;
           let fullPath = "public/";
           if (filePath)
             fullPath += filePath;
@@ -52,7 +53,7 @@ export const uploadFileS3 = {
           }
         }
 
-        if (file.originalname.length > 50) {
+        if (file.originalname.length > 30) {
           req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileNameTooLongError", req.selectedLangs(), [file.originalname]) })
           callback(null, false)
           return;

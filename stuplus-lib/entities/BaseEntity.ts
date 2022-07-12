@@ -1,3 +1,4 @@
+import { MongoosePluginModel } from "@imranbarbhuiya/mongoose-fuzzy-searching";
 import { AcceptsDiscriminator, Model, model, Schema } from "mongoose";
 import { RecordStatus } from "../enums/enums";
 import { AnnouncementCommentDocument, AnnouncementCommentSchema } from "./AnnouncementCommentEntity";
@@ -14,12 +15,15 @@ import { GroupChatUserDocument, GroupChatUserSchema } from "./GroupChatUserEntit
 import { GroupMessageDocument, GroupMessageSchema } from "./GroupMessageEntity";
 import { GroupMessageForwardDocument, GroupMessageForwardSchema } from "./GroupMessageForwardEntity";
 import { GroupMessageReadDocument, GroupMessageReadSchema } from "./GroupMessageReadEntity";
+import { ImageStatisticDocument, ImageStatisticSchema } from "./ImageStatistic";
 import { InterestDocument, InterestSchema } from "./InterestEntity";
 import { MessageDocument, MessageSchema } from "./MessageEntity";
+import { NotificationDocument, NotificationSchema } from "./NotificationEntity";
 import { QuestionCommentDocument, QuestionCommentSchema } from "./QuestionCommentEntity";
 import { QuestionCommentLikeDocument, QuestionCommentLikeSchema } from "./QuestionCommentLikeEntity";
 import { QuestionDocument, QuestionSchema } from "./QuestionEntity";
 import { QuestionLikeDocument, QuestionLikeSchema } from "./QuestionLikeEntity";
+import { ReportDocument, ReportSchema } from "./ReportEntity";
 import { SchoolDocument, SchoolSchema } from "./SchoolEntity";
 import { UserDocument, UserSchema } from "./UserEntity";
 
@@ -33,7 +37,8 @@ export default interface BaseEntity {
 
 const collections = ["User", "School", "Faculty", "Department", "Interest", "Announcement", "AnnouncementLike",
   "AnnouncementComment", "GroupChat", "GroupChatUser", "GroupMessage", "GroupMessageForward", "GroupMessageRead",
-  "Message", "Chat", "AnnouncementCommentLike", "Follow", "FollowRequest", "Question", "QuestionLike", "QuestionComment", "QuestionCommentLike"];
+  "Message", "Chat", "AnnouncementCommentLike", "Follow", "FollowRequest", "Question", "QuestionLike", "QuestionComment",
+  "QuestionCommentLike", "Report", "Notification", "ImageStatistic"];
 
 const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
 
@@ -44,6 +49,21 @@ collections.forEach((collectionName: string) => {
 })
 
 registerHooks();
+
+export const ImageStatisticEntity = baseSpreadator["ImageStatistic"].discriminator<
+  ImageStatisticDocument,
+  Model<ImageStatisticDocument>
+>("ImageStatistic", ImageStatisticSchema);
+
+export const NotificationEntity = baseSpreadator["Notification"].discriminator<
+  NotificationDocument,
+  Model<NotificationDocument>
+>("Notification", NotificationSchema);
+
+export const ReportEntity = baseSpreadator["Report"].discriminator<
+  ReportDocument,
+  Model<ReportDocument>
+>("Report", ReportSchema);
 
 export const SchoolEntity = baseSpreadator["School"].discriminator<
   SchoolDocument,
@@ -142,7 +162,7 @@ export const MessageEntity = baseSpreadator["Message"].discriminator<
 
 export const GroupChatEntity = baseSpreadator["GroupChat"].discriminator<
   GroupChatDocument,
-  Model<GroupChatDocument>
+  MongoosePluginModel<GroupChatDocument>
 >("GroupChat", GroupChatSchema);
 
 export const FollowEntity = baseSpreadator["Follow"].discriminator<
@@ -156,356 +176,404 @@ export const FollowRequestEntity = baseSpreadator["FollowRequest"].discriminator
 >("FollowRequest", FollowRequestSchema);
 
 function registerHooks(): void {
+  ImageStatisticSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  })
+  ImageStatisticSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  })
+  ImageStatisticSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  });
+  ImageStatisticSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  });
+  NotificationSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  })
+  NotificationSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  })
+  NotificationSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  });
+  NotificationSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  });
+  ReportSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  })
+  ReportSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  })
+  ReportSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  });
+  ReportSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    next();
+  });
   QuestionCommentLikeSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   QuestionCommentLikeSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   QuestionCommentLikeSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   QuestionCommentLikeSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   QuestionCommentSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   QuestionCommentSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   QuestionCommentSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   QuestionCommentSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   QuestionLikeSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   QuestionLikeSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   QuestionLikeSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   QuestionLikeSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   QuestionSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   QuestionSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   QuestionSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   QuestionSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   FollowRequestSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   FollowRequestSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   FollowRequestSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   FollowRequestSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   FollowSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   FollowSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   FollowSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   FollowSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   AnnouncementCommentLikeSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   AnnouncementCommentLikeSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   AnnouncementCommentLikeSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   AnnouncementCommentLikeSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   DepartmentSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   DepartmentSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   DepartmentSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   DepartmentSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   FacultySchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   FacultySchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   FacultySchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   FacultySchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   InterestSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   InterestSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   InterestSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   InterestSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   AnnouncementSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   AnnouncementSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   AnnouncementSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   AnnouncementSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   AnnouncementLikeSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   AnnouncementLikeSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   AnnouncementLikeSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   AnnouncementLikeSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   AnnouncementCommentSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   AnnouncementCommentSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   AnnouncementCommentSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   AnnouncementCommentSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   ChatSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   ChatSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   ChatSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   ChatSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   GroupChatUserSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   GroupChatUserSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   GroupChatUserSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   GroupChatUserSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   GroupMessageForwardSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   GroupMessageForwardSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   GroupMessageForwardSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   GroupMessageForwardSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   GroupMessageSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   GroupMessageSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   GroupMessageSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   GroupMessageSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   GroupMessageReadSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   GroupMessageReadSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   GroupMessageReadSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   GroupMessageReadSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   MessageSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   MessageSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   MessageSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   MessageSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   UserSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   UserSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   UserSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   UserSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   GroupChatSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   GroupChatSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   GroupChatSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   GroupChatSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   SchoolSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   SchoolSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   })
   SchoolSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
   SchoolSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    next()
+    next();
   });
 };

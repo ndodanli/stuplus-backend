@@ -3,9 +3,12 @@ import BaseEntity from "./BaseEntity";
 
 export interface Department extends BaseEntity {
   facultyId: string;
+  schoolId: string;
   grade: Number;
   title: string;
+  about: string;
   coverImageUrl: string;
+  avatarKey: string;
 }
 
 export interface DepartmentDocument extends Department, Document {
@@ -13,10 +16,13 @@ export interface DepartmentDocument extends Department, Document {
 }
 
 export const DepartmentSchema: Schema = new Schema({
-  facultyId: { type: String, required: true },
+  facultyId: { type: String, required: false, default: null },
+  schoolId: { type: String, required: true },
   grade: { type: Number, required: true },
   title: { type: String, required: true },
   coverImageUrl: { type: String, required: false, default: null },
+  about: { type: String, required: false, default: null },
+  avatarKey: { type: String, required: false, default: null },
 });
 
 // Just to prove that hooks are still functioning as expected
@@ -43,6 +49,9 @@ DepartmentSchema.methods.minify = async function (
     recordDeletionDate: this.recordDeletionDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
+    schoolId: this.schoolId,
+    about: this.about,
+    avatarKey: this.avatarKey,
   };
   return response;
 };

@@ -220,7 +220,7 @@ export default {
       },
       token: getToken(),
       uploadFilePath:
-        'http://localhost:25050/general/uploadFile?uploadPath=question/cover_images',
+        'http://212.98.224.208:25050/general/uploadFile?uploadPath=question/cover_images',
       tableKey: 0,
       list: null,
       total: 0,

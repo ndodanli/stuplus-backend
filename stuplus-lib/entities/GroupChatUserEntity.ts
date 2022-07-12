@@ -1,9 +1,11 @@
 import { Document, Schema } from "mongoose";
+import { GroupChatUserRole } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 
 export interface GroupChatUser extends BaseEntity {
   userId: string; //user id
   groupChatId: string; //chat id
+  groupRole: GroupChatUserRole;
 }
 
 export interface GroupChatUserDocument extends GroupChatUser, Document {
@@ -12,7 +14,8 @@ export interface GroupChatUserDocument extends GroupChatUser, Document {
 
 export const GroupChatUserSchema: Schema = new Schema({
   userId: { type: String, required: true },
-  groupChatId: { type: String, required: true }
+  groupChatId: { type: String, required: true },
+  groupRole: { type: String, required: true },
 });
 
 GroupChatUserSchema.pre("save", function (next) {
@@ -36,6 +39,7 @@ GroupChatUserSchema.methods.minify = async function (
     recordDeletionDate: this.recordDeletionDate,
     userId: this.userId,
     groupChatId: this.groupChatId,
+    groupRole: this.groupRole,
   };
   return response;
 };

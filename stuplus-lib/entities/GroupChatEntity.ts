@@ -2,14 +2,18 @@ import { Document, Schema } from "mongoose";
 import { GroupChatType } from "../../stuplus-lib/enums/enums_socket";
 import BaseEntity from "./BaseEntity";
 import { GroupMessage } from "./GroupMessageEntity";
+import mongoose_fuzzy_searching from "@imranbarbhuiya/mongoose-fuzzy-searching";
 export interface GroupChat extends BaseEntity {
   ownerId: string; //user id
   title: string;
   type: GroupChatType;
   about: string;
   coverImageUrl: string;
-  adminIds: string[];
   avatarKey: string;
+  hashTags: string[];
+  schoolId: string;
+  departmentId: string;
+  grade: number;
   //ignore
   lastMessage?: GroupMessage | null; //ignore
 }
@@ -23,10 +27,29 @@ export const GroupChatSchema: Schema = new Schema({
   title: { type: String, required: true },
   type: { type: Number, required: true },
   coverImageUrl: { type: String, required: false, default: null },
-  adminIds: { type: Array.of(String), required: false, default: [] },
   avatarKey: { type: String, required: false, default: null },
   about: { type: String, required: false, default: null },
+  hashTags: { type: Array.of(String), required: false, default: [] },
+  schoolId: { type: String, required: false, default: null },
+  departmentId: { type: String, required: false, default: null },
+  grade: { type: Number, required: false, default: null },
 });
+
+GroupChatSchema.plugin(mongoose_fuzzy_searching,
+  {
+    fields: [
+      {
+        name: 'hashTags',
+        minSize: 3,
+        weight: 3,
+      },
+      {
+        name: 'title',
+        minSize: 3,
+        weight: 1,
+      },
+    ]
+  });
 
 GroupChatSchema.pre("save", function (next) {
   //
@@ -49,11 +72,14 @@ GroupChatSchema.methods.minify = async function (
     ownerId: this.ownerId,
     title: this.title,
     type: this.type,
-    adminIds: this.adminIds,
     avatarKey: this.avatarKey,
     coverImageUrl: this.coverImageUrl,
     recordDeletionDate: this.recordDeletionDate,
+    hashTags: this.hashTags,
     about: this.about,
+    schoolId: this.schoolId,
+    departmentId: this.departmentId,
+    grade: this.grade,
     //ignore
     lastMessage: null, //ignore
   };

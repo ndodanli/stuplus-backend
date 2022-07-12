@@ -13,6 +13,8 @@ export class BaseFilter {
         // }
         if (filter.pageSize) {
             this.take = filter.pageSize;
+        } else {
+            this.take = 20;
         }
         if (filter.lastRecordDate) {
             this.lastRecordDate = filter.lastRecordDate;

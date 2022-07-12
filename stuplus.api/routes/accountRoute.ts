@@ -4,8 +4,8 @@ import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectRe
 import { authorize } from "../middlewares/auth";
 import { UserAccess } from "../dataAccess/userAccess";
 import { Role } from "../../stuplus-lib/enums/enums";
-import { validateChangeFollowStatus, validateEmailConfirmation, validateFollowUser, validateForgotPassword, validateForgotPasswordCode, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdateProfile } from "../middlewares/validation/account/validateAccountRoute";
-import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO } from "../dtos/UserDTOs";
+import { validateChangeFollowStatus, validateEmailConfirmation, validateFollowUser, validateForgotPassword, validateForgotPasswordCode, validateNotifyReadNotifications, validateReport, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdateProfile } from "../middlewares/validation/account/validateAccountRoute";
+import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO } from "../dtos/UserDTOs";
 import { CustomRequest, CustomResponse } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import path from "path";
@@ -13,6 +13,7 @@ import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
+import { isValidObjectId } from "mongoose";
 
 
 const router = Router();
@@ -593,6 +594,70 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
   const response = new BaseResponse<object>();
   try {
     response.data = await UserAccess.getFollowing(req.selectedLangs(), res.locals.user._id, new BaseFilter(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.post("/report", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateReport, async (req: CustomRequest<ReportDTO>, res: any) => {
+  const response = new BaseResponse<any>();
+  try {
+    await UserAccess.report(req.selectedLangs(), res.locals.user._id, new ReportDTO(req.body));
+
+    response.setMessage(getMessage("reportSuccess", req.selectedLangs()));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.post("/getNotificationHistory", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+  const response = new BaseResponse<any>();
+  try {
+    response.data = await UserAccess.getNotificationHistory(req.selectedLangs(), res.locals.user._id, new BaseFilter(req.body));
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.get("/removeNotification/:notificationId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+  const response = new BaseResponse<any>();
+  try {
+    const notificationId = req.params.notificationId;
+    if (!isValidObjectId(notificationId))
+      throw new NotValidError(getMessage("invalidObjectId", req.selectedLangs()));
+
+    await UserAccess.removeNotification(req.selectedLangs(), res.locals.user._id, notificationId);
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+
+  return Ok(res, response);
+});
+
+router.post("/notifyReadNotifications", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateNotifyReadNotifications, async (req: CustomRequest<NotificationsReadedDTO>, res: any) => {
+  const response = new BaseResponse<any>();
+  try {
+    const payload = new NotificationsReadedDTO(req.body);
+
+    await UserAccess.notifyReadNotifications(req.selectedLangs(), res.locals.user._id, payload);
   } catch (err: any) {
     response.setErrorMessage(err.message);
 

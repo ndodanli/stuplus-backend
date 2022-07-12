@@ -1,20 +1,23 @@
 import { Router } from "express"
-import { DepartmentEntity, FacultyEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { DepartmentEntity, FacultyEntity, GroupChatEntity, GroupChatUserEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { AddUpdateSchoolDTO, SchoolListDTO } from "../dtos/school";
 import { authorize } from "../middlewares/auth";
-import { RecordStatus, Role } from "../../stuplus-lib/enums/enums";
+import { GroupChatUserRole, RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { SortOrder } from "mongoose";
 import RedisService from "../../stuplus-lib/services/redisService";
+import { GroupChatType } from "../../stuplus-lib/enums/enums_socket";
+import { generateHashtags } from "../../stuplus-lib/utils/general";
 
 const router = Router();
 
 router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<SchoolListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
+
     let limit = parseInt(req.query.pageSize as string);
     let skip = (parseInt(req.query.page as string) - 1) * limit;
     let sort = req.query.sort as string;
@@ -61,10 +64,112 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
       schoolToUpdate.title = school.title;
       schoolToUpdate.emailFormat = school.emailFormat;
       schoolToUpdate.coverImageUrl = school.coverImageUrl;
+      schoolToUpdate.type = school.type;
+
       await schoolToUpdate.save();
     }
     else {
       const newSchool = new SchoolEntity(school);
+      //#region Create groups
+      const groupGuard = await RedisService.acquireUser("62ab8a204166fd1eaebbb3fa")
+
+      const schoolHashtags = generateHashtags(newSchool.title);
+      const groupChatEntity = new GroupChatEntity({
+        schoolId: newSchool._id.toString(),
+        title: newSchool.title,
+        // about: newSchool.about,
+        about: "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+        coverImageUrl: newSchool.coverImageUrl,
+        avatarKey: newSchool.avatarKey,
+        type: GroupChatType.Public,
+        ownerId: groupGuard._id.toString(),
+        hashTags: schoolHashtags
+      });
+
+      await GroupChatEntity.create(groupChatEntity);
+
+      await GroupChatUserEntity.create({
+        groupChatId: groupChatEntity._id.toString(),
+        userId: groupGuard._id.toString(),
+        groupRole: GroupChatUserRole.Guard
+      });
+
+      if (school.departments) {
+        for (let i = 0; i < school.departments.length; i++) {
+          const department = school.departments[i];
+          department.schoolId = newSchool._id.toString();
+          const departmentEntity = new DepartmentEntity(department);
+          await DepartmentEntity.create(departmentEntity);
+
+          //#region Create department group chat
+          const departmentGroupChatEntity = new GroupChatEntity({
+            schoolId: newSchool._id.toString(),
+            departmentId: departmentEntity._id.toString(),
+            title: departmentEntity.title,
+            about: departmentEntity.about,
+            coverImageUrl: departmentEntity.coverImageUrl,
+            avatarKey: departmentEntity.avatarKey,
+            type: GroupChatType.Public,
+            ownerId: groupGuard._id.toString(),
+            hashTags: generateHashtags(departmentEntity.title).concat(schoolHashtags)
+          });
+
+          await GroupChatEntity.create(departmentGroupChatEntity);
+
+          await GroupChatUserEntity.create({
+            groupChatId: departmentGroupChatEntity._id.toString(),
+            userId: groupGuard._id.toString(),
+            groupRole: GroupChatUserRole.Guard
+          });
+
+          //#endregion
+
+          //#region Create department grade group chats
+          for (let j = 1; j <= department.grade; j++) {
+            const departmentGradeGroupChatEntity = new GroupChatEntity({
+              schoolId: newSchool._id.toString(),
+              departmentId: departmentEntity._id.toString(),
+              title: departmentEntity.title + ` ${j}. Sınıf`,
+              about: departmentEntity.about,
+              coverImageUrl: departmentEntity.coverImageUrl,
+              avatarKey: departmentEntity.avatarKey,
+              grade: j,
+              type: GroupChatType.Public,
+              ownerId: groupGuard._id.toString(),
+              hashTags: generateHashtags(departmentEntity.title + ` ${j}. Sınıf`).concat(schoolHashtags)
+            });
+            await GroupChatEntity.create(departmentGradeGroupChatEntity);
+
+            await GroupChatUserEntity.create({
+              groupChatId: departmentGradeGroupChatEntity._id.toString(),
+              userId: groupGuard._id.toString(),
+              groupRole: GroupChatUserRole.Guard
+            });
+          }
+          if (department.preparation) {
+            const departmentGradeGroupChatEntity = new GroupChatEntity({
+              schoolId: newSchool._id.toString(),
+              departmentId: departmentEntity._id.toString(),
+              title: departmentEntity.title + " Hazırlık",
+              about: departmentEntity.about,
+              coverImageUrl: departmentEntity.coverImageUrl,
+              avatarKey: departmentEntity.avatarKey,
+              grade: 0,
+              type: GroupChatType.Public,
+              ownerId: groupGuard._id.toString(),
+              hashTags: generateHashtags(departmentEntity.title + " Hazırlık").concat(schoolHashtags)
+            });
+            await GroupChatEntity.create(departmentGradeGroupChatEntity);
+
+            await GroupChatUserEntity.create({
+              groupChatId: departmentGradeGroupChatEntity._id.toString(),
+              userId: groupGuard._id.toString(),
+            });
+          }
+          //#endregion
+        }
+      }
+      //#endregion
       await newSchool.save();
     }
   } catch (err: any) {
@@ -110,10 +215,9 @@ router.delete("/deleteSchool", authorize([Role.Admin]), async (req: CustomReques
       })
     }
     await UserEntity.bulkWrite(bulkUserUpdateOps);
-    const relatedFaculties = await FacultyEntity.find({ schoolId: school._id }, ["_id"]);
-    const relatedFacultyIds = relatedFaculties.map(faculty => faculty._id);
-    await DepartmentEntity.updateMany({ facultyId: { $in: relatedFacultyIds } }, { recordStatus: RecordStatus.Deleted });
+    await DepartmentEntity.updateMany({ schoolId: school._id }, { recordStatus: RecordStatus.Deleted });
     await FacultyEntity.updateMany({ schoolId: school._id }, { recordStatus: RecordStatus.Deleted });
+    await GroupChatEntity.updateMany({ schoolId: school._id }, { recordStatus: RecordStatus.Deleted });
     await school.save();
     for (let user of usersWhoRelatedToSchool) {
       await RedisService.updateUser(user)

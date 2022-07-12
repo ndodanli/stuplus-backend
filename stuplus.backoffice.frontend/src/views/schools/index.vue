@@ -1,13 +1,8 @@
 <template>
   <div class="app-container">
     <div class="filter-container d-flex" style="gap:5px;">
-      <el-input
-        v-model="listQuery.search"
-        placeholder="Title"
-        style="width: 200px"
-        class="filter-item"
-        @keyup.enter.native="handleFilter"
-      />
+      <el-input v-model="listQuery.search" placeholder="Title" style="width: 200px" class="filter-item"
+        @keyup.enter.native="handleFilter" />
       <el-select v-model="listQuery.sort" style="width: 140px" class="filter-item" @change="handleFilter">
         <el-option v-for="item in sortOptions" :key="item.key" :label="item.label" :value="item.key" />
       </el-select>
@@ -23,20 +18,12 @@
       </el-button> -->
     </div>
 
-    <el-table
-      :key="tableKey"
-      v-loading="listLoading"
-      :data="list"
-      border
-      fit
-      highlight-current-row
-      style="width: 100%"
-      @sort-change="sortChange"
-    >
+    <el-table :key="tableKey" v-loading="listLoading" :data="list" border fit highlight-current-row style="width: 100%"
+      @sort-change="sortChange">
       <el-table-column label="Order No" width="150px" align="center">
         <template slot-scope="scope">
           <span>{{
-            (listQuery.page - 1) * listQuery.pageSize + scope.$index + 1
+              (listQuery.page - 1) * listQuery.pageSize + scope.$index + 1
           }}</span>
         </template>
       </el-table-column>
@@ -45,12 +32,12 @@
           <span><img :src="row.coverImageUrl" width="100px"></span>
         </template>
       </el-table-column>
-      <el-table-column label="Title" prop="id" align="center">
+      <el-table-column label="Title" prop="title" align="center">
         <template slot-scope="{ row }">
           <span>{{ row.title }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Email Format" prop="id" align="center">
+      <el-table-column label="Email Format" prop="emailFormat" align="center">
         <template slot-scope="{ row }">
           <span>{{ row.emailFormat }}</span>
         </template>
@@ -73,29 +60,11 @@
       </el-table-column>
     </el-table>
 
-    <pagination
-      v-show="total > 0"
-      :total="total"
-      :page.sync="listQuery.page"
-      :limit.sync="listQuery.pageSize"
-      @pagination="getList"
-    />
+    <pagination v-show="total > 0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.pageSize"
+      @pagination="getList" />
 
-    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <el-form
-        ref="dataForm"
-        :rules="rules"
-        :model="temp"
-        label-position="left"
-        style="width: 400px; margin-left: 50px"
-      >
-        <!-- <el-form-item label="Type" prop="type">
-          <el-select v-model="temp.type" class="filter-item" placeholder="Please select">
-            <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.display_name"
-              :value="item.key" />
-          </el-select>
-        </el-form-item> -->
-
+    <el-dialog :title="textMap[dialogStatus]" width="70%" :visible.sync="dialogFormVisible">
+      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" style="width: 90%;margin-left: 50px">
         <el-form-item label="Title" prop="title">
           <el-input v-model="temp.title" />
         </el-form-item>
@@ -103,19 +72,52 @@
           <el-input v-model="temp.emailFormat" />
         </el-form-item>
         <el-form-item label="Cover Image" prop="coverImageUrl">
-          <el-upload
-            name="file"
-            class="avatar-uploader"
-            :action="uploadFilePath"
-            :show-file-list="false"
-            :headers="{ Authorization: 'Bearer ' + token }"
-            :on-success="handleCoverImageUploadSuccess"
-            :before-upload="handleCoverImageUploadBefore"
-          >
+          <el-upload name="file" class="avatar-uploader" :action="uploadFilePath" :show-file-list="false"
+            :headers="{ Authorization: 'Bearer ' + token }" :on-success="handleCoverImageUploadSuccess"
+            :before-upload="handleCoverImageUploadBefore">
             <img v-if="temp.coverImageUrl" :src="temp.coverImageUrl" width="150px" height="150px">
             <i v-else class="el-icon-plus avatar-uploader-icon" />
           </el-upload>
         </el-form-item>
+        <el-form-item label="Type" prop="type">
+          <el-select v-model="temp.type" placeholder="Select Type...">
+            <el-option v-for="schoolType in types" :key="schoolType.value" :label="schoolType.key"
+              :value="schoolType.value">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="Departments">
+          <div v-for="dep in temp.departments">
+            <el-input v-model="dep.title" />
+            <el-input v-model="dep.about" />
+            <el-upload name="file" class="avatar-uploader" :action="uploadFilePathDepartment" :show-file-list="false"
+              :headers="{ Authorization: 'Bearer ' + token }" :on-success="handleDepartmentCoverImageUploadSuccess"
+              :before-upload="handleCoverImageUploadBefore">
+              <img v-if="dep.coverImageUrl" :src="dep.coverImageUrl" width="100px" height="100px">
+              <i v-else class="el-icon-plus avatar-uploader-icon" />
+            </el-upload>
+            <el-checkbox v-model="dep.preparation">Option</el-checkbox>
+          </div>
+        </el-form-item>
+        <div class="d-flex" style="gap:10px;">
+          <el-input style="flex: 0 0 25%;" placeholder="Title" v-model="department.title" />
+          <el-form-item label="Department Cover Image">
+            <el-upload name="file" class="avatar-uploader" :action="uploadFilePathDepartment" :show-file-list="false"
+              :headers="{ Authorization: 'Bearer ' + token }" :on-success="handleDepartmentCoverImageUploadSuccess"
+              :before-upload="handleCoverImageUploadBefore">
+              <img v-if="department.coverImageUrl" :src="department.coverImageUrl" width="150px" height="150px">
+              <i v-else class="el-icon-plus avatar-uploader-icon" />
+            </el-upload>
+          </el-form-item>
+          <el-input type="textarea" style="flex: 0 0 45%;" placeholder="About(Not necessary)"
+            v-model="department.about" />
+          <el-input-number style="flex: 0 0 15%;" placeholde="Grade" v-model="department.grade" :min="1" :max="10">
+          </el-input-number>
+          <label>Preparation</label>
+          <el-checkbox v-model="department.preparation">Option</el-checkbox>
+          <button class="el-button el-button--primary el-button--mini" type="button" style="flex: 0 0 15%;"
+            @click="handleAddDepartment">Add Department</button>
+        </div>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false"> Cancel </el-button>
@@ -178,7 +180,8 @@ export default {
     return {
       token: getToken(),
       uploadFilePath:
-        'http://localhost:25050/general/uploadFile?uploadPath=school_images',
+        'http://212.98.224.208:25050/general/uploadFile?uploadPath=school_images',
+      uploadFilePathDepartment: 'http://212.98.224.208:25050/general/uploadFile?uploadPath=department_images',
       tableKey: 0,
       list: null,
       total: 0,
@@ -201,7 +204,9 @@ export default {
         _id: null,
         title: null,
         emailFormat: null,
-        coverImageUrl: null
+        coverImageUrl: null,
+        type: null,
+        departments: [],
       },
       dialogFormVisible: false,
       dialogStatus: '',
@@ -215,22 +220,42 @@ export default {
         title: [
           { required: true, message: 'Title is required', trigger: 'blur' }
         ],
-        emailFormat: [
-          { required: true, message: 'Email format is required', trigger: 'blur' }
-        ],
         coverImageUrl: [
           { required: true, message: 'Cover image is required', trigger: 'blur' }
         ]
       },
-      downloadLoading: false
+      downloadLoading: false,
+      types: [
+        { key: "Acik Ogretim", value: 0 },
+        { key: "Devlet", value: 1 },
+        { key: "Ozel", value: 2 },
+      ],
+      department: {
+        title: null,
+        about: "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+        coverImageUrl: null,
+        preparation: false
+      }
     }
   },
   created() {
     this.getList()
   },
   methods: {
+    handleAddDepartment() {
+      this.temp.departments.push(this.department)
+      this.department = {
+        title: null,
+        about: "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+        coverImageUrl: null,
+        preparation: false
+      }
+    },
     handleCoverImageUploadSuccess(res, file) {
       this.temp.coverImageUrl = res.data.url
+    },
+    handleDepartmentCoverImageUploadSuccess(res, file) {
+      this.department.coverImageUrl = res.data.url
     },
     handleCoverImageUploadBefore(file) {
       const isJpgOrPng =
@@ -285,7 +310,9 @@ export default {
         _id: undefined,
         title: null,
         emailFormat: null,
-        coverImageUrl: null
+        coverImageUrl: null,
+        type: null,
+        departments: [],
       }
     },
     handleCreate() {
@@ -401,7 +428,7 @@ export default {
         })
       )
     },
-    getSortClass: function(key) {
+    getSortClass: function (key) {
       const sort = this.listQuery.sort
       return sort === `+${key}` ? 'ascending' : 'descending'
     }

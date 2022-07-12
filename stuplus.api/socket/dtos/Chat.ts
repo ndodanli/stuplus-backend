@@ -8,6 +8,7 @@ export class CreateGroupDTO {
     title: string = "";
     type: GroupChatType = GroupChatType.Private;
     avatarKey: string = "";
+    hashTags: string[] = [];
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);
@@ -20,6 +21,7 @@ export class UpdateGroupInfoDTO {
     title: string = "";
     type: GroupChatType = GroupChatType.Private;
     avatarKey: string = "";
+    hashTags: string[] = [];
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);
@@ -165,6 +167,15 @@ export class DeleteSinglePMDTO {
 
 export class BlockUserDTO {
     userId: string = "";
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class LeaveGroupDTO {
+    groupChatId: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);
