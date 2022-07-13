@@ -10,7 +10,7 @@ import { GroupChatUserRole, RecordStatus, Role } from "../../stuplus-lib/enums/e
 import { SortOrder } from "mongoose";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { GroupChatType } from "../../stuplus-lib/enums/enums_socket";
-import { generateHashtags } from "../../stuplus-lib/utils/general";
+import { searchables } from "../../stuplus-lib/utils/general";
 
 const router = Router();
 
@@ -73,7 +73,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
       //#region Create groups
       const groupGuard = await RedisService.acquireUser("62ab8a204166fd1eaebbb3fa")
 
-      const schoolHashtags = generateHashtags(newSchool.title);
+      const schoolHashtags = searchables(newSchool.title);
       const groupChatEntity = new GroupChatEntity({
         schoolId: newSchool._id.toString(),
         title: newSchool.title,
@@ -111,7 +111,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
             avatarKey: departmentEntity.avatarKey,
             type: GroupChatType.Public,
             ownerId: groupGuard._id.toString(),
-            hashTags: generateHashtags(departmentEntity.title).concat(schoolHashtags)
+            hashTags: searchables(departmentEntity.title).concat(schoolHashtags)
           });
 
           await GroupChatEntity.create(departmentGroupChatEntity);
@@ -136,7 +136,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
               grade: j,
               type: GroupChatType.Public,
               ownerId: groupGuard._id.toString(),
-              hashTags: generateHashtags(departmentEntity.title + ` ${j}. Sınıf`).concat(schoolHashtags)
+              hashTags: searchables(departmentEntity.title + ` ${j}. Sınıf`).concat(schoolHashtags)
             });
             await GroupChatEntity.create(departmentGradeGroupChatEntity);
 
@@ -156,7 +156,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
                 grade: j,
                 type: GroupChatType.Public,
                 ownerId: groupGuard._id.toString(),
-                hashTags: generateHashtags(departmentEntity.title + ` ${j}. Sınıf İÖ`).concat(schoolHashtags)
+                hashTags: searchables(departmentEntity.title + ` ${j}. Sınıf İÖ`).concat(schoolHashtags)
               });
               await GroupChatEntity.create(depSecondaryEducationGroupChatEntity);
 
@@ -178,7 +178,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
               grade: 0,
               type: GroupChatType.Public,
               ownerId: groupGuard._id.toString(),
-              hashTags: generateHashtags(departmentEntity.title + " Hazırlık").concat(schoolHashtags)
+              hashTags: searchables(departmentEntity.title + " Hazırlık").concat(schoolHashtags)
             });
             await GroupChatEntity.create(departmentGradeGroupChatEntity);
 

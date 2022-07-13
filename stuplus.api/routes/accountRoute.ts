@@ -58,7 +58,7 @@ schema: { $ref: "#/definitions/AccountGetUserProfileProfileRequest" }
 } */
   const response = new BaseResponse<object>();
   try {
-    response.data = await UserAccess.getUserProfile(req.selectedLangs(), res.locals.user._id, req.body.targetUserId);
+    response.data = await UserAccess.getUserProfile(req.selectedLangs(), res.locals.user._id, req.params.userId);
 
   } catch (err: any) {
     response.setErrorMessage(err.message);

@@ -119,7 +119,6 @@ export class QuestionAccess {
                 let newCommentsQuery = QuestionCommentEntity.find({
                     questionId: payload.questionId,
                     _id: { $nin: favoriteCommentIds },
-                    createdAt: { $lt: redisComments[0].createdAt }
                 });
 
                 if (redisComments.length > 0)
@@ -224,24 +223,20 @@ export class QuestionAccess {
             throw new NotValidError(getMessage("alreadyLikedOrDisliked", acceptedLanguages));
         //TODO: bu tur hatalari socketten gonder, responseu hemen don.
 
-        for (let i = 0; i < 19; i++) {
-            const now = new Date();
-            const questionLikeDislikeEntity = new QuestionLikeEntity({});
-            const questionLikeDislikeData: object = {
-                e: {
-                    _id: questionLikeDislikeEntity.id,
-                    ownerId: currentUserId,
-                    questionId: payload.questionId,
-                    createdAt: now,
-                    updatedAt: now,
-                },
-            }
-            let redisKey = payload.type === LikeType.Like ? RedisKeyType.DBQuestionLike : RedisKeyType.DBQuestionDislike;
-            redisKey += payload.questionId;
-            await RedisService.client.rPush(redisKey, stringify(questionLikeDislikeData));
-
+        const now = new Date();
+        const questionLikeDislikeEntity = new QuestionLikeEntity({});
+        const questionLikeDislikeData: object = {
+            e: {
+                _id: questionLikeDislikeEntity.id,
+                ownerId: currentUserId,
+                questionId: payload.questionId,
+                createdAt: now,
+                updatedAt: now,
+            },
         }
-
+        let redisKey = payload.type === LikeType.Like ? RedisKeyType.DBQuestionLike : RedisKeyType.DBQuestionDislike;
+        redisKey += payload.questionId;
+        await RedisService.client.rPush(redisKey, stringify(questionLikeDislikeData));
 
         return { beforeType: payload.type };
     }

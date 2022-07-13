@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs"
-import { FollowEntity, FollowRequestEntity, NotificationEntity, ReportEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { FollowEntity, FollowRequestEntity, GroupChatEntity, NotificationEntity, ReportEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { SchoolEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { ExternalLogin, UserDocument } from "../../stuplus-lib/entities/UserEntity";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
@@ -7,7 +7,7 @@ import { FollowLimitation, FollowStatus, NotificationType, RecordStatus, Role } 
 import { getNewToken } from "../utils/token";
 import EmailService from "../../stuplus-lib/services/emailService";
 import moment from "moment-timezone";
-import { checkIfStudentEmail, generateCode } from "../../stuplus-lib/utils/general";
+import { checkIfStudentEmail, generateCode, searchable, searchables } from "../../stuplus-lib/utils/general";
 import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO } from "../dtos/UserDTOs";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { config } from "../config/config";
@@ -28,7 +28,10 @@ export class UserAccess {
         const response = new UserProfileResponseDTO();
         response.user = await RedisService.acquireUser(targetUserId, ["_id", "firstName", "lastName", "profilePhotoUrl",
             "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
-            "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings", "lastSeenDate"]);
+            "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings", "lastSeenDate", "blockedUserIds"]);
+
+        if (response.user.blockedUserIds.includes(userId))
+            throw new NotValidError(getMessage("userBlockedShowProfile", acceptedLanguages));
 
         response.user.followerCount = await RedisService.acquire(RedisKeyType.User + targetUserId + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
             return await FollowEntity.countDocuments({ followingId: targetUserId });
@@ -202,6 +205,8 @@ export class UserAccess {
             userWithSearchedUsername = await UserEntity.findOne({ username: username }, { "_id": 0, "username": 1 }, { lean: true });
             counter++;
         }
+        const randomNames = ["John", "Jane", "Mary", "Tom", "Bob", "Alice", "John", "Jane", "Mary", "Tom", "Bob", "Alice"];
+        const randomSurnames = ["Doe", "Smith", "Jones", "Williams", "Brown", "Miller", "Wilson", "Moore", "Taylor", "Anderson", "Thomas", "Jackson"];
 
         const createdUser = await UserEntity.create({
             ...payload,
@@ -209,6 +214,8 @@ export class UserAccess {
             avatarKey: username,
             role: Role.User,
             lastSeenDate: now,
+            firstName: randomNames[Math.floor(Math.random() * randomNames.length)],
+            lastName: randomSurnames[Math.floor(Math.random() * randomSurnames.length)],
         });
 
         const verifyLink = config.DOMAIN + `/account/emailConfirmation?uid=${createdUser._id}&code=${code}&t=${isStudentEmail ? "1" : "0"}`
@@ -536,7 +543,14 @@ export class UserAccess {
 
     public static async followUser(acceptedLanguages: Array<string>, userId: string, payload: UserFollowUserRequestDTO): Promise<object> {
         let followId: string;
-        const user = await UserEntity.findOne({ _id: payload.requestedId }, { "privacySettings": 1, "_id": 0 }).lean(true);
+        const user = await UserEntity.findOne({ _id: payload.requestedId }, { "privacySettings": 1, "_id": 0, "blockedUserIds": 1 }).lean(true);
+
+        if (!user)
+            throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
+
+        if (user.blockedUserIds.includes(userId))
+            throw new NotValidError(getMessage("userBlockedFollowReq", acceptedLanguages));
+
         if (user?.privacySettings.followLimitation == FollowLimitation.None) {
             //TODO: alt yorum satirini uygulamak yerine belirli periyotlarda duplicateler kontrol edilebilir, simdilik geciyoruz
             const follow = await FollowEntity.exists({ followerId: userId, followingId: payload.requestedId, recordStatus: RecordStatus.Active });
@@ -596,7 +610,7 @@ export class UserAccess {
 
         if (followRequests.length > 0) {
             const followReqRequestedUserIds = followRequests.map(x => x.requestedId);
-            const requiredUsers = await UserEntity.find({ _id: { $in: followReqRequestedUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]);
+            const requiredUsers = await UserEntity.find({ _id: { $in: followReqRequestedUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName", "avatarKey"]);
             for (let i = 0; i < followRequests.length; i++) {
                 const followReq = followRequests[i];
                 followReq.requestedUser = requiredUsers.find(x => x.id == followReq.requestedId);
@@ -619,7 +633,7 @@ export class UserAccess {
 
         if (followRequests.length > 0) {
             const followReqRequestedUserIds = followRequests.map(x => x.ownerId);
-            const requiredUsers = await UserEntity.find({ _id: { $in: followReqRequestedUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]);
+            const requiredUsers = await UserEntity.find({ _id: { $in: followReqRequestedUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName", "avatarKey"]);
             for (let i = 0; i < followRequests.length; i++) {
                 const followReq = followRequests[i];
                 followReq.ownerUser = requiredUsers.find(x => x.id == followReq.ownerId);
@@ -642,7 +656,7 @@ export class UserAccess {
 
         if (followers.length > 0) {
             const followerUserIds = followers.map(x => x.followerId);
-            const requiredUsers = await UserEntity.find({ _id: { $in: followerUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName", "lastSeenDate"]);
+            const requiredUsers = await UserEntity.find({ _id: { $in: followerUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName", "lastSeenDate", "avatarKey"]);
             for (let i = 0; i < followers.length; i++) {
                 const follow = followers[i];
                 follow.followerUser = requiredUsers.find(x => x.id == follow.followerId);
@@ -665,7 +679,7 @@ export class UserAccess {
 
         if (following.length > 0) {
             const followingUserIds = following.map(x => x.followingId);
-            const requiredUsers = await UserEntity.find({ _id: { $in: followingUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName", "lastSeenDate"]);
+            const requiredUsers = await UserEntity.find({ _id: { $in: followingUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName", "lastSeenDate", "avatarKey"]);
             for (let i = 0; i < following.length; i++) {
                 const follow = following[i];
                 follow.followingUser = requiredUsers.find(x => x.id == follow.followingId);
@@ -693,7 +707,7 @@ export class UserAccess {
 
         if (notificationHistory.length > 0) {
             const notificationHistoryUserIds = notificationHistory.filter(x => x.relatedUserId).map(x => x.relatedUserId);
-            const requiredUsers = await UserEntity.find({ _id: { $in: notificationHistoryUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName"]).lean(true);
+            const requiredUsers = await UserEntity.find({ _id: { $in: notificationHistoryUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName", "avatarKey"]).lean(true);
             for (let i = 0; i < notificationHistory.length; i++) {
                 const notification = notificationHistory[i];
                 notification.relatedUser = requiredUsers.find(x => x._id.toString() == notification.relatedUserId);

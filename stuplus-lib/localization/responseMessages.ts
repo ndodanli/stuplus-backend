@@ -106,7 +106,8 @@ const systemLangs: Record<string, Function> = {
             lastNameUpdateLimit: "Soyadını değiştireli çok olmadı, günde bir kereye müsade ediyoruz. Tekrar değiştirebileceğin tarihi veriyorum,",
             firstNameUpdateLimit: "Adını değiştireli çok olmadı, günde bir kereye müsade ediyoruz. Tekrar değiştirebileceğin tarihi veriyorum,",
             usernameUpdateLimit: "Kullanıcı adını sürekli değiştirmemelisin, haftada bir kereye müsade ediyoruz. Tekrar değiştirebileceğin tarihi veriyorum,",
-
+            userBlockedShowProfile: "Bu kullanıcıdan uzak dur.",
+            userBlockedFollowReq: "Bu kullanıcıdan uzak dur."
         }
     },
     "en": function (args: string[] = []) {

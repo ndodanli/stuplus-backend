@@ -84,8 +84,13 @@ export enum ReportType {
    Other = 12
 }
 
-export enum NotificationType{
+export enum NotificationType {
    StartedFollowingYou = 0,
    FollowRequestAccepted = 1,
    AddedYouToGroupChat = 2,
+}
+
+export enum SearchedEntityType {
+   User = 0,
+   Group = 1,
 }

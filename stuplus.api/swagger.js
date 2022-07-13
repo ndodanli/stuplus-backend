@@ -1079,7 +1079,7 @@ const doc = {
             "grade": 0,
         },
         AccountGetUserProfileProfileRequest: {
-            $targetUserId: "targetUserId",
+            $userId: "userId",
         },
         AccountGetUserProfileProfileResponse: {
             hasError: {
@@ -1095,42 +1095,32 @@ const doc = {
                 description: "Message describing the error."
             },
             data: {
-                type: "object",
-                description: "Data returned by the operation.",
-                properties: {
-                    _id: "62ab8a204166fd1eaebbb3fa",
-                    role: 0,
-                    schoolId: null,
-                    facultyId: null,
-                    departmentId: null,
-                    grade: null,
-                    firstName: "string",
-                    lastName: "string",
-                    profilePhotoUrl: "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg",
-                    isAccEmailConfirmed: true,
-                    isSchoolEmailConfirmed: false,
-                    interestIds: [
-                        "string"
-                    ],
-                    __t: "User",
-                    avatarKey: "string",
-                    username: "string",
-                    followerCount: 232,
-                    followingCount: 40,
-                    about: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quidem.",
-                    followStatus: {
-                        followId: "string",
-                        status: {
-                            type: "enum",
-                            values: {
-                                Pending: 2,
-                                Accepted: 3,
-                                None: 4
-                            }
-                        }
-                    }
+                "user": {
+                    "_id": "62b444af42c36c87dff387d7",
+                    "username": "test1030",
+                    "role": 1,
+                    "facultyId": null,
+                    "grade": 3,
+                    "firstName": "test1030",
+                    "lastName": "test1030",
+                    "isAccEmailConfirmed": true,
+                    "isSchoolEmailConfirmed": true,
+                    "privacySettings": {
+                        "followLimitation": 0
+                    },
+                    "avatarKey": "dsads",
+                    "schoolId": null,
+                    "profilePhotoUrl": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656883392736-1656856337742-1MFqZJCvcok.jpg",
+                    "interestIds": [],
+                    "blockedUserIds": [],
+                    "followerCount": 0,
+                    "followingCount": 0
+                },
+                "followStatus": {
+                    "followId": null,
+                    "status": 4
                 }
-            }
+            },
         },
         AccountFollowUserRequest: {
             $requestedId: "userToFollowId",

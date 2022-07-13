@@ -41,11 +41,23 @@ export const sortByDate = (arr: any[], key: string): any[] => {
     });
 }
 
-export const hashtaggable = (phrase: string) => {
-    var maxLength = 40;
+export const searchables = (stringForHashtags: string) => {
+    let strArr = stringForHashtags.split(' ');
+    let convertedArr = [];
+    strArr.unshift(stringForHashtags);
+    for (let i = 0; i < strArr.length; i++) {
+        let returnString = searchable(strArr[i]);
 
-    var returnString = phrase.toLowerCase();
-    //Convert Characters
+        if (returnString)
+            convertedArr.push(returnString)
+    }
+
+    return convertedArr;
+}
+
+export const searchable = (str: string) => {
+    var maxLength = 40;
+    let returnString = str.toLowerCase();
     returnString = returnString.replace(/ö/g, 'o');
     returnString = returnString.replace(/ç/g, 'c');
     returnString = returnString.replace(/ş/g, 's');
@@ -59,64 +71,15 @@ export const hashtaggable = (phrase: string) => {
     returnString = returnString.replace(/[\s-]+/g, " ");
     // trims current string
     returnString = returnString.replace(/^\s+|\s+$/g, "");
+
     // cuts string (if too long)
     if (returnString.length > maxLength)
         returnString = returnString.substring(0, maxLength);
-    // add hyphens
+
+    returnString = returnString.replace(/\s/g, '')
+
     return returnString;
 }
-let generateHashtag = function (str: string) {
-    str = hashtaggable(str)
-
-    str = str.replace(/\s+/g, ' ') // remove extra ' '
-        .replace(/[\'\".,\/#!$%\\^&\*;:{}=\-_`~()\[\]|+@?<>]/g, '')
-        .replace(/\s{2,}/g, ' '); // remove extra ' ' from punctuation
-    if (str === '') { // if str is empty return ''
-        return '';
-    } else { // else generate hashtag
-
-        let capEachWord = (str: string) => str
-            .trim() // trim spaces around str
-            //.toLowerCase() // default to lower case (optional)
-            .split(' ') // Split str to array of substrings
-            .map(word => word[0] + word.slice(1))
-            .join('') // join array to string
-        // prepend #
-
-        // return hashtagIt(capEachWord(str)); // return hashtag result
-        return capEachWord(str); // return hashtag result
-    }
-}
-
-export const generateHashtags = function (stringForHashtags: string): string[] {
-    let strArr = stringForHashtags.split(' ');
-    let convertedArr: string[] = [];
-    strArr.unshift(generateHashtag(stringForHashtags))
-    for (let i = 0; i < strArr.length; i++) {
-        let str = strArr[i];
-        str = hashtaggable(str)
-
-        str = str.replace(/\s+/g, ' ') // remove extra ' '
-            .replace(/[\'\".,\/#!$%\\^&\*;:{}=\-_`~()\[\]|+@?<>]/g, '')
-            .replace(/\s{2,}/g, ' '); // remove extra ' ' from punctuation
-        if (str !== '') { // if str is empty return ''
-            let capEachWord = (str: string) => str
-                .trim() // trim spaces around str
-                //.toLowerCase() // default to lower case (optional)
-                .split(' ') // Split str to array of substrings
-                .map(word => word[0] + word.slice(1))
-                .join('') // join array to string
-            // prepend #
-
-            // return hashtagIt(capEachWord(str)); // return hashtag result
-            convertedArr.push(capEachWord(str)); // return hashtag result
-        }
-    }
-    convertedArr.unshift(generateHashtag(stringForHashtags))
-
-    return strArr;
-}
-let hashtagIt = (str: string) => '#' + str;
 
 export const generateRandomNumber = (min: number, max: number): number => {
     return Math.floor(Math.random() * (max - min + 1)) + min;

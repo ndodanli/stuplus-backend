@@ -5337,13 +5337,13 @@
       "AccountGetUserProfileProfileRequest": {
         "type": "object",
         "properties": {
-          "targetUserId": {
+          "userId": {
             "type": "string",
-            "example": "targetUserId"
+            "example": "userId"
           }
         },
         "required": [
-          "targetUserId"
+          "userId"
         ],
         "xml": {
           "name": "AccountGetUserProfileProfileRequest"
@@ -5394,40 +5394,33 @@
           "data": {
             "type": "object",
             "properties": {
-              "type": {
-                "type": "string",
-                "example": "object"
-              },
-              "description": {
-                "type": "string",
-                "example": "Data returned by the operation."
-              },
-              "properties": {
+              "user": {
                 "type": "object",
                 "properties": {
                   "_id": {
                     "type": "string",
-                    "example": "62ab8a204166fd1eaebbb3fa"
+                    "example": "62b444af42c36c87dff387d7"
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "test1030"
                   },
                   "role": {
                     "type": "number",
-                    "example": 0
+                    "example": 1
                   },
-                  "schoolId": {},
                   "facultyId": {},
-                  "departmentId": {},
-                  "grade": {},
+                  "grade": {
+                    "type": "number",
+                    "example": 3
+                  },
                   "firstName": {
                     "type": "string",
-                    "example": "string"
+                    "example": "test1030"
                   },
                   "lastName": {
                     "type": "string",
-                    "example": "string"
-                  },
-                  "profilePhotoUrl": {
-                    "type": "string",
-                    "example": "https://stuplus-bucket.s3.amazonaws.com/public/profile_photos/1656012020219-1MFqZJCvcok.jpg"
+                    "example": "test1030"
                   },
                   "isAccEmailConfirmed": {
                     "type": "boolean",
@@ -5435,75 +5428,53 @@
                   },
                   "isSchoolEmailConfirmed": {
                     "type": "boolean",
-                    "example": false
+                    "example": true
                   },
-                  "interestIds": {
-                    "type": "array",
-                    "example": [
-                      "string"
-                    ],
-                    "items": {
-                      "type": "string"
+                  "privacySettings": {
+                    "type": "object",
+                    "properties": {
+                      "followLimitation": {
+                        "type": "number",
+                        "example": 0
+                      }
                     }
-                  },
-                  "__t": {
-                    "type": "string",
-                    "example": "User"
                   },
                   "avatarKey": {
                     "type": "string",
-                    "example": "string"
+                    "example": "dsads"
                   },
-                  "username": {
+                  "schoolId": {},
+                  "profilePhotoUrl": {
                     "type": "string",
-                    "example": "string"
+                    "example": "https://fakultembucket.s3.amazonaws.com/public/profile_images/1656883392736-1656856337742-1MFqZJCvcok.jpg"
+                  },
+                  "interestIds": {
+                    "type": "array",
+                    "example": [],
+                    "items": {}
+                  },
+                  "blockedUserIds": {
+                    "type": "array",
+                    "example": [],
+                    "items": {}
                   },
                   "followerCount": {
                     "type": "number",
-                    "example": 232
+                    "example": 0
                   },
                   "followingCount": {
                     "type": "number",
-                    "example": 40
-                  },
-                  "about": {
-                    "type": "string",
-                    "example": "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quidem."
-                  },
-                  "followStatus": {
-                    "type": "object",
-                    "properties": {
-                      "followId": {
-                        "type": "string",
-                        "example": "string"
-                      },
-                      "status": {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "example": "enum"
-                          },
-                          "values": {
-                            "type": "object",
-                            "properties": {
-                              "Pending": {
-                                "type": "number",
-                                "example": 2
-                              },
-                              "Accepted": {
-                                "type": "number",
-                                "example": 3
-                              },
-                              "None": {
-                                "type": "number",
-                                "example": 4
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
+                    "example": 0
+                  }
+                }
+              },
+              "followStatus": {
+                "type": "object",
+                "properties": {
+                  "followId": {},
+                  "status": {
+                    "type": "number",
+                    "example": 4
                   }
                 }
               }

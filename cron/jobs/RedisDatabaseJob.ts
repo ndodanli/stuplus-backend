@@ -1,11 +1,12 @@
 import AsyncLock from "async-lock";
 import { RedisFileMessageUpdateDTO, RedisMessageReceiptUpdateDTO } from "../../stuplus.api/socket/dtos/RedisChat";
 import { config } from "../../stuplus-lib/config/config";
-import { AnnouncementCommentEntity, AnnouncementCommentLikeEntity, AnnouncementLikeEntity, GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, MessageEntity, QuestionCommentEntity, QuestionCommentLikeEntity, QuestionLikeEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { AnnouncementCommentEntity, AnnouncementCommentLikeEntity, AnnouncementLikeEntity, GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, HashtagEntity, MessageEntity, QuestionCommentEntity, QuestionCommentLikeEntity, QuestionLikeEntity, SearchHistoryEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { LikeType } from "../../stuplus-lib/enums/enums";
 import { RedisGMOperationType, RedisKeyType, RedisPMOperationType } from "../../stuplus-lib/enums/enums_socket";
 import RedisService from "../../stuplus-lib/services/redisService";
 import IBaseCronJob from "./IBaseCronJob";
+import { AnyBulkWriteOperation } from "mongodb";
 
 export default class RedisDatabaseJob implements IBaseCronJob {
     cronExpression: string;
@@ -29,40 +30,145 @@ export default class RedisDatabaseJob implements IBaseCronJob {
         const totalKeySize = await RedisService.client.dbSize();
         let currentKeySize = 0;
         do {
-            const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { MATCH: "d*", COUNT: 100 });
+            const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { MATCH: "d*", COUNT: 50 });
             currentKeySize += keys.length;
             RedisDatabaseJob.currentCursor = cursor;
+            const operations = [];
+
             for (let i = 0; i < keys.length; i++) {
                 const currentKey = keys[i];
                 if (currentKey.startsWith(RedisKeyType.DBPrivateMessage)) {
-                    handlePMOperations(currentKey);
+                    operations.push({
+                        func: handlePMOperations,
+                        arg1: currentKey,
+                    });
                 } else if (currentKey.startsWith(RedisKeyType.DBGroupMessage)) {
-                    handleGroupMessageOperations(currentKey);
+                    operations.push({
+                        func: handleGroupMessageOperations,
+                        arg1: currentKey,
+                    });
                 } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementLike)) {
-                    handleAnnouncementLikeOperations(currentKey);
+                    operations.push({
+                        func: handleAnnouncementLikeOperations,
+                        arg1: currentKey,
+                    });
                 } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementDislike)) {
-                    handleAnnouncementDislikeOperations(currentKey);
+                    operations.push({
+                        func: handleAnnouncementDislikeOperations,
+                        arg1: currentKey,
+                    });
                 } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementComment)) {
-                    handleAnnouncementCommentOperations(currentKey);
+                    operations.push({
+                        func: handleAnnouncementCommentOperations,
+                        arg1: currentKey,
+                    });
                 } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementCommentLike)) {
-                    handleAnnouncementCommentLikeOperations(currentKey);
+                    operations.push({
+                        func: handleAnnouncementCommentLikeOperations,
+                        arg1: currentKey,
+                    });
                 } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementCommentDislike)) {
-                    handleAnnouncementCommentDislikeOperations(currentKey);
+                    operations.push({
+                        func: handleAnnouncementCommentDislikeOperations,
+                        arg1: currentKey,
+                    });
                 } else if (currentKey.startsWith(RedisKeyType.DBQuestionLike)) {
-                    handleQuestionLikeOperations(currentKey);
+                    operations.push({
+                        func: handleQuestionLikeOperations,
+                        arg1: currentKey,
+                    });
                 } else if (currentKey.startsWith(RedisKeyType.DBQuestionDislike)) {
-                    handleQuestionDislikeOperations(currentKey);
+                    operations.push({
+                        func: handleQuestionDislikeOperations,
+                        arg1: currentKey,
+                    });
                 } else if (currentKey.startsWith(RedisKeyType.DBQuestionComment)) {
-                    handleQuestionCommentOperations(currentKey);
+                    operations.push({
+                        func: handleQuestionCommentOperations,
+                        arg1: currentKey,
+                    });
                 } else if (currentKey.startsWith(RedisKeyType.DBQuestionCommentLike)) {
-                    handleQuestionCommentLikeOperations(currentKey);
+                    operations.push({
+                        func: handleQuestionCommentLikeOperations,
+                        arg1: currentKey,
+                    });
                 } else if (currentKey.startsWith(RedisKeyType.DBQuestionCommentDislike)) {
-                    handleQuestionCommentDislikeOperations(currentKey);
+                    operations.push({
+                        func: handleQuestionCommentDislikeOperations,
+                        arg1: currentKey,
+                    });
+                } else if (currentKey.startsWith(RedisKeyType.DBSearchHistory)) {
+                    operations.push({
+                        func: handleSearchHistoryOperations,
+                        arg1: currentKey,
+                    });
+                } else if (currentKey.startsWith(RedisKeyType.DBHashtagEntity)) {
+                    operations.push({
+                        func: handleHashtagOperations,
+                        arg1: currentKey,
+                    });
                 }
-
+            }
+            if (operations.length > 0) {
+                await Promise.all(operations.map(async (operation) => {
+                    operation.func(operation.arg1);
+                }));
             }
         } while (RedisDatabaseJob.currentCursor != 0 && currentKeySize < totalKeySize);
         // console.log("RedisDatabaseJob Cron job finished");
+
+        async function handleHashtagOperations(currentKey: string) {
+            return new Promise(async (resolve, reject) => {
+                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const batchSize = config.BATCH_SIZES.PM_BATCH_SIZE;
+                for (let i = 0; i < data.length; i += batchSize) {
+                    const hashtagEntity: any = data[i].toJSONObject();
+                    const groupPopularity = await RedisService.client.get(RedisKeyType.DBHashtagGroupPopularityIncr + `${hashtagEntity.tag}:groupPopularity`)
+                    const questionPopularity = await RedisService.client.get(RedisKeyType.DBHashtagGroupPopularityIncr + `${hashtagEntity.tag}:questionPopularity`)
+                    const annoPopularity = await RedisService.client.get(RedisKeyType.DBHashtagGroupPopularityIncr + `${hashtagEntity.tag}:annoPopularity`)
+                    const overallPopularity = data.length;
+                    HashtagEntity.findOneAndUpdate(
+                        { tag: hashtagEntity.tag },
+                        {
+                            tag: hashtagEntity.tag,
+                            $inc: {
+                                groupPopularity: groupPopularity,
+                                questionPopularity: questionPopularity,
+                                annoPopularity: annoPopularity,
+                                overallPopularity: overallPopularity
+                            }
+                        },
+                        { upsert: true });
+                }
+            });
+        }
+
+        async function handleSearchHistoryOperations(currentKey: string) {
+            return new Promise(async (resolve, reject) => {
+                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const searchHistoryBatches: Array<Array<object>> = [];
+                const batchSize = config.BATCH_SIZES.PM_BATCH_SIZE;
+                let iterator = 0;
+                for (let i = 0; i < data.length; i += batchSize) {
+                    const currentBatch = data.slice(i, i + batchSize);
+                    searchHistoryBatches[iterator] = new Array<object>();
+                    for (let j = 0; j < currentBatch.length; j++) {
+                        const query: any = currentBatch[j].toJSONObject();
+                        searchHistoryBatches[iterator].push(query.e);
+                    }
+                    iterator++;
+                }
+                if (searchHistoryBatches.length > 0) {
+                    for (let i = 0; i < searchHistoryBatches.length; i++) {
+                        if (searchHistoryBatches[i].length > 0) {
+                            console.time("Searched History insertSH Bulk operation time");
+                            await SearchHistoryEntity.insertMany(searchHistoryBatches[i]);
+                            console.timeEnd("Searched History insertSH Bulk operation time");
+                        }
+                    }
+                }
+            });
+        }
 
         async function handlePMOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {

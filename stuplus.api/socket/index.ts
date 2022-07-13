@@ -1,5 +1,5 @@
 import ISocket from "./interfaces/socket";
-import { ChatEntity, GroupMessageForwardEntity, GroupMessageEntity, GroupMessageReadEntity, MessageEntity, UserEntity, GroupChatEntity, GroupChatUserEntity, FollowEntity, NotificationEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { ChatEntity, GroupMessageForwardEntity, GroupMessageEntity, GroupMessageReadEntity, MessageEntity, UserEntity, GroupChatEntity, GroupChatUserEntity, FollowEntity, NotificationEntity, HashtagEntity } from "../../stuplus-lib/entities/BaseEntity";
 import "../../stuplus-lib/extensions/extensionMethods"
 require("dotenv").config();
 import { RedisSendFileMessageDTO, RedisGroupMessageDTO, RedisGroupMessageForwardReadDTO, RedisMessageDTO, RedisMessageForwardReadDTO, RedisUpdateFileMessageDTO, RedisGroupSendFileMessageDTO, RedisGroupUpdateFileMessageDTO } from "./dtos/RedisChat";
@@ -12,7 +12,7 @@ import { AddToGroupChatDTO, BlockUserDTO, ClearPMChatHistoryDTO, CreateGroupDTO,
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { groupChatName, userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 import RedisService from "../../stuplus-lib/services/redisService";
-import { hashtaggable, stringify } from "../../stuplus-lib/utils/general";
+import { searchable, stringify } from "../../stuplus-lib/utils/general";
 import { MessageDocument, MessageFiles, ReplyToDTO } from "../../stuplus-lib/entities/MessageEntity";
 import { DeleteChatForType, GroupChatUserRole, MessageLimitation, NotificationType, RecordStatus, RedisMessagesNotFoundType } from "../../stuplus-lib/enums/enums";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
@@ -903,10 +903,24 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
             throw new NotValidError(getMessage("fileError", req.selectedLangs()))
         }
         //TODO: check if users who added can be added to group
+        const redisOps: Promise<any>[] = [];
         const payload = new CreateGroupDTO(req.body);
-        payload.hashTags.forEach((x, index, arr) => {
-            arr[index] = hashtaggable(x)
+        payload.hashTags.forEach(async (x, index, arr) => {
+            arr[index] = searchable(x);
+            const now = new Date();
+            const hashtagEntity = new HashtagEntity({});
+            const hData: object = {
+                e: {
+                    _id: hashtagEntity.id,
+                    tag: arr[index],
+                    createdAt: now,
+                    updatedAt: now,
+                }
+            }
+            redisOps.push(RedisService.client.rPush(RedisKeyType.DBHashtagEntity + ":" + `${arr[index]}`, stringify(hData)));
+            redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagGroupPopularityIncr + `${arr[index]}:groupPopularity`));
         });
+        await Promise.all(redisOps);
 
         const groupChatEntity = await GroupChatEntity.create(
             {
@@ -1019,7 +1033,7 @@ router.post("/updateGroupInfo", authorize([Role.User, Role.Admin, Role.ContentCr
         groupChat.avatarKey = payload.avatarKey;
         if (payload.hashTags) {
             payload.hashTags.forEach((x, index, arr) => {
-                arr[index] = hashtaggable(x)
+                arr[index] = searchable(x)
             });
             groupChat.hashTags = payload.hashTags;
         }

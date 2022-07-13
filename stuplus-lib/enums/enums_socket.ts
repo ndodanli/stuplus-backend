@@ -56,6 +56,11 @@ export const RedisKeyType = {
    DBQuestionCommentLike: "d20:",
    DBQuestionCommentDislike: "d21:",
    QuestionCommentLikeCount: "22:",
+   DBSearchHistory: "d23:",
+   DBHashtagEntity: "d24:",
+   DBHashtagGroupPopularityIncr: "d25:",
+   DBHashtagQuestionPopularityIncr: "d26:",
+   DBHashtagAnnoPopularityIncr: "d27:",
 }
 export const RedisSubKeyType = {
    FollowerCount: "0"

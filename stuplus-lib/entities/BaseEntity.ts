@@ -15,6 +15,7 @@ import { GroupChatUserDocument, GroupChatUserSchema } from "./GroupChatUserEntit
 import { GroupMessageDocument, GroupMessageSchema } from "./GroupMessageEntity";
 import { GroupMessageForwardDocument, GroupMessageForwardSchema } from "./GroupMessageForwardEntity";
 import { GroupMessageReadDocument, GroupMessageReadSchema } from "./GroupMessageReadEntity";
+import { HashtagDocument, HashtagSchema } from "./HashtagEntity";
 import { ImageStatisticDocument, ImageStatisticSchema } from "./ImageStatistic";
 import { InterestDocument, InterestSchema } from "./InterestEntity";
 import { MessageDocument, MessageSchema } from "./MessageEntity";
@@ -25,6 +26,7 @@ import { QuestionDocument, QuestionSchema } from "./QuestionEntity";
 import { QuestionLikeDocument, QuestionLikeSchema } from "./QuestionLikeEntity";
 import { ReportDocument, ReportSchema } from "./ReportEntity";
 import { SchoolDocument, SchoolSchema } from "./SchoolEntity";
+import { SearchHistoryDocument, SearchHistorySchema } from "./SearchHistoryEntity";
 import { UserDocument, UserSchema } from "./UserEntity";
 
 export default interface BaseEntity {
@@ -38,7 +40,7 @@ export default interface BaseEntity {
 const collections = ["User", "School", "Faculty", "Department", "Interest", "Announcement", "AnnouncementLike",
   "AnnouncementComment", "GroupChat", "GroupChatUser", "GroupMessage", "GroupMessageForward", "GroupMessageRead",
   "Message", "Chat", "AnnouncementCommentLike", "Follow", "FollowRequest", "Question", "QuestionLike", "QuestionComment",
-  "QuestionCommentLike", "Report", "Notification", "ImageStatistic"];
+  "QuestionCommentLike", "Report", "Notification", "ImageStatistic", "SearchHistory", "Hashtag"];
 
 const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
 
@@ -49,6 +51,16 @@ collections.forEach((collectionName: string) => {
 })
 
 registerHooks();
+
+export const HashtagEntity = baseSpreadator["Hashtag"].discriminator<
+  HashtagDocument,
+  Model<HashtagDocument>
+>("Hashtag", HashtagSchema);
+
+export const SearchHistoryEntity = baseSpreadator["SearchHistory"].discriminator<
+  SearchHistoryDocument,
+  Model<SearchHistoryDocument>
+>("SearchHistory", SearchHistorySchema);
 
 export const ImageStatisticEntity = baseSpreadator["ImageStatistic"].discriminator<
   ImageStatisticDocument,
@@ -176,6 +188,46 @@ export const FollowRequestEntity = baseSpreadator["FollowRequest"].discriminator
 >("FollowRequest", FollowRequestSchema);
 
 function registerHooks(): void {
+  HashtagSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    this.select({ __v: 0 });
+    next();
+  })
+  HashtagSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    this.select({ __v: 0 });
+    next();
+  })
+  HashtagSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    this.select({ __v: 0 });
+    next();
+  });
+  HashtagSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    this.select({ __v: 0 });
+    next();
+  });
+  SearchHistorySchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    this.select({ __v: 0 });
+    next();
+  })
+  SearchHistorySchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    this.select({ __v: 0 });
+    next();
+  })
+  SearchHistorySchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    this.select({ __v: 0 });
+    next();
+  });
+  SearchHistorySchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    this.select({ __v: 0 });
+    next();
+  });
   ImageStatisticSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     this.select({ __v: 0 });
