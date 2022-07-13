@@ -120,8 +120,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
         async function handleHashtagOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
                 const data = await RedisService.client.lRange(currentKey, 0, -1);
-                const batchSize = config.BATCH_SIZES.PM_BATCH_SIZE;
-                for (let i = 0; i < data.length; i += batchSize) {
+                for (let i = 0; i < data.length; i++) {
                     const hashtagEntity: any = data[i].toJSONObject();
                     const groupPopularity = await RedisService.client.get(RedisKeyType.DBHashtagGroupPopularityIncr + `${hashtagEntity.tag}:groupPopularity`)
                     const questionPopularity = await RedisService.client.get(RedisKeyType.DBHashtagGroupPopularityIncr + `${hashtagEntity.tag}:questionPopularity`)
