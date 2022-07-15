@@ -8,7 +8,7 @@ import { getNewToken } from "../utils/token";
 import EmailService from "../../stuplus-lib/services/emailService";
 import moment from "moment-timezone";
 import { checkIfStudentEmail, generateCode, searchable, searchables } from "../../stuplus-lib/utils/general";
-import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO } from "../dtos/UserDTOs";
+import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO, UpdateUserSchoolDTO } from "../dtos/UserDTOs";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { config } from "../config/config";
 import axios from "axios";
@@ -64,6 +64,34 @@ export class UserAccess {
         }
 
         return response;
+    }
+
+    public static async updateSchool(acceptedLanguages: Array<string>, id: string, payload: UpdateUserSchoolDTO): Promise<Boolean> {
+        const user = await UserEntity.findOne({ _id: id });
+
+        if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
+
+        user.schoolId = payload.schoolId;
+        user.departmentId = payload.departmentId;
+        user.grade = payload.grade;
+        user.secondaryEducation = payload.secondaryEducation;
+
+        await user.save();
+        await RedisService.updateUser(user);
+
+        // io.in(userWatchRoomName(user.id)).emit("cWatchUsers", {
+        //     id: user.id,
+        //     t: WatchRoomTypes.UserProfileChanged,
+        //     data: {
+        //         firstName: user.firstName,
+        //         lastName: user.lastName,
+        //         about: user.about,
+        //         avatarKey: user.avatarKey,
+        //         username: user.username
+        //     }
+        // });
+
+        return true;
     }
 
     public static async updateProfile(acceptedLanguages: Array<string>, id: string, payload: UpdateUserProfileDTO): Promise<UserDocument | null> {

@@ -136,7 +136,8 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
               grade: j,
               type: GroupChatType.Public,
               ownerId: groupGuard._id.toString(),
-              hashTags: searchables(departmentEntity.title + ` ${j}. Sınıf`).concat(schoolHashtags)
+              hashTags: searchables(departmentEntity.title + ` ${j}. Sınıf`).concat(schoolHashtags),
+              secondaryEducation: false
             });
             await GroupChatEntity.create(departmentGradeGroupChatEntity);
 
@@ -156,7 +157,8 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
                 grade: j,
                 type: GroupChatType.Public,
                 ownerId: groupGuard._id.toString(),
-                hashTags: searchables(departmentEntity.title + ` ${j}. Sınıf İÖ`).concat(schoolHashtags)
+                hashTags: searchables(departmentEntity.title + ` ${j}. Sınıf İÖ`).concat(schoolHashtags),
+                secondaryEducation: true
               });
               await GroupChatEntity.create(depSecondaryEducationGroupChatEntity);
 

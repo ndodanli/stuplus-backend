@@ -1078,6 +1078,12 @@ const doc = {
             "facultyId": "facultyId",
             "grade": 0,
         },
+        AccountUpdateSchoolRequest: {
+            $schoolId: "schoolId",
+            $departmentId: "departmentId",
+            $grade: 0,
+            $secondaryEducation: false
+        },
         AccountGetUserProfileProfileRequest: {
             $userId: "userId",
         },

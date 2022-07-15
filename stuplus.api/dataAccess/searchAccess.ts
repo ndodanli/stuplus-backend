@@ -1,11 +1,7 @@
 import { _LeanDocument } from "mongoose";
-import { DepartmentEntity, GroupChatEntity, SearchHistoryEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
-import { GroupChat, GroupChatDocument } from "../../stuplus-lib/entities/GroupChatEntity";
+import { DepartmentEntity, GroupChatEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { GroupChat } from "../../stuplus-lib/entities/GroupChatEntity";
 import { User } from "../../stuplus-lib/entities/UserEntity";
-import { SearchedEntityType } from "../../stuplus-lib/enums/enums";
-import { RedisKeyType, RedisPMOperationType } from "../../stuplus-lib/enums/enums_socket";
-import RedisService from "../../stuplus-lib/services/redisService";
-import { stringify } from "../../stuplus-lib/utils/general";
 import { SearchGroupChatDTO } from "../dtos/SearchDTOs";
 import { SchoolAccess } from "./schoolAccess";
 
@@ -31,21 +27,6 @@ export class SearchAccess {
             .skip(payload.skip)
             .limit(payload.pageSize)
             .lean(true) as User[];
-
-        const now = new Date();
-        const searchHistoryEntity = new SearchHistoryEntity({});
-        const sData: object = {
-            e: {
-                _id: searchHistoryEntity.id,
-                searchTerm: payload.searchString,
-                searchedEntities: [SearchedEntityType.User],
-                foundedCount: users.length,
-                createdAt: now,
-                updatedAt: now,
-            }
-        }
-
-        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + userId, stringify(sData));
 
         return users;
     }

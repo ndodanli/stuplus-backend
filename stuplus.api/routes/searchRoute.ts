@@ -3,11 +3,14 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { authorize } from "../../stuplus.backoffice.api/middlewares/auth";
-import { NotificationType, Role } from "../../stuplus-lib/enums/enums";
+import { NotificationType, Role, SearchedEntityType } from "../../stuplus-lib/enums/enums";
 import { validateSearchPeopleAndGroup } from "../middlewares/validation/search/validateSearchRoute";
 import { SearchGroupChatDTO, SearchPeopleAndGroupChatDTO, SearchPeopleDTO } from "../dtos/SearchDTOs";
 import { SearchAccess } from "../dataAccess/searchAccess";
-import { NotificationEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { NotificationEntity, SearchHistoryEntity } from "../../stuplus-lib/entities/BaseEntity";
+import RedisService from "../../stuplus-lib/services/redisService";
+import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
+import { stringify } from "../../stuplus-lib/utils/general";
 const router = Router();
 
 router.post("/people", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearchPeopleAndGroup, async (req: CustomRequest<SearchPeopleDTO>, res: any) => {
@@ -28,6 +31,22 @@ router.post("/people", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
         const payload = new SearchPeopleDTO(req.body);
 
         response.data = await SearchAccess.getSearchedUsers(res.locals.user._id, payload);
+
+        const now = new Date();
+        const searchHistoryEntity = new SearchHistoryEntity({});
+        const sData: object = {
+            e: {
+                _id: searchHistoryEntity.id,
+                searchTerm: payload.searchString,
+                searchedEntities: [SearchedEntityType.User],
+                foundedCount: response.data.length,
+                ownerId: res.locals.user._id,
+                createdAt: now,
+                updatedAt: now,
+            }
+        }
+
+        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -56,6 +75,22 @@ router.post("/groupChats", authorize([Role.User, Role.Admin, Role.ContentCreator
         const payload = new SearchGroupChatDTO(req.body);
 
         response.data = await SearchAccess.getSearchedGroupChats(res.locals.user._id, payload);
+
+        const now = new Date();
+        const searchHistoryEntity = new SearchHistoryEntity({});
+        const sData: object = {
+            e: {
+                _id: searchHistoryEntity.id,
+                searchTerm: payload.searchString,
+                searchedEntities: [SearchedEntityType.Group],
+                foundedCount: response.data.length,
+                ownerId: res.locals.user._id,
+                createdAt: now,
+                updatedAt: now,
+            }
+        }
+
+        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -98,6 +133,22 @@ router.post("/peopleAndGroupChats", authorize([Role.User, Role.Admin, Role.Conte
         });
 
         response.data = resultArray;
+
+        const now = new Date();
+        const searchHistoryEntity = new SearchHistoryEntity({});
+        const sData: object = {
+            e: {
+                _id: searchHistoryEntity.id,
+                searchTerm: payload.searchString,
+                searchedEntities: [SearchedEntityType.Group, SearchedEntityType.User],
+                foundedCount: response.data.length,
+                ownerId: res.locals.user._id,
+                createdAt: now,
+                updatedAt: now,
+            }
+        }
+
+        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 

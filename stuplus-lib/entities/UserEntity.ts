@@ -34,6 +34,7 @@ export interface User extends BaseEntity {
   about: string;
   privacySettings: PrivacySettings;
   lastSeenDate: Date;
+  secondaryEducation: boolean;
   //ignore
   schoolName: string | null; //ignore
   facultyName: string | null; //ignore
@@ -153,6 +154,7 @@ export const UserSchema: Schema = new Schema({
     default: { followLimitation: FollowLimitation.None }
   },
   lastSeenDate: { type: Date, required: false, default: null },
+  secondaryEducation: { type: Boolean, required: false, default: false },
 });
 
 UserSchema.plugin(mongoose_fuzzy_searching,
@@ -228,6 +230,7 @@ UserSchema.methods.minify = async function (
     recordDeletionDate: this.recordDeletionDate,
     lastSeenDate: this.lastSeenDate,
     updateTimeLimits: this.updateTimeLimits,
+    secondaryEducation: this.secondaryEducation,
     //ignore
     schoolName: null, //ignore
     facultyName: null, //ignore

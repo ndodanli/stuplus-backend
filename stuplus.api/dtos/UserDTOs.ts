@@ -18,6 +18,18 @@ export class UpdateUserProfileDTO {
     }
 }
 
+export class UpdateUserSchoolDTO {
+    schoolId: string = "";
+    departmentId: string = "";
+    grade: number = 1;
+    secondaryEducation: boolean = false;
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
 export class UpdateUserInterestsDTO {
     interestIds: Array<string> = []
     constructor(obj: any) {

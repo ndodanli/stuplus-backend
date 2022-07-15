@@ -54,7 +54,7 @@ router.get("/getFaculties/:schoolId", validategetFaculties, async (req: CustomRe
 
 router.get("/getDepartments/:schoolId", validategetDepartments, async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['School']
-#swagger.description = 'Get departments by faculty id' */
+#swagger.description = 'Get departments by school id' */
   /* #swagger.responses[200] = {
    "description": "Success",
    "schema": {

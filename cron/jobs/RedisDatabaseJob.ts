@@ -30,7 +30,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
         const totalKeySize = await RedisService.client.dbSize();
         let currentKeySize = 0;
         do {
-            const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { MATCH: "d*", COUNT: 50 });
+            const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { MATCH: "d*", COUNT: 100 });
             currentKeySize += keys.length;
             RedisDatabaseJob.currentCursor = cursor;
             const operations = [];
@@ -119,26 +119,32 @@ export default class RedisDatabaseJob implements IBaseCronJob {
 
         async function handleHashtagOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
-                for (let i = 0; i < data.length; i++) {
-                    const hashtagEntity: any = data[i].toJSONObject();
-                    const groupPopularity = await RedisService.client.get(RedisKeyType.DBHashtagGroupPopularityIncr + `${hashtagEntity.tag}:groupPopularity`)
-                    const questionPopularity = await RedisService.client.get(RedisKeyType.DBHashtagGroupPopularityIncr + `${hashtagEntity.tag}:questionPopularity`)
-                    const annoPopularity = await RedisService.client.get(RedisKeyType.DBHashtagGroupPopularityIncr + `${hashtagEntity.tag}:annoPopularity`)
-                    const overallPopularity = data.length;
-                    HashtagEntity.findOneAndUpdate(
-                        { tag: hashtagEntity.tag },
-                        {
-                            tag: hashtagEntity.tag,
-                            $inc: {
-                                groupPopularity: groupPopularity,
-                                questionPopularity: questionPopularity,
-                                annoPopularity: annoPopularity,
-                                overallPopularity: overallPopularity
-                            }
-                        },
-                        { upsert: true });
-                }
+                const hashtag: any = currentKey.split(":")[1];
+                const groupPopularityKey = RedisKeyType.DBHashtagGroupPopularityIncr + `${hashtag}:groupPopularity`;
+                const questionPopularityKey = RedisKeyType.DBHashtagGroupPopularityIncr + `${hashtag}:questionPopularity`;
+                const annoPopularityKey = RedisKeyType.DBHashtagGroupPopularityIncr + `${hashtag}:annoPopularity`;
+                const overallPopularityKey = RedisKeyType.DBHashtagEntity + hashtag;
+                let groupPopularity = await RedisService.client.get(groupPopularityKey).then(x => parseInt(x ?? "0"));
+                let questionPopularity = await RedisService.client.get(questionPopularityKey).then(x => parseInt(x ?? "0"));
+                let annoPopularity = await RedisService.client.get(annoPopularityKey).then(x => parseInt(x ?? "0"));
+                let overallPopularity = await RedisService.client.get(overallPopularityKey).then(x => parseInt(x ?? "0"));
+                await HashtagEntity.findOneAndUpdate(
+                    { tag: hashtag },
+                    {
+                        tag: hashtag,
+                        $inc: {
+                            groupPopularity: groupPopularity,
+                            questionPopularity: questionPopularity,
+                            annoPopularity: annoPopularity,
+                            overallPopularity: overallPopularity
+                        }
+                    },
+                    { upsert: true });
+                await RedisService.client.del(groupPopularityKey);
+                await RedisService.client.del(questionPopularityKey);
+                await RedisService.client.del(annoPopularityKey);
+                await RedisService.client.del(overallPopularityKey);
+                resolve(true);
             });
         }
 
@@ -166,6 +172,8 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         }
                     }
                 }
+                await RedisService.client.lTrim(currentKey, data.length, -1);
+                resolve(true);
             });
         }
 

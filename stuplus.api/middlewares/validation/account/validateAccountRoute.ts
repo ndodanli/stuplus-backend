@@ -7,6 +7,41 @@ import { Ok } from "../../../../stuplus-lib/utils/base/ResponseObjectResults";
 import { noUsage } from "../customValidators";
 import { isValidObjectId } from "mongoose";
 
+export const validateUpdateSchool = [
+    check('schoolId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.selectedLangs(), ["İsim"]))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('departmentId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.selectedLangs(), ["Soyisim"]))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('grade')
+        .notEmpty()
+        .withMessage("Grade geçerli değil.")
+        .bail(),
+    check('secondaryEducation')
+        .notEmpty()
+        .withMessage("secondaryEducation bool olmalidir.")
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, "Lütfen gerekli bilgileri doldurun."));
+        next();
+    },
+];
+
 export const validateUpdateProfile = [
     check('firstName')
         .isLength({ min: 1, max: 50 })

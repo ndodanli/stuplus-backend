@@ -4,8 +4,8 @@ import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectRe
 import { authorize } from "../middlewares/auth";
 import { UserAccess } from "../dataAccess/userAccess";
 import { Role } from "../../stuplus-lib/enums/enums";
-import { validateChangeFollowStatus, validateEmailConfirmation, validateFollowUser, validateForgotPassword, validateForgotPasswordCode, validateNotifyReadNotifications, validateReport, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdateProfile } from "../middlewares/validation/account/validateAccountRoute";
-import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO } from "../dtos/UserDTOs";
+import { validateChangeFollowStatus, validateEmailConfirmation, validateFollowUser, validateForgotPassword, validateForgotPasswordCode, validateNotifyReadNotifications, validateReport, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdateProfile, validateUpdateSchool } from "../middlewares/validation/account/validateAccountRoute";
+import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO, UpdateUserSchoolDTO } from "../dtos/UserDTOs";
 import { CustomRequest, CustomResponse } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import path from "path";
@@ -14,6 +14,10 @@ import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { isValidObjectId } from "mongoose";
+import { User } from "../../stuplus-lib/entities/UserEntity";
+import { FollowEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { RedisKeyType, RedisSubKeyType } from "../../stuplus-lib/enums/enums_socket";
+import redisTTL from "../../stuplus-lib/constants/redisTTL";
 
 
 const router = Router();
@@ -27,12 +31,21 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
 "$ref": "#/definitions/GetAccountUserResponse"
 }
 } */
-  const response = new BaseResponse<object>();
+  const response = new BaseResponse<User>();
   try {
     response.data = await RedisService.acquireUser(res.locals.user._id, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
       "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
       "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings"]);
 
+    if (!response.data)
+      throw new NotValidError(getMessage("userNotFound", ["tr"]));
+
+    response.data.followerCount = await RedisService.acquire(RedisKeyType.User + response.data._id + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
+      return await FollowEntity.countDocuments({ followingId: response.data?._id });
+    });
+    response.data.followingCount = await RedisService.acquire(RedisKeyType.User + response.data._id + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
+      return await FollowEntity.countDocuments({ followerId: response.data?._id });
+    });
   } catch (err: any) {
     response.setErrorMessage(err.message);
 
@@ -88,6 +101,34 @@ router.post("/updateProfile", authorize([Role.User, Role.Admin, Role.ContentCrea
     await UserAccess.updateProfile(req.selectedLangs(), res.locals.user._id, new UpdateUserProfileDTO(req.body))
 
     response.setMessage(getMessage("profileUpdated", req.selectedLangs()))
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response);
+  }
+  return Ok(res, response);
+});
+
+router.post("/updateSchool", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateUpdateSchool, async (req: CustomRequest<UpdateUserSchoolDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+         #swagger.description = 'Update user's school.' */
+  /*	#swagger.requestBody = {
+     required: true,
+     schema: { $ref: "#/definitions/AccountUpdateSchoolRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/NullResponse"
+   }
+ } */
+  const response = new BaseResponse<object>();
+  try {
+    await UserAccess.updateSchool(req.selectedLangs(), res.locals.user._id, new UpdateUserSchoolDTO(req.body))
+
+    response.setMessage(getMessage("schoolUpdatedUser", req.selectedLangs()))
 
   } catch (err: any) {
     response.setErrorMessage(err.message);

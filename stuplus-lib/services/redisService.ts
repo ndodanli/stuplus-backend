@@ -2,7 +2,7 @@ import path from 'path';
 import { createClient } from 'redis';
 import logger from '../config/logger';
 import { DepartmentEntity, FacultyEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
-import { UserDocument } from '../entities/UserEntity';
+import { User, UserDocument } from '../entities/UserEntity';
 import { RedisKeyType } from '../enums/enums_socket';
 import NotValidError from '../errors/NotValidError';
 import { getMessage } from '../localization/responseMessages';
@@ -45,8 +45,8 @@ export default class RedisService {
     }
 
     //TODO: fix project type
-    static async acquireUser(userId: string, project?: string[] | any): Promise<UserDocument> {
-        const redisUser = await this.acquire<UserDocument>(RedisKeyType.User + userId, 60 * 120, async () => {
+    static async acquireUser(userId: string, project?: string[] | any): Promise<User> {
+        const redisUser = await this.acquire<User>(RedisKeyType.User + userId, 60 * 120, async () => {
 
             const user = await UserEntity.findOne({ _id: userId }, {}, { lean: true })
 

@@ -186,6 +186,52 @@
         }
       }
     },
+    "/account/updateSchool": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Update user",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountUpdateSchoolRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountUpdateSchoolRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/account/updateInterests": {
       "post": {
         "tags": [
@@ -1364,7 +1410,7 @@
         "tags": [
           "School"
         ],
-        "description": "Get departments by faculty id",
+        "description": "Get departments by school id",
         "parameters": [
           {
             "name": "schoolId",
@@ -1404,7 +1450,7 @@
         "tags": [
           "Interest"
         ],
-        "description": "Like or dislike a anouncement",
+        "description": "Get all interests",
         "parameters": [],
         "responses": {
           "200": {
@@ -5332,6 +5378,36 @@
         },
         "xml": {
           "name": "SchoolGetDepartmentsResponse"
+        }
+      },
+      "AccountUpdateSchoolRequest": {
+        "type": "object",
+        "properties": {
+          "schoolId": {
+            "type": "string",
+            "example": "schoolId"
+          },
+          "departmentId": {
+            "type": "string",
+            "example": "departmentId"
+          },
+          "grade": {
+            "type": "number",
+            "example": 0
+          },
+          "secondaryEducation": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "schoolId",
+          "departmentId",
+          "grade",
+          "secondaryEducation"
+        ],
+        "xml": {
+          "name": "AccountUpdateSchoolRequest"
         }
       },
       "AccountGetUserProfileProfileRequest": {

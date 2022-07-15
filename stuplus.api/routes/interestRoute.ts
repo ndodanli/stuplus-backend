@@ -7,7 +7,7 @@ const router = Router();
 
 router.get("/getAllInterests", async (req: CustomRequest<object>, res: any) => {
     /* #swagger.tags = ['Interest']
-#swagger.description = 'Like or dislike a anouncement's comment.' */
+#swagger.description = 'Get all interests' */
     /* #swagger.responses[200] = {
      "description": "Success",
      "schema": {
