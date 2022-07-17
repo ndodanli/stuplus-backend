@@ -10,3 +10,5 @@
 
 -gizlilik ayarlari profilimi gizle yazisi sadece takip ettiklerim yapilacak
 -gizlilik ayarlari guncellenirken bildirim ayarlari kapatiyor
+
+***like dislike hash yapisina donusturulecek
