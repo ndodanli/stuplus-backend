@@ -6,3 +6,7 @@
 
 
 +-sockete gelen object idleri kontrol et *hepsi edilmeli-sonradan gelenler de
+
+
+-gizlilik ayarlari profilimi gizle yazisi sadece takip ettiklerim yapilacak
+-gizlilik ayarlari guncellenirken bildirim ayarlari kapatiyor
