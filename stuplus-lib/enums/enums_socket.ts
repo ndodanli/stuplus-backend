@@ -61,6 +61,7 @@ export const RedisKeyType = {
    DBHashtagGroupPopularityIncr: "d25:",
    DBHashtagQuestionPopularityIncr: "d26:",
    DBHashtagAnnoPopularityIncr: "d27:",
+   UserPlayerIds: "28:",
 }
 export const RedisSubKeyType = {
    FollowerCount: "0"

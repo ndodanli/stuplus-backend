@@ -3,9 +3,9 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { authorize } from "../middlewares/auth";
 import { UserAccess } from "../dataAccess/userAccess";
-import { Role } from "../../stuplus-lib/enums/enums";
-import { validateChangeFollowStatus, validateEmailConfirmation, validateFollowUser, validateForgotPassword, validateForgotPasswordCode, validateNotifyReadNotifications, validateReport, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdateProfile, validateUpdateSchool } from "../middlewares/validation/account/validateAccountRoute";
-import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO, UpdateUserSchoolDTO } from "../dtos/UserDTOs";
+import { GroupChatUserRole, Role } from "../../stuplus-lib/enums/enums";
+import { validateChangeFollowStatus, validateEmailConfirmation, validateFollowUser, validateForgotPassword, validateForgotPasswordCode, validateNotifyReadNotifications, validateReport, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdatePrivacySettings, validateUpdateProfile, validateUpdateSchool } from "../middlewares/validation/account/validateAccountRoute";
+import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO, UpdateUserSchoolDTO, UpdatePrivacySettingsDTO } from "../dtos/UserDTOs";
 import { CustomRequest, CustomResponse } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import path from "path";
@@ -15,10 +15,11 @@ import RedisService from "../../stuplus-lib/services/redisService";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { isValidObjectId } from "mongoose";
 import { User } from "../../stuplus-lib/entities/UserEntity";
-import { FollowEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { FollowEntity, GroupChatEntity, GroupChatUserEntity, NotificationEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { RedisKeyType, RedisSubKeyType } from "../../stuplus-lib/enums/enums_socket";
 import redisTTL from "../../stuplus-lib/constants/redisTTL";
-
+import { chunk } from "../../stuplus-lib/utils/general";
+import OneSignalService from "../../stuplus-lib/services/oneSignalService";
 
 const router = Router();
 
@@ -46,11 +47,12 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
     response.data.followingCount = await RedisService.acquire(RedisKeyType.User + response.data._id + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
       return await FollowEntity.countDocuments({ followerId: response.data?._id });
     });
+    response.data.unreadNotificationCount = await NotificationEntity.countDocuments({ userId: response.data._id, readed: false });
   } catch (err: any) {
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -77,7 +79,27 @@ schema: { $ref: "#/definitions/AccountGetUserProfileProfileRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
+  }
+
+  return Ok(res, response);
+});
+
+router.get("/updatePlayerId/:playerId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<any>, res: any) => {
+  const response = new BaseResponse<any>();
+  try {
+    const playerId = req.params.playerId;
+
+    if (!playerId)
+      throw new NotValidError(getMessage("playerIdNotValid", req.selectedLangs()));
+
+    await UserAccess.updatePlayerId(req.selectedLangs(), res.locals.user._id, playerId);
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -106,7 +128,35 @@ router.post("/updateProfile", authorize([Role.User, Role.Admin, Role.ContentCrea
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
+  }
+  return Ok(res, response);
+});
+
+router.post("/updatePrivacySettings", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateUpdatePrivacySettings, async (req: CustomRequest<UpdatePrivacySettingsDTO>, res: any) => {
+  /* #swagger.tags = ['Account']
+         #swagger.description = 'Update user's profile.' */
+  /*	#swagger.requestBody = {
+     required: true,
+     schema: { $ref: "#/definitions/AccountUpdatePrivacySettingsRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/AccountUpdatePrivacySettingsResponse"
+   }
+ } */
+  const response = new BaseResponse<object>();
+  try {
+    await UserAccess.updatePrivacySettings(req.selectedLangs(), res.locals.user._id, new UpdatePrivacySettingsDTO(req.body))
+
+    response.setMessage(getMessage("privacySettingsUpdated", req.selectedLangs()))
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response, err);
   }
   return Ok(res, response);
 });
@@ -134,7 +184,7 @@ router.post("/updateSchool", authorize([Role.User, Role.Admin, Role.ContentCreat
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
   return Ok(res, response);
 });
@@ -162,7 +212,7 @@ schema: { $ref: "#/definitions/AccountUpdateInterestsRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -183,15 +233,19 @@ schema: { $ref: "#/definitions/AccountUpdatePasswordRequest" }
  } */
   const response = new BaseResponse<object>();
   try {
-    await UserAccess.updatePassword(req.selectedLangs(), res.locals.user._id, req.body)
-
-    response.setMessage(getMessage("passwordUpdated", req.selectedLangs()))
+    const pwRes = await UserAccess.updatePassword(req.selectedLangs(), res.locals.user._id, req.body)
+    if (pwRes.hasError) {
+      response.validationErrors = pwRes.validationErrors;
+      response.hasError = pwRes.hasError;
+    } else {
+      response.setMessage(getMessage("passwordUpdated", req.selectedLangs()))
+    }
 
   } catch (err: any) {
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -220,7 +274,7 @@ schema: { $ref: "#/definitions/AccountForgotPasswordRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -249,7 +303,7 @@ schema: { $ref: "#/definitions/AccountConfirmForgotPasswordCodeRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -278,7 +332,7 @@ schema: { $ref: "#/definitions/AccountResetPasswordCodeRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -301,7 +355,7 @@ router.post("/emailConfirmation", validateEmailConfirmation, async (req: CustomR
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -330,7 +384,7 @@ schema: { $ref: "#/definitions/AccountSendConfirmationEmailRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -379,7 +433,7 @@ router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin, Role.Conten
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -405,7 +459,7 @@ schema: { $ref: "#/definitions/AccountFollowUserRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response); ``
@@ -431,7 +485,7 @@ schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -457,7 +511,7 @@ schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -483,7 +537,7 @@ schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -509,7 +563,7 @@ schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -535,7 +589,7 @@ schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -561,7 +615,7 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -587,7 +641,7 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -613,7 +667,7 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -639,7 +693,7 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -667,7 +721,7 @@ schema: { $ref: "#/definitions/AccountReportRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -693,7 +747,7 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -719,7 +773,7 @@ router.get("/removeNotification/:notificationId", authorize([Role.User, Role.Adm
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -747,7 +801,7 @@ schema: { $ref: "#/definitions/AccountNotifyReadNotificationsRequest" }
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);

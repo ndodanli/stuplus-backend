@@ -45,7 +45,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<Announcem
     response.setErrorMessage(err.message)
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -76,7 +76,7 @@ router.post("/addUpdateAnnouncementLike", authorize([Role.Admin]), async (req: C
   } catch (err: any) {
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -96,7 +96,7 @@ router.delete("/deleteAnnouncementLike", authorize([Role.Admin]), async (req: Cu
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)

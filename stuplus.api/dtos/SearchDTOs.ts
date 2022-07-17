@@ -1,8 +1,18 @@
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { mapToDTO } from "../../stuplus-lib/utils/general";
 
+export class SearchQuestionDTO extends BaseFilter {
+    searchTerm: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
 export class SearchPeopleDTO extends BaseFilter {
-    searchString: string = "";
+    searchTerm: string = "";
     constructor(obj: any) {
         super(obj);
         if (obj) {
@@ -12,7 +22,7 @@ export class SearchPeopleDTO extends BaseFilter {
 }
 
 export class SearchGroupChatDTO extends BaseFilter {
-    searchString: string = "";
+    searchTerm: string = "";
     constructor(obj: any) {
         super(obj);
         if (obj) {
@@ -22,7 +32,17 @@ export class SearchGroupChatDTO extends BaseFilter {
 }
 
 export class SearchPeopleAndGroupChatDTO extends BaseFilter {
-    searchString: string = "";
+    searchTerm: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class SearchHashTagDTO extends BaseFilter {
+    searchTerm: string = "";
     constructor(obj: any) {
         super(obj);
         if (obj) {

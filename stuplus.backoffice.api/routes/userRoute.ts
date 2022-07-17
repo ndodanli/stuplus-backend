@@ -54,7 +54,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<UserListD
     response.setErrorMessage(err.message)
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -119,7 +119,7 @@ router.post("/addUpdateUser", authorize([Role.Admin]), async (req: CustomRequest
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -139,7 +139,7 @@ router.delete("/deleteUser", authorize([Role.Admin]), async (req: CustomRequest<
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)

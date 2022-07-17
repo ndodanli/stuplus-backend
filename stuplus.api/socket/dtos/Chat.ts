@@ -31,8 +31,6 @@ export class UpdateGroupInfoDTO {
 
 export class WatchUsersDTO {
     uIds?: string[];
-    title: string = "";
-    type: GroupChatType = GroupChatType.Private;
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

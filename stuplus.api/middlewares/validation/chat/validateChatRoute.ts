@@ -106,6 +106,11 @@ export const validateCreateGroup = [
                 }
             }
         }),
+    check('hashTags')
+        .if((value: any, { req }: any) => value)
+        .isArray({ min: 1, max: 20 })
+        .withMessage((value: any, { req }: any) => getMessage("hashTagsLimitError", req.selectedLangs()))
+        .bail(),
     check('title')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
@@ -181,6 +186,37 @@ export const validateLeaveGroup = [
                 throw new Error(getMessage("incorrectId", req.selectedLangs()));
             }
         }),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
+export const validateRemoveFromGroup = [
+    check('groupChatId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("mustBeArray", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
+        .bail(),
+    check('userIds')
+        .isArray({ min: 1, max: 50 })
+        .withMessage((value: any, { req }: any) => getMessage("removeUsersLimit", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            for (let i = 0; i < value.length; i++) {
+                if (!isValidObjectId(value[i])) {
+                    throw new Error(getMessage("incorrectId", req.selectedLangs()));
+                }
+            }
+        })
+        .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())

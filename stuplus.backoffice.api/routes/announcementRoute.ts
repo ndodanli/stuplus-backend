@@ -45,7 +45,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<Announcem
     response.setErrorMessage(err.message)
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -79,7 +79,7 @@ router.post("/addUpdateAnnouncement", authorize([Role.Admin]), async (req: Custo
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -99,7 +99,7 @@ router.delete("/deleteAnnouncement", authorize([Role.Admin]), async (req: Custom
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)

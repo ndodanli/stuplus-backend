@@ -23,9 +23,17 @@ let config = {
         ANNOUNCEMENT_LD_BATCH_SIZE: 500,
         ANNOUNCEMENT_COMMENT_BATCH_SIZE: 100,
         ANNOUNCEMENT_COMMENT_LD_BATCH_SIZE: 100,
-    }
+    },
+    ONESIGNAL_APP_ID: "52a513a2-f29f-4cad-8573-ae7973aaa3b5",
 }
 
+const app_key_provider = {
+    getToken() {
+        return "ODE2NWQwZGEtYzc1NC00ZDllLWJlY2ItMzI2OTVjM2ZkMzcw";
+    }
+};
+
 export {
-    config
+    config,
+    app_key_provider
 }

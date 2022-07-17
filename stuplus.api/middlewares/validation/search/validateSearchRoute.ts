@@ -3,10 +3,10 @@ import { CustomRequest } from "../../../../stuplus-lib/utils/base/baseOrganizers
 import BaseResponse from "../../../../stuplus-lib/utils/base/BaseResponse";
 import { Ok } from "../../../../stuplus-lib/utils/base/ResponseObjectResults";
 
-export const validateSearchPeopleAndGroup = [
-    check('searchString')
+export const validateSearch = [
+    check('searchTerm')
         .notEmpty()
-        .withMessage('searchString bulunamadı.')
+        .withMessage('searchTerm bulunamadı.')
         .bail(),
     check('page')
         .notEmpty()

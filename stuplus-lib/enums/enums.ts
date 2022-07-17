@@ -63,9 +63,10 @@ export enum SchoolType {
 }
 
 export enum GroupChatUserRole {
-   Participant = 0,
+   Member = 0,
    Admin = 1,
-   Guard = 2
+   Guard = 2,
+   Owner = 3
 }
 
 export enum ReportType {
@@ -93,4 +94,7 @@ export enum NotificationType {
 export enum SearchedEntityType {
    User = 0,
    Group = 1,
+   Hashtag = 2,
+   Question = 3,
+   Announcement = 4,
 }

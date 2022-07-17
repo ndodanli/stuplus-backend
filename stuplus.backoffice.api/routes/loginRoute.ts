@@ -28,7 +28,7 @@ router.post("/", validateLogin, async (req: CustomRequest<LoginUserDTO>, res: an
     response.setErrorMessage(err.message)
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)

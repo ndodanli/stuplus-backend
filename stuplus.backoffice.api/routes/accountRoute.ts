@@ -25,7 +25,7 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);

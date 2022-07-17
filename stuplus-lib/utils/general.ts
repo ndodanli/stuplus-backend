@@ -41,6 +41,31 @@ export const sortByDate = (arr: any[], key: string): any[] => {
     });
 }
 
+export const searchableWithSpaces = (str: string) => {
+    var maxLength = 40;
+    let returnString = str.toLowerCase();
+    returnString = returnString.replace(/ö/g, 'o');
+    returnString = returnString.replace(/ç/g, 'c');
+    returnString = returnString.replace(/ş/g, 's');
+    returnString = returnString.replace(/ı/g, 'i');
+    returnString = returnString.replace(/ğ/g, 'g');
+    returnString = returnString.replace(/ü/g, 'u');
+
+    // if there are other invalid chars, convert them into blank spaces
+    returnString = returnString.replace(/[^a-z0-9\s-]/g, "");
+    // convert multiple spaces and hyphens into one space       
+    returnString = returnString.replace(/[\s-]+/g, " ");
+    // trims current string
+    returnString = returnString.replace(/^\s+|\s+$/g, "");
+
+    // cuts string (if too long)
+    if (returnString.length > maxLength)
+        returnString = returnString.substring(0, maxLength);
+
+    return returnString;
+}
+
+
 export const searchables = (stringForHashtags: string) => {
     let strArr = stringForHashtags.split(' ');
     let convertedArr = [];
@@ -83,4 +108,13 @@ export const searchable = (str: string) => {
 
 export const generateRandomNumber = (min: number, max: number): number => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+//chunks an array into smaller arrays of a specific size
+export function chunk<T>(arr: T[], size: number): T[][] {
+    var chunks = [];
+    while (arr.length) {
+        chunks.push(arr.splice(0, size));
+    }
+    return chunks;
 }

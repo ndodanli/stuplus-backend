@@ -45,7 +45,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<QuestionL
     response.setErrorMessage(err.message)
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -79,7 +79,7 @@ router.post("/addUpdatequestion", authorize([Role.Admin]), async (req: CustomReq
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -99,7 +99,7 @@ router.delete("/deletequestion", authorize([Role.Admin]), async (req: CustomRequ
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)

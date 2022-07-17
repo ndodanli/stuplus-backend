@@ -44,7 +44,26 @@ export default class RedisService {
         }
     }
 
-    //TODO: fix project type
+    static async acquireHash<T>(masterKey: string, subKey: string, ttl: number, func: Function): Promise<T> {
+        const value = await this.client.hGet(masterKey, subKey);
+        if (value) {
+            return JSON.parse(value) as unknown as T;
+        } else {
+            const result = await func();
+            await this.client.hSet(masterKey, subKey, JSON.stringify(result));
+            this.client.expire(masterKey, ttl);
+            return result;
+        }
+    }
+
+    static async acquirePlayerId(userId: string): Promise<string> {
+        return this.acquireHash(RedisKeyType.UserPlayerIds, userId, 60 * 60 * 4, async () => {
+            const user = await UserEntity.findOne({ _id: userId }, { _id: 0, playerId: 1 }, { lean: true });
+            if (!user) throw new NotValidError(getMessage("userNotFound", ["tr"]));
+            return user.playerId;
+        });
+    }
+
     static async acquireUser(userId: string, project?: string[] | any): Promise<User> {
         const redisUser = await this.acquire<User>(RedisKeyType.User + userId, 60 * 120, async () => {
 
@@ -84,6 +103,15 @@ export default class RedisService {
         }
 
         return redisUser;
+    }
+
+    static async delGroupChatIdsFromUser(userId: string): Promise<void> {
+        await this.client.del(RedisKeyType.User + userId + ":groupChats");
+    }
+
+    static async delMultipleGCIdsFromUsers(userIds: string[]): Promise<void> {
+        const keys = userIds.map(userId => RedisKeyType.User + userId + ":groupChats");
+        await this.client.del(keys);
     }
 
     static async updateUser(user: UserDocument): Promise<void> {

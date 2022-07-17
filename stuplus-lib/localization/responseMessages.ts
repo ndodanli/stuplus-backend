@@ -98,6 +98,7 @@ const systemLangs: Record<string, Function> = {
             groupChatUserNotFound: "Seni bu grupta bulamadık, dolayısıyla da çıkaramadık.",
             leaveGroupSuccess: "Başarıyla gruptan ayrıldın, tebrikler.",
             groupCreatedSuccess: "grubunu başarıyla oluşturdum, güzel güzel konuşalım, anlaşalım.",
+            groupUpdatedSuccess: "Grubu başarıyla güncelledim.",
             groupCreatedGuardSuccess: "grubunu başarıyla oluşturdum, güzel güzel konuşalım, anlaşalım. Ayrıca beni gruba eklemene gerek yok, grubu ben kuruyorum zaten.",
             groupUsersAddedSuccess: "Kullanıcıları başarıyla ekledim.",
             groupUsersAddedGuardSuccess: "Kullanıcıları başarıyla ekledim. Beni gruba eklemene gerek yok, ben zaten her yerdeyim...",
@@ -109,6 +110,12 @@ const systemLangs: Record<string, Function> = {
             userBlockedShowProfile: "Bu kullanıcıdan uzak dur.",
             userBlockedFollowReq: "Bu kullanıcıdan uzak dur.",
             schoolUpdatedUser: "Okulunu başarıyla güncelledik, artık sen de bizden birisin, aramıza hoş geldin.",
+            hashTagsLimitError: "Çok fazla hashgtag kullandın, en fazla 20 tane kullanabilirsin.",
+            groupRemovedSuccess: "Grubu başarıyla sildik.",
+            removeUsersLimit: "Çok fazla kullanıcı silmek istedin, bir sorun mu var? Varsa destek ekibine(o da biziz =) ) bildir lütfen. Bu arada en fazla 50 tanesini aynı anda silebilirsin.",
+            groupHasNoMemberCannotDelete: "Bu grubun hiç üyesi yok ki sileyim, kendini silme de kapat git madem.",
+            cannotRemoveOwner: "Yöneticini silmek? Buna izin veremem, kim yönetecek bizi sonra?",
+            privacySettingsUpdated: "Gizlilik ayarlarınızı başarıyla güncelledik.",
         }
     },
     "en": function (args: string[] = []) {

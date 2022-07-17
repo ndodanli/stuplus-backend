@@ -12,25 +12,25 @@ import { AddToGroupChatDTO, BlockUserDTO, ClearPMChatHistoryDTO, CreateGroupDTO,
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { groupChatName, userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 import RedisService from "../../stuplus-lib/services/redisService";
-import { searchable, stringify } from "../../stuplus-lib/utils/general";
+import { searchable, stringify, searchableWithSpaces, chunk } from "../../stuplus-lib/utils/general";
 import { MessageDocument, MessageFiles, ReplyToDTO } from "../../stuplus-lib/entities/MessageEntity";
 import { DeleteChatForType, GroupChatUserRole, MessageLimitation, NotificationType, RecordStatus, RedisMessagesNotFoundType } from "../../stuplus-lib/enums/enums";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { Router } from "express";
 import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
-import { validateBlockUser, validateClearPMChat, validateDeleteSinglePM, validateLeaveGroup, validateSendFileMessage, validateUpdateFileMessage } from "../middlewares/validation/chat/validateChatRoute";
+import { validateBlockUser, validateClearPMChat, validateDeleteSinglePM, validateLeaveGroup, validateRemoveFromGroup, validateSendFileMessage, validateUpdateFileMessage } from "../middlewares/validation/chat/validateChatRoute";
 import { GroupMessageDocument } from "../../stuplus-lib/entities/GroupMessageEntity";
 import { GroupChatUserDocument } from "../../stuplus-lib/entities/GroupChatUserEntity";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { ChatDocument } from "../../stuplus-lib/entities/ChatEntity";
 import { GroupChatDocument } from "../../stuplus-lib/entities/GroupChatEntity";
 import { isValidObjectId } from "mongoose";
+import { GroupAccess } from "../dataAccess/groupAccess";
+import OnlineUserService from "../../stuplus-lib/services/onlineUsersService";
+import OneSignalService from "../../stuplus-lib/services/oneSignalService";
+import { User, UserDocument } from "../../stuplus-lib/entities/UserEntity";
+import MessageService from "../../stuplus-lib/services/messageService";
 const router = Router();
-let onlineUsers: Map<string, string>;
-setup();
-async function setup() {
-    onlineUsers = new Map<string, string>();
-};
 
 const io = require("socket.io")(3000, {
     pingTimeout: 30000,
@@ -65,7 +65,7 @@ io.on("connection", async (socket: ISocket) => {
         socket.disconnect();
         return;
     }
-    onlineUsers.set(decodedJwtUser["_id"], socket.id);
+    OnlineUserService.onlineUsers.set(decodedJwtUser["_id"], socket.id);
     user._id = decodedJwtUser["_id"];
     socket.data.user = user;
 
@@ -80,17 +80,17 @@ io.on("connection", async (socket: ISocket) => {
         socket.join(groupChatName(groupChatIds[i]));
     }
 
-    io.in(userWatchRoomName(user.id)).emit("cWatchUsers", {
-        id: user.id,
+    io.in(userWatchRoomName(user._id)).emit("cWatchUsers", {
+        id: user._id,
         t: WatchRoomTypes.UserOnline
     });
     console.log("client connected. socket id: ", socket.id);
 
-    socket.join(user.id);
+    socket.join(user._id);
 
     socket.on("disconnect", async (reason: any) => {
         console.log("disconnect: reason ", reason); // "ping timeout"
-        onlineUsers.delete(socket.data.user._id);
+        OnlineUserService.onlineUsers.delete(socket.data.user._id);
         await UserEntity.findOneAndUpdate({ _id: socket.data.user._id }, {
             lastSeenDate: new Date()
         });
@@ -124,8 +124,10 @@ io.on("connection", async (socket: ISocket) => {
             }
 
             if (toUser.privacySettings.messageLimitation == MessageLimitation.OnlyWhoUserFollows &&
-                !await FollowEntity.exists({ followerId: toUserId, followingId: socket.data.user._id, recordStatus: RecordStatus.Active }))
+                !await FollowEntity.exists({ followerId: toUserId, followingId: socket.data.user._id, recordStatus: RecordStatus.Active })) {
                 cb({ success: false, message: getMessage("cantSendMessageFollow", ["tr"], [toUser.username]) });
+                return;
+            }
 
             let responseData: any = { success: true };
 
@@ -165,7 +167,17 @@ io.on("connection", async (socket: ISocket) => {
             if (!data.ci)
                 emitData["f"] = socket.data.user;
 
-            io.to(data.to).emit("cPmSend", emitData);
+            if (await OnlineUserService.isOnline(data.to)) {
+                io.to(data.to).emit("cPmSend", emitData);
+            }
+            else {
+                const playerId = await RedisService.acquirePlayerId(data.to);
+                await OneSignalService.sendNotification({
+                    heading: socket.data.user.username,
+                    playerIds: [playerId],
+                    content: data.m,
+                })
+            }
 
             cb(responseData);
         } catch (error: any) {
@@ -265,9 +277,25 @@ io.on("connection", async (socket: ISocket) => {
 
             await RedisService.client.rPush(RedisKeyType.DBGroupMessage + data.gCi, stringify(chatData));
 
-            socket.to(groupChatName(data.gCi)).emit("cGmSend", { t: data.m, mi: gMessageEntity.id, gCi: data.gCi, f: socket.data.user });
-
+            const gcName = groupChatName(data.gCi);
+            socket.to(gcName).emit("cGmSend", { t: data.m, mi: gMessageEntity.id, gCi: data.gCi, f: socket.data.user });
             cb({ success: true, mi: gMessageEntity.id });
+
+            // const online
+            const clients = io.sockets.adapter.rooms.get('Room Name');
+            for (const clientId of clients) {
+
+                //this is the socket of each client in the room.
+                const clientSocket = io.sockets.sockets.get(clientId);
+                clientSocket.connected
+                //you can do whatever you need with this
+
+            }
+
+
+
+            //TODO: send notification to offline users
+
         } catch (error: any) {
             cb({ success: false, message: error?.message });
         }
@@ -364,16 +392,36 @@ io.on("connection", async (socket: ISocket) => {
             cb({ success: false, message: "Invalid parameters." });
             return;
         }
-        if (data.uIds.length > 100) {
-            cb({ success: false, message: "You can only watch 100 users at once." });
+        if (data.uIds.length > 20) {
+            cb({ success: false, message: "You can only watch 20 users at once." });
             return;
         }
 
         try {
             const usersToJoin = data.uIds.map(uId => userWatchRoomName(uId));
             socket.join(usersToJoin);
-            const onlineUsersFromUsersToJoin = [...onlineUsers.keys()].filter(onlineUId => data.uIds?.includes(onlineUId));
+            const onlineUsersFromUsersToJoin = [...OnlineUserService.onlineUsers.keys()].filter(onlineUId => data.uIds?.includes(onlineUId));
             cb({ success: true, onlineUserIds: onlineUsersFromUsersToJoin });
+        } catch (error: any) {
+            cb({ success: false, message: error?.message });
+        }
+    });
+
+    socket.on("unwatch-users", async (data: WatchUsersDTO, cb: Function) => {
+        if (!data.uIds || !data.uIds.length) {
+            cb({ success: false, message: "Invalid parameters." });
+            return;
+        }
+        if (data.uIds.length > 50) {
+            cb({ success: false, message: "You can only leave watching 50 users at once." });
+            return;
+        }
+
+        try {
+            const usersToLeave = data.uIds.map(uId => userWatchRoomName(uId));
+            usersToLeave.forEach(u => {
+                socket.leave(u);
+            });
         } catch (error: any) {
             cb({ success: false, message: error?.message });
         }
@@ -381,10 +429,15 @@ io.on("connection", async (socket: ISocket) => {
 });
 
 //TEST: PASSED
-router.post("/unblockUser", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BlockUserDTO>, res: any) => {
+router.get("/unblockUser/:userId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<any>, res: any) => {
+    /* #swagger.tags = ['Chat']
+          #swagger.description = 'Unblock user by id.' */
     const response = new BaseResponse<any>();
     try {
-        const payload = new BlockUserDTO(req.body);
+        const userId = req.params.userId;
+        if (!userId || !isValidObjectId(userId)) {
+            throw new NotValidError("Invalid user id.");
+        }
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         // const addedToUserBlockList = await UserEntity.findOneAndUpdate({ _id: res.locals.user._id }, { $push: { blockedUserIds: payload.userId } }, { new: true });
@@ -394,7 +447,7 @@ router.post("/unblockUser", authorize([Role.User, Role.Admin, Role.ContentCreato
         if (!user)
             throw new NotValidError(getMessage("userNotFound", req.selectedLangs()));
 
-        user.blockedUserIds = user.blockedUserIds.filter(id => id !== payload.userId);
+        user.blockedUserIds = user.blockedUserIds.filter(id => id !== userId);
         user.markModified("blockedUserIds");
         await user.save();
 
@@ -405,7 +458,7 @@ router.post("/unblockUser", authorize([Role.User, Role.Admin, Role.ContentCreato
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -433,35 +486,39 @@ router.post("/getBlockedUsers", authorize([Role.User, Role.Admin, Role.ContentCr
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
 });
 
 //TEST: PASSED
-router.post("/blockuser", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateBlockUser, async (req: CustomRequest<BlockUserDTO>, res: any) => {
+router.get("/blockuser/:userId", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateBlockUser, async (req: CustomRequest<any>, res: any) => {
+    /* #swagger.tags = ['Chat']
+          #swagger.description = 'Block user by id.' */
     const response = new BaseResponse<any>();
     try {
-
-        const payload = new BlockUserDTO(req.body);
+        const userId = req.params.userId;
+        if (!userId || !isValidObjectId(userId)) {
+            throw new NotValidError("Invalid user id.");
+        }
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        // const addedToUserBlockList = await UserEntity.findOneAndUpdate({ _id: res.locals.user._id }, { $push: { blockedUserIds: payload.userId } }, { new: true });
+        // const addedToUserBlockList = await UserEntity.findOneAndUpdate({ _id: res.locals.user._id }, { $push: { blockedUserIds: userId } }, { new: true });
         // if (!addedToUserBlockList)
         //     throw new NotValidError(getMessage("userNotFound", req.selectedLangs()));
         const user = await UserEntity.findOne({ _id: res.locals.user._id });
         if (!user)
             throw new NotValidError(getMessage("userNotFound", req.selectedLangs()));
 
-        user.blockedUserIds.push(payload.userId);
+        user.blockedUserIds.push(userId);
         user.markModified("blockedUserIds");
         await user.save();
 
         await FollowEntity.updateMany({
             $or: [
-                { followerId: res.locals.user._id, followingId: payload.userId },
-                { followerId: payload.userId, followingId: res.locals.user._id }
+                { followerId: res.locals.user._id, followingId: userId },
+                { followerId: userId, followingId: res.locals.user._id }
             ]
         }, { recordStatus: RecordStatus.Deleted });
 
@@ -472,7 +529,7 @@ router.post("/blockuser", authorize([Role.User, Role.Admin, Role.ContentCreator]
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -563,7 +620,7 @@ router.post("/deleteSinglePM", authorize([Role.User, Role.Admin, Role.ContentCre
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -637,7 +694,7 @@ router.post("/clearPMChatHistory", authorize([Role.User, Role.Admin, Role.Conten
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -774,7 +831,7 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -889,13 +946,14 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
 });
 
-router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "chat/group_images/", 5242880), async (req: CustomRequest<CreateGroupDTO>, res: any) => {
+//PASSED:true(not chat)
+router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "chat/group_images/", 5242880), async (req: CustomRequest<any>, res: any) => {
     const response = new BaseResponse<object>();
     try {
         if (req.fileValidationErrors?.length) {
@@ -903,28 +961,21 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
             throw new NotValidError(getMessage("fileError", req.selectedLangs()))
         }
         //TODO: check if users who added can be added to group
-        const redisOps: Promise<any>[] = [];
         const payload = new CreateGroupDTO(req.body);
-        payload.hashTags.forEach(async (x, index, arr) => {
-            arr[index] = searchable(x);
-            const now = new Date();
-            const hashtagEntity = new HashtagEntity({});
-            const hData: object = {
-                e: {
-                    _id: hashtagEntity.id,
-                    tag: arr[index],
-                    createdAt: now,
-                    updatedAt: now,
-                }
-            }
-            redisOps.push(RedisService.client.rPush(RedisKeyType.DBHashtagEntity + ":" + `${arr[index]}`, stringify(hData)));
-            redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagGroupPopularityIncr + `${arr[index]}:groupPopularity`));
-        });
-        await Promise.all(redisOps);
+        const redisOps: Promise<any>[] = [];
+        if (payload.hashTags && payload.hashTags.length > 0) {
+            payload.hashTags.forEach(async (x, index, arr) => {
+                arr[index] = searchable(x);
+                redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagEntity + `${arr[index]}`));
+                redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagGroupPopularityIncr + `${arr[index]}:groupPopularity`));
+            });
+            await Promise.all(redisOps);
+        }
 
         const groupChatEntity = await GroupChatEntity.create(
             {
                 title: payload.title,
+                titlesch: searchableWithSpaces(payload.title),
                 ownerId: res.locals.user._id,
                 type: payload.type,
                 coverImageUrl: req.file?.location,
@@ -937,14 +988,15 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
             payload.userIds.splice(findGuardInPayloadUsers, 1);
 
         let chatUsers = payload.userIds.map((userId: string) => {
-            return new GroupChatUserEntity({ userId: userId, groupChatId: groupChatEntity._id.toString() });
+            return new GroupChatUserEntity({ userId: userId, groupChatId: groupChatEntity._id.toString(), groupRole: GroupChatUserRole.Member });
         });
+        chatUsers.push(new GroupChatUserEntity({ userId: res.locals.user._id, groupChatId: groupChatEntity._id.toString(), groupRole: GroupChatUserRole.Owner }));
         await GroupChatUserEntity.insertMany(chatUsers);
         const usersIdsNotFound = [];
         payload.userIds.push(res.locals.user._id); //add current user to group
         for (let i = 0; i < payload.userIds.length; i++) {
             const userId = payload.userIds[i];
-            const socketId = onlineUsers.get(userId);
+            const socketId = OnlineUserService.onlineUsers.get(userId);
             if (socketId) {
                 const socketUser = io.sockets.sockets.get(socketId);
                 if (!socketUser) continue;
@@ -962,6 +1014,11 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
                 gCi: groupChatEntity.id,
             });
 
+        let responseMessage = payload.title + " ";
+        if (findGuardInPayloadUsers != -1)
+            responseMessage += getMessage("groupCreatedGuardSuccess", req.selectedLangs())
+        else
+            responseMessage += getMessage("groupCreatedSuccess", req.selectedLangs());
         const groupGuard = await RedisService.acquireUser("62ab8a204166fd1eaebbb3fa")
 
         const now = new Date();
@@ -970,7 +1027,7 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
             e: {
                 _id: gMessageEntity.id,
                 fromId: "62ab8a204166fd1eaebbb3fa",
-                text: `${payload.title} ${getMessage("groupCreated", req.selectedLangs())}`,
+                text: responseMessage,
                 groupChatId: groupChatEntity.id,
                 createdAt: now,
                 updatedAt: now,
@@ -998,20 +1055,63 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
         };
 
         if (findGuardInPayloadUsers != -1)
-            response.setMessage(getMessage("groupCreatedGuardSuccess", req.selectedLangs()));
+            response.setMessage(responseMessage);
         else
-            response.setMessage(getMessage("groupCreatedSuccess", req.selectedLangs()));
+            response.setMessage(responseMessage);
 
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
 });
 
+router.get("/removeGroup/:groupChatId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<any>, res: any) => {
+    const response = new BaseResponse<any>();
+    try {
+        const groupChatId = req.params.groupChatId as string;
+
+        const groupChatEntity = await GroupChatEntity.findById(groupChatId);
+        if (!groupChatEntity)
+            throw new NotValidError(getMessage("groupChatNotFound", req.selectedLangs()));
+
+        const user = await RedisService.acquireUser(res.locals.user._id);
+
+        if (groupChatEntity.ownerId != user._id && user.role != Role.Admin)
+            throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
+
+        io.in(groupChatName(groupChatId)).emit("cGroupRemoved", {
+            gCi: groupChatId,
+        });
+
+        const users = await GroupChatUserEntity.find({ groupChatId: groupChatId }, { userId: 1 });
+        const usersIds = users.map(x => x.userId);
+        const usersIdsBatches = chunk(usersIds, 1000);
+        for (let i = 0; i < usersIdsBatches.length; i++) {
+            const usersIdsBatch = usersIdsBatches[i];
+            await RedisService.delMultipleGCIdsFromUsers(usersIdsBatch);
+            await GroupChatUserEntity.updateMany({ groupChatId: groupChatId, userId: { $in: usersIdsBatch }, }, { recordStatus: RecordStatus.Deleted });
+        }
+
+        groupChatEntity.recordStatus = RecordStatus.Deleted;
+        await groupChatEntity.save();
+
+        response.message = getMessage("groupRemovedSuccess", req.selectedLangs());
+
+    } catch (err: any) {
+        response.setErrorMessage(err.message);
+
+        if (err.status != 200)
+            return InternalError(res, response, err);
+    }
+
+    return Ok(res, response);
+});
+
+//PASSED:true(not chat)
 router.post("/updateGroupInfo", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "chat/group_images/", 5242880), async (req: CustomRequest<UpdateGroupInfoDTO>, res: any) => {
     const response = new BaseResponse<object>();
     try {
@@ -1020,22 +1120,31 @@ router.post("/updateGroupInfo", authorize([Role.User, Role.Admin, Role.ContentCr
             throw new NotValidError(getMessage("fileError", req.selectedLangs()))
         }
         const payload = new UpdateGroupInfoDTO(req.body);
-        const groupChat = await GroupChatEntity.findOne({ _id: payload.groupChatId },
-            {
-                hashTags: 0, hashTags_fuzzy: 0,
-                title_fuzzy: 0
-            }).lean(true);
-        if (!groupChat || !await GroupChatUserEntity.exists({ groupChatId: payload.groupChatId, userId: res.locals.user._id }))
+        const groupChat = await GroupChatEntity.findOne({ _id: payload.groupChatId });
+        if (!groupChat)
+            throw new NotValidError(getMessage("groupChatNotFound", req.selectedLangs()));
+        if (!await GroupChatUserEntity.exists({ groupChatId: payload.groupChatId, userId: res.locals.user._id }))
             throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
 
+        if (groupChat.title != payload.title)
+            groupChat.titlesch = searchableWithSpaces(payload.title);
         groupChat.title = payload.title;
         groupChat.type = payload.type;
         groupChat.avatarKey = payload.avatarKey;
+        const redisOps: Promise<any>[] = [];
         if (payload.hashTags) {
             payload.hashTags.forEach((x, index, arr) => {
                 arr[index] = searchable(x)
             });
-            groupChat.hashTags = payload.hashTags;
+            const differences: string[] = payload.hashTags.filter(x => !groupChat.hashTags.includes(x));
+            if (differences.length) {
+                groupChat.hashTags = groupChat.hashTags.concat(differences);
+                differences.forEach(x => {
+                    redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagEntity + `${x}`));
+                    redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagGroupPopularityIncr + `${x}:groupPopularity`));
+                })
+                await Promise.all(redisOps);
+            }
         }
         if (req.file) {
             groupChat.coverImageUrl = req.file.location;
@@ -1046,7 +1155,7 @@ router.post("/updateGroupInfo", authorize([Role.User, Role.Admin, Role.ContentCr
         const offlineUserIds: string[] = [];
         for (let i = 0; i < groupChatUserIds.length; i++) {
             const userId = groupChatUserIds[i];
-            const socketId = onlineUsers.get(userId);
+            const socketId = OnlineUserService.onlineUsers.get(userId);
             if (!socketId) {
                 offlineUserIds.push(userId);
                 //TODO:offline send notification
@@ -1068,13 +1177,13 @@ router.post("/updateGroupInfo", authorize([Role.User, Role.Admin, Role.ContentCr
             gCi: groupChat._id.toString(),
         };
 
-        response.setMessage(getMessage("groupCreatedSuccess", req.selectedLangs()));
+        response.setMessage(getMessage("groupUpdatedSuccess", req.selectedLangs()));
 
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1234,7 +1343,7 @@ router.post("/getMessages", authorize([Role.User, Role.Admin, Role.ContentCreato
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1268,7 +1377,7 @@ router.post("/getSearchedPMs", authorize([Role.User, Role.Admin, Role.ContentCre
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1306,7 +1415,7 @@ router.post("/getSearchedPM", authorize([Role.User, Role.Admin, Role.ContentCrea
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1337,7 +1446,7 @@ router.post("/getSearchedGMs", authorize([Role.User, Role.Admin, Role.ContentCre
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1372,7 +1481,7 @@ router.post("/getSearchedPM", authorize([Role.User, Role.Admin, Role.ContentCrea
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1464,7 +1573,7 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1562,7 +1671,7 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1686,7 +1795,7 @@ router.post("/getGroupMessages", authorize([Role.User, Role.Admin, Role.ContentC
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1726,7 +1835,7 @@ router.post("/getGroupUsers", authorize([Role.User, Role.Admin, Role.ContentCrea
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1818,7 +1927,7 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1915,7 +2024,7 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -1925,118 +2034,12 @@ router.post("/addToGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
 
     var response = new BaseResponse<object>();
     try {
-        var payload = new AddToGroupChatDTO(req.body);
-        const groupChat = await GroupChatEntity.findOne({ _id: payload.groupChatId }, {
-            hashTags: 0,
-            hashTags_fuzzy: 0,
-            title_fuzzy: 0,
-        }).lean(true);
-
-        if (!groupChat || (groupChat.ownerId != res.locals.user._id &&
-            !await GroupChatUserEntity.exists({ groupChatId: payload.groupChatId, userId: res.locals.user._id, recordStatus: RecordStatus.Active })))
-            throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
-
-        const findGuardInPayloadUsers = payload.userIds.findIndex(userId => userId == "62ab8a204166fd1eaebbb3fa");
-        if (findGuardInPayloadUsers != -1)
-            payload.userIds.splice(findGuardInPayloadUsers, 1);
-
-        let chatUsers = payload.userIds.map((userId: string) => {
-            return new GroupChatUserEntity({ userId: userId, groupChatId: groupChat._id.toString() });
-        });
-
-        await GroupChatUserEntity.insertMany(chatUsers);
-
-        const socketUserDatas = [];
-        const usersIdsNotFound = [];
-        for (let i = 0; i < payload.userIds.length; i++) {
-            const userId = payload.userIds[i];
-            await RedisService.client.del(RedisKeyType.User + userId + ":groupChats");
-            const socketId = onlineUsers.get(userId);
-            if (socketId) {
-                const socketUser = io.sockets.sockets.get(socketId);
-                if (!socketUser) continue;
-                io.to(socketId).emit("cAddedToGroup", {
-                    t: groupChat.title,
-                    gCoIm: groupChat.coverImage,
-                    gAvKey: groupChat.avatarKey,
-                    gCi: groupChat._id.toString(),
-                });
-
-                //TODO: send notification and users's new notification badge by 1
-                socketUser.join(groupChatName(groupChat._id.toString()));
-                socketUserDatas.push({
-                    uN: socketUser.data.user.username, //username
-                    fN: socketUser.data.user.firstName, //first name
-                    lN: socketUser.data.user.lastName, //last name
-                    uId: socketUser.data.user.id, //user id
-                    ppUrl: socketUser.data.user.profilePhotoUrl, //profile picture url
-                    avKey: socketUser.avatarKey, //avatar key
-                });
-            } else {
-                usersIdsNotFound.push(userId);
-                //TODO:offline send notification
-            }
-        }
-        const usersNotFound = await UserEntity.find({ _id: { $in: usersIdsNotFound } }, { "username": 1, "firstName": 1, "lastName": 1, "profilePhotoUrl": 1, "avatarKey": 1 }).lean(true);
-        for (let i = 0; i < usersNotFound.length; i++) {
-            const user = usersNotFound[i];
-            socketUserDatas.push({
-                uN: user.username, //username
-                fN: user.firstName, //first name
-                lN: user.lastName, //last name
-                uId: user.id, //user id
-                ppUrl: user.profilePhotoUrl, //profile picture url
-                avKey: user.avatarKey, //avatar key
-            });
-        }
-
-        const groupGuard = await RedisService.acquireUser("62ab8a204166fd1eaebbb3fa")
-        const notifications = [];
-        for (let i = 0; i < socketUserDatas.length; i++) {
-            const userData = socketUserDatas[i];
-            const now = new Date();
-            const gMessageEntity = new GroupMessageEntity({});
-            const chatData: any = {
-                e: {
-                    _id: gMessageEntity.id,
-                    fromId: "62ab8a204166fd1eaebbb3fa",
-                    text: `${userData.uN} ${getMessage("addedToGroup", req.selectedLangs())}`,
-                    groupChatId: groupChat._id.toString(),
-                    createdAt: now,
-                    updatedAt: now,
-                },
-                t: RedisGMOperationType.InsertMessage
-            }
-
-            await RedisService.client.rPush(RedisKeyType.DBGroupMessage + chatData.e.groupChatId, stringify(chatData));
-            io.in(groupChatName(chatData.e.groupChatId)).emit("cGmSend", {
-                t: chatData.e.text, mi: gMessageEntity.id, gCi: chatData.e.groupChatId, f: {
-                    uN: groupGuard.username, //username
-                    fN: groupGuard.firstName, //first name
-                    lN: groupGuard.lastName, //last name
-                    uId: groupGuard._id.toString(), //user id
-                    ppUrl: groupGuard.profilePhotoUrl, //profile picture url
-                    avKey: groupGuard.avatarKey, //avatar key
-                }
-            });
-            notifications.push(new NotificationEntity({
-                senderId: res.locals.user._id,
-                receiverId: userData.uId,
-                type: NotificationType.AddedYouToGroupChat,
-                groupChatId: chatData.e.groupChatId,
-            }));
-        }
-        await NotificationEntity.insertMany(notifications);
-
-        if (findGuardInPayloadUsers != -1)
-            response.setMessage(getMessage("groupUsersAddedGuardSuccess", req.selectedLangs()));
-        else
-            response.setMessage(getMessage("groupUsersAddedSuccess", req.selectedLangs()));
+        response.message = await GroupAccess.addUsersToGroupChat(req.selectedLangs(), res.locals.user._id, new AddToGroupChatDTO(req.body));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -2055,6 +2058,8 @@ router.post("/makeUsersGroupAdmin", authorize([Role.User, Role.Admin, Role.Conte
 
         if (!groupChat || groupChat.ownerId != res.locals.user._id)
             throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
+
+        const user = await RedisService.acquireUser(res.locals.user._id)
 
         const findGuardInPayloadUsers = payload.userIds.findIndex(userId => userId == "62ab8a204166fd1eaebbb3fa");
         if (findGuardInPayloadUsers != -1)
@@ -2078,22 +2083,28 @@ router.post("/makeUsersGroupAdmin", authorize([Role.User, Role.Admin, Role.Conte
         const socketUserDatas = [];
         for (let i = 0; i < payload.userIds.length; i++) {
             const userId = payload.userIds[i];
-            const socketId = onlineUsers.get(userId);
+            const socketId = OnlineUserService.onlineUsers.get(userId);
             if (socketId) {
                 const socketUser = io.sockets.sockets.get(socketId);
                 socketUserDatas.push({
                     uN: socketUser.data.user.username, //username
                     fN: socketUser.data.user.firstName, //first name
                     lN: socketUser.data.user.lastName, //last name
-                    uId: socketUser.data.user.id, //user id
+                    uId: socketUser.data.user._id, //user id
                     ppUrl: socketUser.data.user.profilePhotoUrl, //profile picture url
                     avKey: socketUser.avatarKey, //avatar key
                 });
             } else {
                 usersIdsNotFound.push(userId);
-                //TODO:offline send notification
             }
         }
+
+        await OneSignalService.sendNotificationWithUserIds({
+            userIds: usersIdsNotFound,
+            heading: `${groupChat.title} grubunda admin oldun, helal sana.`,
+            content: `${user.username} seni ${groupChat.title} grubunda admin yaptı.`,
+        })
+
         const usersNotFound = await UserEntity.find({ _id: { $in: usersIdsNotFound } }, { "username": 1, "firstName": 1, "lastName": 1, "profilePhotoUrl": 1, "avatarKey": 1 }).lean(true);
         for (let i = 0; i < usersNotFound.length; i++) {
             const user = usersNotFound[i];
@@ -2101,7 +2112,7 @@ router.post("/makeUsersGroupAdmin", authorize([Role.User, Role.Admin, Role.Conte
                 uN: user.username, //username
                 fN: user.firstName, //first name
                 lN: user.lastName, //last name
-                uId: user.id, //user id
+                uId: user._id.toString(), //user id
                 ppUrl: user.profilePhotoUrl, //profile picture url
                 avKey: user.avatarKey, //avatar key
             });
@@ -2112,31 +2123,12 @@ router.post("/makeUsersGroupAdmin", authorize([Role.User, Role.Admin, Role.Conte
 
         for (let i = 0; i < socketUserDatas.length; i++) {
             const userData = socketUserDatas[i];
-            const now = new Date();
-            const gMessageEntity = new GroupMessageEntity({});
-            const chatData: any = {
-                e: {
-                    _id: gMessageEntity.id,
-                    fromId: "62ab8a204166fd1eaebbb3fa",
-                    text: `${userData.uN} ${getMessage("newAdmin", req.selectedLangs())}`,
-                    groupChatId: groupChat._id.toString(),
-                    createdAt: now,
-                    updatedAt: now,
-                },
-                t: RedisGMOperationType.InsertMessage
-            }
-
-            await RedisService.client.rPush(RedisKeyType.DBGroupMessage + chatData.e.groupChatId, stringify(chatData));
-            io.in(groupChatName(chatData.e.groupChatId)).emit("cGmSend", {
-                t: chatData.e.text, mi: gMessageEntity.id, gCi: chatData.e.groupChatId, f: {
-                    uN: groupGuard.username, //username
-                    fN: groupGuard.firstName, //first name
-                    lN: groupGuard.lastName, //last name
-                    uId: groupGuard._id.toString(), //user id
-                    ppUrl: groupGuard.profilePhotoUrl, //profile picture url
-                    avKey: groupGuard.avatarKey, //avatar key
-                }
-            });
+            await MessageService.senGroupMessage({
+                fromId: "62ab8a204166fd1eaebbb3fa",
+                text: `${userData.uN} seni ${groupChat.title} grubunda admin yaptı.`,
+                groupChatId: payload.groupChatId,
+                fromUser: groupGuard,
+            })
         }
 
         if (findGuardInPayloadUsers != -1)
@@ -2147,31 +2139,64 @@ router.post("/makeUsersGroupAdmin", authorize([Role.User, Role.Admin, Role.Conte
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
 });
 
-router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<RemoveFromGroupChatDTO>, res: any) => {
-
+router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateRemoveFromGroup, async (req: CustomRequest<RemoveFromGroupChatDTO>, res: any) => {
     var response = new BaseResponse<object>();
     try {
         var payload = new RemoveFromGroupChatDTO(req.body);
         const groupChat = await GroupChatEntity.findOne({ _id: payload.groupChatId },
             {
-                hashTags: 0, hashTags_fuzzy: 0,
-                title_fuzzy: 0
-            }).lean(true);
+                hashTags: 0
+            });
 
-        if (!groupChat || (groupChat.ownerId != res.locals.user._id &&
-            !await GroupChatUserEntity.exists({ groupChatId: payload.groupChatId, userId: res.locals.user._id, recordStatus: RecordStatus.Active })))
+        if (!groupChat)
+            throw new NotValidError(getMessage("groupChatNotFound", req.selectedLangs()));
+
+        const groupChatUser = await GroupChatUserEntity.findOne({ groupChatId: payload.groupChatId, userId: res.locals.user._id });
+
+        if (!groupChatUser)
+            throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
+
+        const user = await RedisService.acquireUser(res.locals.user._id);
+
+        if (groupChatUser.groupRole != GroupChatUserRole.Admin && groupChatUser.groupRole != GroupChatUserRole.Owner)
             throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
 
         const findGuardInDeletedUsers = payload.userIds.findIndex(userId => userId == "62ab8a204166fd1eaebbb3fa");
         if (findGuardInDeletedUsers != -1)
             payload.userIds.splice(findGuardInDeletedUsers, 1);
 
+        const findOwnerInDeletedUsers = payload.userIds.findIndex(userId => userId == groupChat.ownerId);
+        let randomOldMember: User = new UserEntity();
+        if (findOwnerInDeletedUsers != -1) {
+            if (groupChat.ownerId != res.locals.user._id)
+                throw new NotValidError(getMessage("cannotRemoveOwner", req.selectedLangs()));
+
+            const oldestMembers = await GroupChatUserEntity.find({ groupChatId: payload.groupChatId }, { userId: 1, createdAt: 1 }).sort({ createdAt: 1 }).limit(5);
+            if (oldestMembers.length > 0) {
+                const oldMemberId = oldestMembers[Math.floor(Math.random() * oldestMembers.length)].userId;
+                randomOldMember = await RedisService.acquireUser(oldMemberId);
+                groupChat.ownerId = oldMemberId;
+                await groupChat.save();
+                await OneSignalService.sendNotification({
+                    heading: `${groupChat.title} grubunda yeni kurucu oldun.`,
+                    content: `${user.username} kendini uçurduğu için seni ${groupChat.title} grubunda yeni kurucu yaptım. Sen de bırakıp gitme bizi...`,
+                    playerIds: [randomOldMember.playerId],
+                })
+                await OneSignalService.sendNotification({
+                    heading: `Hey!👋`,
+                    content: `Kendi grubundan ayrıldın, iyi misin?. Herhangi bir problemin varsa ya da sadece kötü hissettiysen bizimle iletişime geçebilirsin, her zaman buradayız.`,
+                    playerIds: [user.playerId],
+                })
+            } else {
+                throw new NotValidError(getMessage("groupHasNoMemberCannotDelete", req.selectedLangs()));
+            }
+        }
 
         await GroupChatUserEntity.updateMany({ groupChatId: groupChat._id.toString(), userId: { $in: payload.userIds } }, { recordStatus: RecordStatus.Deleted });
 
@@ -2179,8 +2204,7 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
         const usersIdsNotFound = [];
         for (let i = 0; i < payload.userIds.length; i++) {
             const userId = payload.userIds[i];
-            await RedisService.client.del(RedisKeyType.User + userId + ":groupChats");
-            const socketId = onlineUsers.get(userId);
+            const socketId = OnlineUserService.onlineUsers.get(userId);
             if (socketId) {
                 const socketUser = io.sockets.sockets.get(socketId);
                 socketUser?.leave(groupChatName(groupChat._id.toString()));
@@ -2192,15 +2216,23 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
                     uN: socketUser.data.user.username, //username
                     fN: socketUser.data.user.firstName, //first name
                     lN: socketUser.data.user.lastName, //last name
-                    uId: socketUser.data.user.id, //user id
+                    uId: socketUser.data.user._id, //user id
                     ppUrl: socketUser.data.user.profilePhotoUrl, //profile picture url
                     avKey: socketUser.avatarKey, //avatar key
                 });
             } else {
                 usersIdsNotFound.push(userId);
-                //TODO:offline send notification
             }
         }
+
+        await RedisService.delMultipleGCIdsFromUsers(payload.userIds);
+
+        await OneSignalService.sendNotificationWithUserIds({
+            userIds: usersIdsNotFound,
+            heading: `${groupChat.title} grubundan uçuruldun.`,
+            content: `${user.username} seni ${groupChat.title} grubundan uçurdu.`,
+        })
+
         const usersNotFound = await UserEntity.find({ _id: { $in: usersIdsNotFound } }, { "username": 1, "firstName": 1, "lastName": 1, "profilePhotoUrl": 1, "avatarKey": 1 }).lean(true);
         for (let i = 0; i < usersNotFound.length; i++) {
             const user = usersNotFound[i];
@@ -2208,7 +2240,7 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
                 uN: user.username, //username
                 fN: user.firstName, //first name
                 lN: user.lastName, //last name
-                uId: user.id, //user id
+                uId: user._id.toString(), //user id
                 ppUrl: user.profilePhotoUrl, //profile picture url
                 avKey: user.avatarKey, //avatar key
             });
@@ -2219,30 +2251,38 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
 
         for (let i = 0; i < socketUserDatas.length; i++) {
             const userData = socketUserDatas[i];
-            const now = new Date();
-            const gMessageEntity = new GroupMessageEntity({});
-            const chatData: any = {
-                e: {
-                    _id: gMessageEntity.id,
-                    fromId: "62ab8a204166fd1eaebbb3fa",
-                    text: `${userData.uN} ${getMessage("removedFromGroup", req.selectedLangs())}`,
-                    groupChatId: groupChat._id.toString(),
-                    createdAt: now,
-                    updatedAt: now,
-                },
-                t: RedisGMOperationType.InsertMessage
-            }
+            MessageService.senGroupMessage({
+                fromId: "62ab8a204166fd1eaebbb3fa",
+                text: `${userData.uN} ${getMessage("removedFromGroup", req.selectedLangs())}`,
+                groupChatId: payload.groupChatId,
+                fromUser: groupGuard,
+            });
+        }
 
-            await RedisService.client.rPush(RedisKeyType.DBGroupMessage + chatData.e.groupChatId, stringify(chatData));
-            io.in(groupChatName(chatData.e.groupChatId)).emit("cGmSend", {
-                t: chatData.e.text, mi: gMessageEntity.id, gCi: chatData.e.groupChatId, f: {
-                    uN: groupGuard.username, //username
-                    fN: groupGuard.firstName, //first name
-                    lN: groupGuard.lastName, //last name
-                    uId: groupGuard._id.toString(), //user id
-                    ppUrl: groupGuard.profilePhotoUrl, //profile picture url
-                    avKey: groupGuard.avatarKey, //avatar key
-                }
+        if (findOwnerInDeletedUsers != -1) {
+            MessageService.senGroupMessage({
+                fromId: "62ab8a204166fd1eaebbb3fa",
+                text: `Bak sen şu işe...`,
+                groupChatId: payload.groupChatId,
+                fromUser: groupGuard,
+            });
+            MessageService.senGroupMessage({
+                fromId: "62ab8a204166fd1eaebbb3fa",
+                text: `Grup kurucusu kendini uçurdu😱, sakin olup düşünmem gerekli🤔. Buldum💡`,
+                groupChatId: payload.groupChatId,
+                fromUser: groupGuard,
+            });
+            await MessageService.senGroupMessage({
+                fromId: "62ab8a204166fd1eaebbb3fa",
+                text: `Yeni yöneticimizi kutlayalım ${randomOldMember.username}.`,
+                groupChatId: payload.groupChatId,
+                fromUser: groupGuard,
+            })
+            MessageService.senGroupMessage({
+                fromId: "62ab8a204166fd1eaebbb3fa",
+                text: `Çoook eskilerden bir dostumuzu yönetici yaptım. Tam gaz devam👻`,
+                groupChatId: payload.groupChatId,
+                fromUser: groupGuard,
             });
         }
 
@@ -2255,13 +2295,13 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
 });
 
-router.post("/getGroupProfile/:groupChatId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<any>, res: any) => {
+router.get("/getGroupProfile/:groupChatId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<any>, res: any) => {
     const response = new BaseResponse<any>();
     try {
         const groupChatId = req.params.groupChatId;
@@ -2295,7 +2335,7 @@ router.post("/getGroupProfile/:groupChatId", authorize([Role.User, Role.Admin, R
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
@@ -2305,6 +2345,10 @@ router.post("/leaveGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
     const response = new BaseResponse<any>();
     try {
         const payload = new LeaveGroupDTO(req.body);
+        const groupChat = await GroupChatEntity.findOne({ _id: payload.groupChatId });
+        if (!groupChat)
+            throw new NotValidError(getMessage("groupChatNotFound", req.selectedLangs()));
+
         const leaveGroup = await GroupChatUserEntity.findOneAndUpdate({
             groupChatId: payload.groupChatId,
             userId: res.locals.user._id,
@@ -2318,44 +2362,75 @@ router.post("/leaveGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
         const groupGuard = await RedisService.acquireUser("62ab8a204166fd1eaebbb3fa")
 
         const leavedUser = await UserEntity.findOne({ _id: res.locals.user._id }, { "username": 1, "firstName": 1, "lastName": 1, "profilePhotoUrl": 1, "avatarKey": 1 }).lean(true);
-        const now = new Date();
-        const gMessageEntity = new GroupMessageEntity({});
-        const chatData: any = {
-            e: {
-                _id: gMessageEntity.id,
-                fromId: "62ab8a204166fd1eaebbb3fa",
-                text: `${leavedUser?.firstName} ${getMessage("removedFromGroup", req.selectedLangs())}`,
-                groupChatId: payload.groupChatId,
-                createdAt: now,
-                updatedAt: now,
-            },
-            t: RedisGMOperationType.InsertMessage
-        }
 
-        await RedisService.client.rPush(RedisKeyType.DBGroupMessage + chatData.e.groupChatId, stringify(chatData));
-        io.in(groupChatName(chatData.e.groupChatId)).emit("cGmSend", {
-            t: chatData.e.text, mi: gMessageEntity.id, gCi: chatData.e.groupChatId, f: {
-                uN: groupGuard.username, //username
-                fN: groupGuard.firstName, //first name
-                lN: groupGuard.lastName, //last name
-                uId: groupGuard._id.toString(), //user id
-                ppUrl: groupGuard.profilePhotoUrl, //profile picture url
-                avKey: groupGuard.avatarKey, //avatar key
-            }
-        });
-        const socketId = onlineUsers.get(res.locals.user._id);
+        await MessageService.senGroupMessage({
+            fromId: "62ab8a204166fd1eaebbb3fa",
+            text: `${leavedUser?.firstName} ${getMessage("removedFromGroup", req.selectedLangs())}`,
+            groupChatId: payload.groupChatId,
+            fromUser: groupGuard,
+        })
+
+        const socketId = OnlineUserService.onlineUsers.get(res.locals.user._id);
         if (socketId) {
             const socketUser = io.sockets.sockets.get(socketId);
             socketUser?.leave(groupChatName(payload.groupChatId));
         }
 
+        const groupOwnedLeaved = groupChat.ownerId == res.locals.user._id
+        let randomOldMember: User = new UserEntity();
+        if (groupOwnedLeaved) {
+            const oldestMembers = await GroupChatUserEntity.find({ groupChatId: payload.groupChatId }, { userId: 1, createdAt: 1 }).sort({ createdAt: 1 }).limit(5);
+            if (oldestMembers.length > 0) {
+                const user = await RedisService.acquireUser(res.locals.user._id);
+                const oldMemberId = oldestMembers[Math.floor(Math.random() * oldestMembers.length)].userId;
+                randomOldMember = await RedisService.acquireUser(oldMemberId);
+                groupChat.ownerId = oldMemberId;
+                await groupChat.save();
+                await OneSignalService.sendNotification({
+                    heading: `${groupChat.title} grubunda yeni kurucu oldun.`,
+                    content: `${user.username} ayrıldığı için seni ${groupChat.title} grubunda yeni kurucu yaptım. Sen de bırakıp gitme bizi...`,
+                    playerIds: [randomOldMember.playerId],
+                })
+                await OneSignalService.sendNotification({
+                    heading: `Hey!👋`,
+                    content: `Kendi grubundan ayrıldın, iyi misin?. Herhangi bir problemin varsa ya da sadece kötü hissettiysen bizimle iletişime geçebilirsin, her zaman buradayız.`,
+                    playerIds: [user.playerId],
+                })
+                MessageService.senGroupMessage({
+                    fromId: "62ab8a204166fd1eaebbb3fa",
+                    text: `Bak sen şu işe...`,
+                    groupChatId: payload.groupChatId,
+                    fromUser: groupGuard,
+                });
+                MessageService.senGroupMessage({
+                    fromId: "62ab8a204166fd1eaebbb3fa",
+                    text: `Grup kurucusu ayrıldı😱, sakin olup düşünmem gerekli🤔. Buldum💡`,
+                    groupChatId: payload.groupChatId,
+                    fromUser: groupGuard,
+                });
+                await MessageService.senGroupMessage({
+                    fromId: "62ab8a204166fd1eaebbb3fa",
+                    text: `Yeni yöneticimizi kutlayalım ${randomOldMember.username}.`,
+                    groupChatId: payload.groupChatId,
+                    fromUser: groupGuard,
+                })
+                MessageService.senGroupMessage({
+                    fromId: "62ab8a204166fd1eaebbb3fa",
+                    text: `Çoook eskilerden bir dostumuzu yönetici yaptım. Tam gaz devam👻`,
+                    groupChatId: payload.groupChatId,
+                    fromUser: groupGuard,
+                });
+            } else {
+                throw new NotValidError(getMessage("groupHasNoMemberCannotDelete", req.selectedLangs()));
+            }
+        }
         response.setMessage(getMessage("leaveGroupSuccess", req.selectedLangs()));
 
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);

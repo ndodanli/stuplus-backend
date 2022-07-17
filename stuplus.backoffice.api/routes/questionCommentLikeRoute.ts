@@ -46,7 +46,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<QuestionC
     response.setErrorMessage(err.message)
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -77,7 +77,7 @@ router.post("/addUpdateQuestionCommentLike", authorize([Role.Admin]), async (req
   } catch (err: any) {
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -97,7 +97,7 @@ router.delete("/deleteQuestionCommentLike", authorize([Role.Admin]), async (req:
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)

@@ -42,8 +42,212 @@ const doc = {
     },
     definitions: {
         //#region Search
+        SearchAnnouncementRequest: {
+            $searchTerm: "test",
+            $page: 1,
+            $pageSize: 20,
+        },
+        SearchAnnouncementResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data:  [
+                {
+                    "_id": "62cf05da39b1a28284adf3ae",
+                    "ownerId": "628a9e39b483f428a74e75c1",
+                    "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/announcement/cover_images/1657734350307-9055-duyuru.PNG",
+                    "title": "SEYEHATSEVER UYGULAMASI İLE KYK YURTLARI TÜM YAZ BOYU ÜCRETSİZ!",
+                    "relatedSchoolIds": [
+                        "62cc9c8f5c9816cc1e36858d"
+                    ],
+                    "text": "<p>Yaz Tatili için seyahat edecek gençler Erzurum için Erkek yurdu olarak Ömer Nasuhi Bilmen yurdunda; Kız yurdu ise Yakutiye Öğrenci Yurdunda kalabileceklerdir. Hangi şehirde hangi yurdun aktif olduğunu ve yurtların iletişim bilgilerini öğrenmek isteyen öğrenciler \"https://seyahatsever.gsb.gov.tr/\" adresinden belirtilen bilgilere erişim sağlayabileceklerdir.</p>",
+                    "isActive": true,
+                    "fromDate": "2022-07-14T21:00:00.000Z",
+                    "toDate": "2022-08-31T21:00:00.000Z",
+                    "score": 0,
+                    "recordStatus": 1,
+                    "__t": "Announcement",
+                    "createdAt": "2022-07-13T17:50:18.488Z",
+                    "updatedAt": "2022-07-16T21:40:50.861Z",
+                    "__v": 1,
+                    "hashTags": [],
+                    "titlesch": "seyehatsever uygulamasi ile kyk yurtlari"
+                }
+            ],
+        },
+        SearchQuestionRequest: {
+            $searchTerm: "test",
+            $page: 1,
+            $pageSize: 20,
+        },
+        SearchQuestionResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: [
+                {
+                    "_id": "62c09acb63c9dc82f6bcf9b9",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "coverImageUrl": null,
+                    "title": "TEST NO SCHOOL",
+                    "relatedSchoolIds": [],
+                    "text": "<br> dasfksdfdsfd",
+                    "isActive": true,
+                    "fromDate": null,
+                    "toDate": null,
+                    "score": 0,
+                    "recordStatus": 1,
+                    "__t": "Question",
+                    "createdAt": "2022-07-02T19:21:47.409Z",
+                    "updatedAt": "2022-07-03T15:47:20.351Z",
+                    "__v": 0
+                },
+                {
+                    "_id": "62c09ab763c9dc82f6bcf956",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "coverImageUrl": null,
+                    "title": "test q",
+                    "relatedSchoolIds": [],
+                    "text": "<br> dasfksdfdsfd",
+                    "isActive": true,
+                    "fromDate": null,
+                    "toDate": null,
+                    "score": 0,
+                    "recordStatus": 1,
+                    "__t": "Question",
+                    "createdAt": "2022-07-02T19:21:27.109Z",
+                    "updatedAt": "2022-07-02T19:21:27.109Z",
+                    "__v": 0
+                },
+                {
+                    "_id": "62c09a23120eabd0fa61b145",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/question/cover_images/1656965469743-1656856337742-1MFqZJCvcok.jpg",
+                    "title": "test q",
+                    "relatedSchoolIds": [
+                        "62b0c8d63721b9b60d3585db"
+                    ],
+                    "text": "<p><br>dasfksdfdsfd</p>",
+                    "isActive": true,
+                    "score": 0,
+                    "recordStatus": 1,
+                    "__t": "Question",
+                    "createdAt": "2022-07-02T19:18:59.894Z",
+                    "updatedAt": "2022-07-04T20:11:13.713Z",
+                    "__v": 0
+                },
+                {
+                    "_id": "62c092f0e6a6394e2a0c1fe9",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/question/cover_images/1656965479314-xf3o1tBz13o.jpg",
+                    "title": "test q",
+                    "relatedSchoolIds": [
+                        "62b0c8d63721b9b60d3585db"
+                    ],
+                    "text": "<p><br>dasfksdfdsfd</p>",
+                    "isActive": true,
+                    "score": 0,
+                    "recordStatus": 1,
+                    "__t": "Question",
+                    "createdAt": "2022-07-02T18:48:16.030Z",
+                    "updatedAt": "2022-07-04T20:11:21.961Z",
+                    "__v": 0
+                },
+            ]
+        },
+        SearchHashtagRequest: {
+            $searchTerm: "test",
+            $page: 1,
+            $pageSize: 20,
+        },
+        SearchHashtagResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: [
+                {
+                    "_id": "62d07d5eea5d4faa14396e6f",
+                    "__t": "Hashtag",
+                    "recordStatus": 1,
+                    "tag": "sinif",
+                    "__v": 0,
+                    "announcementPopularity": 0,
+                    "createdAt": "2022-07-14T20:32:30.156Z",
+                    "groupPopularity": 1912,
+                    "overallPopularity": 1914,
+                    "questionPopularity": 0,
+                    "updatedAt": "2022-07-14T20:36:00.279Z"
+                },
+                {
+                    "_id": "62d07d5eea5d4faa14396b91",
+                    "__t": "Hashtag",
+                    "recordStatus": 1,
+                    "tag": "cocukgelisimi1sinif",
+                    "__v": 0,
+                    "announcementPopularity": 0,
+                    "createdAt": "2022-07-14T20:32:30.123Z",
+                    "groupPopularity": 9,
+                    "overallPopularity": 9,
+                    "questionPopularity": 0,
+                    "updatedAt": "2022-07-14T20:42:30.915Z"
+                },
+                {
+                    "_id": "62d07d6eea5d4faa1439b028",
+                    "__t": "Hashtag",
+                    "recordStatus": 1,
+                    "tag": "bankacilikvesigortacilik2sinif",
+                    "__v": 0,
+                    "announcementPopularity": 0,
+                    "createdAt": "2022-07-14T20:32:45.238Z",
+                    "groupPopularity": 7,
+                    "overallPopularity": 7,
+                    "questionPopularity": 0,
+                    "updatedAt": "2022-07-14T20:36:00.267Z"
+                },
+                {
+                    "_id": "62d07d6fea5d4faa1439b53b",
+                    "__t": "Hashtag",
+                    "recordStatus": 1,
+                    "tag": "bankacilikvesigortacilik1sinif",
+                    "__v": 0,
+                    "announcementPopularity": 0,
+                    "createdAt": "2022-07-14T20:32:45.285Z",
+                    "groupPopularity": 7,
+                    "overallPopularity": 7,
+                    "questionPopularity": 0,
+                    "updatedAt": "2022-07-14T20:36:00.287Z"
+                },
+            ],
+        },
         SearchPeopleRequest: {
-            $searchString: "test",
+            $searchTerm: "test",
             $page: 1,
             $pageSize: 20,
         },
@@ -91,7 +295,7 @@ const doc = {
             ],
         },
         SearchGroupChatsRequest: {
-            $searchString: "uni",
+            $searchTerm: "uni",
             $page: 1,
             $pageSize: 20,
         },
@@ -289,7 +493,7 @@ const doc = {
             ],
         },
         SearchPeopleAndGroupChatsRequest: {
-            $searchString: "tes",
+            $searchTerm: "tes",
             $page: 1,
             $pageSize: 20,
         },
@@ -631,6 +835,39 @@ const doc = {
             $about: "string"
         },
         AccountUpdateProfileResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: {
+                type: "null"
+            }
+        },
+        AccountUpdatePrivacySettingsRequest: {
+            $followLimitation: {
+                type: "enum",
+                values: {
+                    None: 0,
+                    ByRequest: 1
+                }
+            },
+            $messageLimitation: {
+                type: "enum",
+                values: {
+                    None: 0,
+                    OnlyWhoUserFollows: 1
+                }
+            },
+        },
+        AccountUpdatePrivacySettingsResponse: {
             hasError: {
                 type: "boolean",
                 description: "Indicates whether the operation was successful or not."

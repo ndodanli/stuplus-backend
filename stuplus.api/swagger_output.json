@@ -140,6 +140,27 @@
         }
       }
     },
+    "/account/updatePlayerId/{playerId}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "playerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/account/updateProfile": {
       "post": {
         "tags": [
@@ -180,6 +201,52 @@
             "application/xml": {
               "schema": {
                 "$ref": "#/components/schemas/AccountUpdateProfileRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/updatePrivacySettings": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "description": "Update user",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountUpdatePrivacySettingsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountUpdatePrivacySettingsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountUpdatePrivacySettingsRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountUpdatePrivacySettingsRequest"
               }
             }
           }
@@ -1524,6 +1591,9 @@
                   },
                   "relatedSchoolIds": {
                     "type": "array"
+                  },
+                  "hashTags": {
+                    "type": "array"
                   }
                 },
                 "required": [
@@ -1854,6 +1924,9 @@
                     "type": "string"
                   },
                   "relatedSchoolIds": {
+                    "type": "array"
+                  },
+                  "hashTags": {
                     "type": "array"
                   }
                 },
@@ -2275,6 +2348,144 @@
         }
       }
     },
+    "/search/hashtag": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "description": "Get hashtags by search term.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchHashtagResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchHashtagResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchHashtagRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchHashtagRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/question": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "description": "Get searched questions.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchQuestionResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchQuestionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchQuestionRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchQuestionRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/announcement": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "description": "Get searched questions.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchQuestionResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchQuestionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchQuestionRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchQuestionRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/general/updateImageStats": {
       "post": {
         "description": "",
@@ -2308,10 +2519,22 @@
         }
       }
     },
-    "/chat/unblockUser": {
-      "post": {
-        "description": "",
-        "parameters": [],
+    "/chat/unblockUser/{userId}": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "description": "Unblock user by id.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {},
         "security": [
           {
@@ -2332,10 +2555,22 @@
         ]
       }
     },
-    "/chat/blockuser": {
-      "post": {
-        "description": "",
-        "parameters": [],
+    "/chat/blockuser/{userId}": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "description": "Block user by id.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {},
         "security": [
           {
@@ -2396,6 +2631,27 @@
       "post": {
         "description": "",
         "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/removeGroup/{groupChatId}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "groupChatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {},
         "security": [
           {
@@ -2763,7 +3019,7 @@
       }
     },
     "/chat/getGroupProfile/{groupChatId}": {
-      "post": {
+      "get": {
         "description": "",
         "parameters": [
           {
@@ -2810,10 +3066,10 @@
   },
   "components": {
     "schemas": {
-      "SearchPeopleRequest": {
+      "SearchAnnouncementRequest": {
         "type": "object",
         "properties": {
-          "searchString": {
+          "searchTerm": {
             "type": "string",
             "example": "test"
           },
@@ -2827,7 +3083,422 @@
           }
         },
         "required": [
-          "searchString",
+          "searchTerm",
+          "page",
+          "pageSize"
+        ],
+        "xml": {
+          "name": "SearchAnnouncementRequest"
+        }
+      },
+      "SearchAnnouncementResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62cf05da39b1a28284adf3ae"
+                },
+                "ownerId": {
+                  "type": "string",
+                  "example": "628a9e39b483f428a74e75c1"
+                },
+                "coverImageUrl": {
+                  "type": "string",
+                  "example": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/announcement/cover_images/1657734350307-9055-duyuru.PNG"
+                },
+                "title": {
+                  "type": "string",
+                  "example": "SEYEHATSEVER UYGULAMASI İLE KYK YURTLARI TÜM YAZ BOYU ÜCRETSİZ!"
+                },
+                "relatedSchoolIds": {
+                  "type": "array",
+                  "example": [
+                    "62cc9c8f5c9816cc1e36858d"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "text": {
+                  "type": "string",
+                  "example": "<p>Yaz Tatili için seyahat edecek gençler Erzurum için Erkek yurdu olarak Ömer Nasuhi Bilmen yurdunda; Kız yurdu ise Yakutiye Öğrenci Yurdunda kalabileceklerdir. Hangi şehirde hangi yurdun aktif olduğunu ve yurtların iletişim bilgilerini öğrenmek isteyen öğrenciler \"https://seyahatsever.gsb.gov.tr/\" adresinden belirtilen bilgilere erişim sağlayabileceklerdir.</p>"
+                },
+                "isActive": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "fromDate": {
+                  "type": "string",
+                  "example": "2022-07-14T21:00:00.000Z"
+                },
+                "toDate": {
+                  "type": "string",
+                  "example": "2022-08-31T21:00:00.000Z"
+                },
+                "score": {
+                  "type": "number",
+                  "example": 0
+                },
+                "recordStatus": {
+                  "type": "number",
+                  "example": 1
+                },
+                "__t": {
+                  "type": "string",
+                  "example": "Announcement"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2022-07-13T17:50:18.488Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "example": "2022-07-16T21:40:50.861Z"
+                },
+                "__v": {
+                  "type": "number",
+                  "example": 1
+                },
+                "hashTags": {
+                  "type": "array",
+                  "example": [],
+                  "items": {}
+                },
+                "titlesch": {
+                  "type": "string",
+                  "example": "seyehatsever uygulamasi ile kyk yurtlari"
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "SearchAnnouncementResponse"
+        }
+      },
+      "SearchQuestionRequest": {
+        "type": "object",
+        "properties": {
+          "searchTerm": {
+            "type": "string",
+            "example": "test"
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "searchTerm",
+          "page",
+          "pageSize"
+        ],
+        "xml": {
+          "name": "SearchQuestionRequest"
+        }
+      },
+      "SearchQuestionResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62c092f0e6a6394e2a0c1fe9"
+                },
+                "ownerId": {
+                  "type": "string",
+                  "example": "62ab8a204166fd1eaebbb3fa"
+                },
+                "coverImageUrl": {
+                  "type": "string",
+                  "example": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/question/cover_images/1656965479314-xf3o1tBz13o.jpg"
+                },
+                "title": {
+                  "type": "string",
+                  "example": "test q"
+                },
+                "relatedSchoolIds": {
+                  "type": "array",
+                  "example": [
+                    "62b0c8d63721b9b60d3585db"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "text": {
+                  "type": "string",
+                  "example": "<p><br>dasfksdfdsfd</p>"
+                },
+                "isActive": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "score": {
+                  "type": "number",
+                  "example": 0
+                },
+                "recordStatus": {
+                  "type": "number",
+                  "example": 1
+                },
+                "__t": {
+                  "type": "string",
+                  "example": "Question"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2022-07-02T18:48:16.030Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "example": "2022-07-04T20:11:21.961Z"
+                },
+                "__v": {
+                  "type": "number",
+                  "example": 0
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "SearchQuestionResponse"
+        }
+      },
+      "SearchHashtagRequest": {
+        "type": "object",
+        "properties": {
+          "searchTerm": {
+            "type": "string",
+            "example": "test"
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "searchTerm",
+          "page",
+          "pageSize"
+        ],
+        "xml": {
+          "name": "SearchHashtagRequest"
+        }
+      },
+      "SearchHashtagResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62d07d6fea5d4faa1439b53b"
+                },
+                "__t": {
+                  "type": "string",
+                  "example": "Hashtag"
+                },
+                "recordStatus": {
+                  "type": "number",
+                  "example": 1
+                },
+                "tag": {
+                  "type": "string",
+                  "example": "bankacilikvesigortacilik1sinif"
+                },
+                "__v": {
+                  "type": "number",
+                  "example": 0
+                },
+                "announcementPopularity": {
+                  "type": "number",
+                  "example": 0
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2022-07-14T20:32:45.285Z"
+                },
+                "groupPopularity": {
+                  "type": "number",
+                  "example": 7
+                },
+                "overallPopularity": {
+                  "type": "number",
+                  "example": 7
+                },
+                "questionPopularity": {
+                  "type": "number",
+                  "example": 0
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "example": "2022-07-14T20:36:00.287Z"
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "SearchHashtagResponse"
+        }
+      },
+      "SearchPeopleRequest": {
+        "type": "object",
+        "properties": {
+          "searchTerm": {
+            "type": "string",
+            "example": "test"
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "searchTerm",
           "page",
           "pageSize"
         ],
@@ -2918,7 +3589,7 @@
       "SearchGroupChatsRequest": {
         "type": "object",
         "properties": {
-          "searchString": {
+          "searchTerm": {
             "type": "string",
             "example": "uni"
           },
@@ -2932,7 +3603,7 @@
           }
         },
         "required": [
-          "searchString",
+          "searchTerm",
           "page",
           "pageSize"
         ],
@@ -3145,7 +3816,7 @@
       "SearchPeopleAndGroupChatsRequest": {
         "type": "object",
         "properties": {
-          "searchString": {
+          "searchTerm": {
             "type": "string",
             "example": "tes"
           },
@@ -3159,7 +3830,7 @@
           }
         },
         "required": [
-          "searchString",
+          "searchTerm",
           "page",
           "pageSize"
         ],
@@ -3944,6 +4615,118 @@
         },
         "xml": {
           "name": "AccountUpdateProfileResponse"
+        }
+      },
+      "AccountUpdatePrivacySettingsRequest": {
+        "type": "object",
+        "properties": {
+          "followLimitation": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "None": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "ByRequest": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          },
+          "messageLimitation": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "None": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "OnlyWhoUserFollows": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "followLimitation",
+          "messageLimitation"
+        ],
+        "xml": {
+          "name": "AccountUpdatePrivacySettingsRequest"
+        }
+      },
+      "AccountUpdatePrivacySettingsResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "null"
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "AccountUpdatePrivacySettingsResponse"
         }
       },
       "AccountUpdateInterestsRequest": {

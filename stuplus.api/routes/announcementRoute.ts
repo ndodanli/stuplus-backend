@@ -34,6 +34,9 @@ router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadFileS3.s
                              },
                              relatedSchoolIds: {
                                  type: "array",
+                             },
+                             hashTags: {
+                                 type: "array",
                              }
                          },
                          required: ["title", "text", "relatedSchoolIds"]
@@ -64,7 +67,7 @@ router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadFileS3.s
         response.setErrorMessage(err.message)
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response)
@@ -90,7 +93,7 @@ router.post("/getAnnouncements", authorize([Role.ContentCreator, Role.User, Role
         response.setErrorMessage(err.message)
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response)
@@ -112,7 +115,7 @@ router.get("/getAnnouncement/:id", authorize([Role.ContentCreator, Role.User, Ro
         response.setErrorMessage(err.message)
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response)
@@ -138,7 +141,7 @@ router.post("/likeDislike", authorize([Role.ContentCreator, Role.User, Role.Admi
         response.setErrorMessage(err.message)
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response)
@@ -164,7 +167,7 @@ router.post("/getComments", authorize([Role.ContentCreator, Role.User, Role.Admi
         response.setErrorMessage(err.message)
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response)
@@ -190,7 +193,7 @@ router.post("/comment", authorize([Role.ContentCreator, Role.User, Role.Admin, R
         response.setErrorMessage(err.message)
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response)
@@ -216,7 +219,7 @@ router.post("/commentLikeDislike", authorize([Role.ContentCreator, Role.User, Ro
         response.setErrorMessage(err.message)
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response)

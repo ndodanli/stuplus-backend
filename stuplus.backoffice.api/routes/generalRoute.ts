@@ -30,7 +30,7 @@ router.post("/uploadFile", authorize([Role.Admin]), uploadFileS3.single("file", 
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -45,7 +45,7 @@ router.get("/getAllSchools", authorize([Role.Admin]), async (req: CustomRequest<
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -60,7 +60,7 @@ router.get("/getAllFaculties", authorize([Role.Admin]), async (req: CustomReques
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -75,7 +75,7 @@ router.get("/getAllDepartments", authorize([Role.Admin]), async (req: CustomRequ
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -90,7 +90,7 @@ router.get("/getAllInterests", authorize([Role.Admin]), async (req: CustomReques
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -116,7 +116,7 @@ router.get("/getUsers", authorize([Role.Admin]), async (req: CustomRequest<objec
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -142,7 +142,7 @@ router.get("/getAnnouncements", authorize([Role.Admin]), async (req: CustomReque
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -168,7 +168,7 @@ router.get("/getQuestions", authorize([Role.Admin]), async (req: CustomRequest<o
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -194,7 +194,7 @@ router.get("/getSchools", authorize([Role.Admin]), async (req: CustomRequest<obj
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -220,7 +220,7 @@ router.get("/getFaculties", authorize([Role.Admin]), async (req: CustomRequest<o
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -236,7 +236,7 @@ router.get("/getQuestionComments", authorize([Role.Admin]), async (req: CustomRe
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);
@@ -252,7 +252,7 @@ router.get("/getAnnouncementComments", authorize([Role.Admin]), async (req: Cust
     response.setErrorMessage(err.message);
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response);

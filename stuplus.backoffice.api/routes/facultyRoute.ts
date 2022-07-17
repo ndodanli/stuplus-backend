@@ -44,7 +44,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<FacultyLi
     response.setErrorMessage(err.message)
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -73,7 +73,7 @@ router.post("/addUpdateFaculty", authorize([Role.Admin]), async (req: CustomRequ
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -113,7 +113,7 @@ router.delete("/deleteFaculty", authorize([Role.Admin]), async (req: CustomReque
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)

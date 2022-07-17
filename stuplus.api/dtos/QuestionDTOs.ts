@@ -7,6 +7,7 @@ export class QuestionAddDTO {
     title: string = "";
     relatedSchoolIds: string[] | string = [];
     text: string = "";
+    hashTags: string[] = [];
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

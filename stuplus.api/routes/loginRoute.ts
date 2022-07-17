@@ -30,7 +30,7 @@ router.post("/", validateLogin, async (req: CustomRequest<LoginUserDTO>, res: an
         response.setErrorMessage(err.message)
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response)
@@ -58,7 +58,7 @@ router.post("/google", validateGoogleLogin, async (req: CustomRequest<LoginUserG
         response.setErrorMessage(err.message)
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response)
@@ -87,7 +87,7 @@ router.post("/register", validateRegister, async (req: CustomRequest<RegisterUse
         response.setErrorMessage(err.message)
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response)

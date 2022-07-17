@@ -8,6 +8,7 @@ import { School } from "./SchoolEntity";
 export interface GroupChat extends BaseEntity {
   ownerId: string; //user id
   title: string;
+  titlesch: string;
   type: GroupChatType;
   about: string;
   coverImageUrl: string;
@@ -30,6 +31,7 @@ export interface GroupChatDocument extends GroupChat, Document {
 export const GroupChatSchema: Schema = new Schema({
   ownerId: { type: String, required: true }, //user id
   title: { type: String, required: true },
+  titlesch: { type: String, required: true },
   type: { type: Number, required: true },
   coverImageUrl: { type: String, required: false, default: null },
   avatarKey: { type: String, required: false, default: null },
@@ -50,10 +52,10 @@ GroupChatSchema.plugin(mongoose_fuzzy_searching,
         weight: 3,
       },
       {
-        name: 'title',
+        name: 'titlesch',
         minSize: 3,
         weight: 1,
-      },
+      }
     ]
   });
 
@@ -77,6 +79,7 @@ GroupChatSchema.methods.minify = async function (
     updatedAt: this.updatedAt,
     ownerId: this.ownerId,
     title: this.title,
+    titlesch: this.titlesch,
     type: this.type,
     avatarKey: this.avatarKey,
     coverImageUrl: this.coverImageUrl,

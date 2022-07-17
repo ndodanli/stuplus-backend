@@ -44,7 +44,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<Departmen
     response.setErrorMessage(err.message)
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -74,7 +74,7 @@ router.post("/addUpdateDepartment", authorize([Role.Admin]), async (req: CustomR
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -112,7 +112,7 @@ router.delete("/deleteDepartment", authorize([Role.Admin]), async (req: CustomRe
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)

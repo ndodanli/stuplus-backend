@@ -44,7 +44,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<QuestionC
     response.setErrorMessage(err.message)
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -73,7 +73,7 @@ router.post("/addUpdateQuestionComment", authorize([Role.Admin]), async (req: Cu
   } catch (err: any) {
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -97,7 +97,7 @@ router.delete("/deleteQuestionComment", authorize([Role.Admin]), async (req: Cus
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)

@@ -4,7 +4,7 @@ import { mapToDTO } from "../../../stuplus-lib/utils/general";
 
 export class UserProfileResponseDTO {
     user?: User | null;
-    followStatus?: object;
+    followStatus?: any;
     constructor(obj?: any) {
         if (obj) {
             mapToDTO(this, obj);

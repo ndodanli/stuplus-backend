@@ -388,7 +388,6 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                             });
                             await GroupMessageEntity.bulkWrite(bulkForwardUpdateOp);
                             console.timeEnd("GM updateSendFile Bulk operation time");
-
                         }
                     }
                 }

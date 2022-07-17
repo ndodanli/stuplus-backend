@@ -24,9 +24,9 @@ export const validategetFaculties = [
 ];
 
 export const validategetDepartments = [
-    param('facultyId')
+    param('schoolId')
         .notEmpty()
-        .withMessage('FacultyId bulunamadı.')
+        .withMessage('schoolId bulunamadı.')
         .bail()
         .custom(async (value, { req }) => {
             if (!isValidObjectId(value)) {

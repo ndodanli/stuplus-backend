@@ -5,7 +5,7 @@ import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
-import { stringify } from "../../stuplus-lib/utils/general";
+import { searchable, searchableWithSpaces, stringify } from "../../stuplus-lib/utils/general";
 import { LikeType, RecordStatus } from "../../stuplus-lib/enums/enums";
 import { AnnouncementCommentDocument } from "../../stuplus-lib/entities/AnnouncementCommentEntity";
 import sanitizeHtml from 'sanitize-html';
@@ -22,10 +22,21 @@ export class AnnouncementAccess {
         if (!payload.relatedSchoolIds?.every(x => user.relatedSchoolIds.includes(x)))
             throw new NotValidError(getMessage("userNotAuthorized", acceptedLanguages));
 
+        const redisOps: Promise<any>[] = [];
+        if (payload.hashTags && payload.hashTags.length > 0) {
+            payload.hashTags.forEach(async (x, index, arr) => {
+                arr[index] = searchable(x);
+                redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagEntity + `${arr[index]}`));
+                redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagGroupPopularityIncr + `${arr[index]}:annoPopularity`));
+            });
+            await Promise.all(redisOps);
+        }
+
         payload.text = sanitizeHtml(payload.text);
 
         await AnnouncementEntity.create(new AnnouncementEntity({
             ...payload,
+            titlesch: searchableWithSpaces(payload.title),
             ownerId: user._id.toString(),
         }));
 

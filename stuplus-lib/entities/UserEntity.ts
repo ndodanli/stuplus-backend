@@ -35,6 +35,7 @@ export interface User extends BaseEntity {
   privacySettings: PrivacySettings;
   lastSeenDate: Date;
   secondaryEducation: boolean;
+  playerId: string; //one signal player id
   //ignore
   schoolName: string | null; //ignore
   facultyName: string | null; //ignore
@@ -42,6 +43,7 @@ export interface User extends BaseEntity {
   followerCount: number; //ignore
   followingCount: number; //ignore
   isAdminOfThisGroup: boolean; //ignore
+  unreadNotificationCount: number; //ignore
 }
 
 export class UpdateTimeLimits {
@@ -77,12 +79,16 @@ export class EmailConfirmation {
 }
 
 export class NotificationSettings {
-  test1: Boolean | null;
-  test2: Boolean | null;
-  constructor() {
-    this.test1 = null;
-    this.test2 = null;
-  }
+  newMessage: boolean = true;
+  newFollow: boolean = true;
+  newFollowRequest: boolean = true;
+  newCommentToAnnouncement: boolean = true;
+  newCommentToQuestion: boolean = true;
+  newLike: boolean = true;
+  newMention: boolean = true;
+  newGroupMessage: boolean = true;
+
+  newGroupMention: boolean = true;
 }
 export interface UserDocument extends User, Document {
   minify(): unknown;
@@ -147,7 +153,8 @@ export const UserSchema: Schema = new Schema({
   about: { type: String, required: false, default: null },
   privacySettings: {
     type: new Schema({
-      followLimitation: { type: Number, required: false, default: null },
+      followLimitation: { type: Number, required: false, default: 0 },
+      messageLimitation: { type: Number, required: false, default: 0 },
     },
       { _id: false }),
     required: false,
@@ -155,6 +162,7 @@ export const UserSchema: Schema = new Schema({
   },
   lastSeenDate: { type: Date, required: false, default: null },
   secondaryEducation: { type: Boolean, required: false, default: false },
+  playerId: { type: String, required: false, default: null },
 });
 
 UserSchema.plugin(mongoose_fuzzy_searching,
@@ -231,6 +239,7 @@ UserSchema.methods.minify = async function (
     lastSeenDate: this.lastSeenDate,
     updateTimeLimits: this.updateTimeLimits,
     secondaryEducation: this.secondaryEducation,
+    playerId: this.playerId,
     //ignore
     schoolName: null, //ignore
     facultyName: null, //ignore
@@ -238,6 +247,7 @@ UserSchema.methods.minify = async function (
     followerCount: 0, //ignore
     followingCount: 0, //ignore
     isAdminOfThisGroup: false, //ignore
+    unreadNotificationCount: 0, //ignore
   };
   return response;
 };

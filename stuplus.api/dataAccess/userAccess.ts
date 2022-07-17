@@ -8,7 +8,7 @@ import { getNewToken } from "../utils/token";
 import EmailService from "../../stuplus-lib/services/emailService";
 import moment from "moment-timezone";
 import { checkIfStudentEmail, generateCode, searchable, searchables } from "../../stuplus-lib/utils/general";
-import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO, UpdateUserSchoolDTO } from "../dtos/UserDTOs";
+import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO, UpdateUserSchoolDTO, UpdatePrivacySettingsDTO } from "../dtos/UserDTOs";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { config } from "../config/config";
 import axios from "axios";
@@ -23,6 +23,8 @@ import { FollowDocument } from "../../stuplus-lib/entities/FollowEntity";
 import { io } from "../socket";
 import { userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 import { NotificationDocument } from "../../stuplus-lib/entities/NotificationEntity";
+import { GroupAccess } from "./groupAccess";
+import { AddToGroupChatDTO } from "../socket/dtos/Chat";
 export class UserAccess {
     public static async getUserProfile(acceptedLanguages: Array<string>, userId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
         const response = new UserProfileResponseDTO();
@@ -66,30 +68,62 @@ export class UserAccess {
         return response;
     }
 
+    public static async updatePlayerId(acceptedLanguages: Array<string>, userId: string, playerId: string): Promise<boolean> {
+        await UserEntity.findOneAndUpdate({ _id: userId }, { playerId: playerId });
+        return true;
+    }
+
     public static async updateSchool(acceptedLanguages: Array<string>, id: string, payload: UpdateUserSchoolDTO): Promise<Boolean> {
         const user = await UserEntity.findOne({ _id: id });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
-
-        user.schoolId = payload.schoolId;
-        user.departmentId = payload.departmentId;
+        let firstTime = false;
+        if (!user.schoolId) {
+            firstTime = true;
+            user.schoolId = payload.schoolId;
+        }
+        if (!user.departmentId)
+            user.departmentId = payload.departmentId;
         user.grade = payload.grade;
         user.secondaryEducation = payload.secondaryEducation;
 
         await user.save();
+
+        if (firstTime) {
+            const userGroupChats = await GroupChatEntity.find({
+                schoolId: user.schoolId,
+                departmentId: user.departmentId,
+                grade: user.grade,
+                secondaryEducation: user.secondaryEducation
+            }, { _id: 1 });
+            const userGroupChatIds = userGroupChats.map(groupChat => groupChat._id);
+
+            for (let i = 0; i < userGroupChatIds.length; i++) {
+                const gcId = userGroupChatIds[i];
+                const addToGroupChatPayload = new AddToGroupChatDTO({
+                    groupChatId: gcId,
+                    userIds: [user._id.toString()],
+                });
+
+                await GroupAccess.addUsersToGroupChat(acceptedLanguages, "62ab8a204166fd1eaebbb3fa", addToGroupChatPayload, true);
+            }
+        }
         await RedisService.updateUser(user);
 
-        // io.in(userWatchRoomName(user.id)).emit("cWatchUsers", {
-        //     id: user.id,
-        //     t: WatchRoomTypes.UserProfileChanged,
-        //     data: {
-        //         firstName: user.firstName,
-        //         lastName: user.lastName,
-        //         about: user.about,
-        //         avatarKey: user.avatarKey,
-        //         username: user.username
-        //     }
-        // });
+        return true;
+    }
+
+    public static async updatePrivacySettings(acceptedLanguages: Array<string>, id: string, payload: UpdatePrivacySettingsDTO): Promise<Boolean> {
+        const user = await UserEntity.findOne({ _id: id });
+
+        if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
+
+        user.privacySettings.followLimitation = payload.followLimitation;
+        user.privacySettings.messageLimitation = payload.messageLimitation;
+        user.markModified("privacySettings");
+
+        await user.save();
+        await RedisService.updateUser(user);
 
         return true;
     }
@@ -181,22 +215,38 @@ export class UserAccess {
         return user;
     }
 
-    public static async updatePassword(acceptedLanguages: Array<string>, id: string, payload: any): Promise<UserDocument | null> {
+    public static async updatePassword(acceptedLanguages: Array<string>, id: string, payload: any): Promise<any | null> {
         const user = await UserEntity.findOne({ _id: id });
+        const response: { validationErrors: any[], hasError: boolean } = { validationErrors: [], hasError: false };
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
-        if (!(await bcrypt.compare(payload.password, user.password)))
-            throw new NotValidError(getMessage("passwordNotTrue", acceptedLanguages));
-
-        if ((await bcrypt.compare(payload.newPassword, user.password)))
-            throw new NotValidError(getMessage("passwordCanNotBeSameAsOld", acceptedLanguages));
+        if (!(await bcrypt.compare(payload.password, user.password))) {
+            response.hasError = true;
+            response.validationErrors.push({
+                value: "password",
+                msg: getMessage("passwordNotTrue", acceptedLanguages),
+                param: "password",
+                location: "body"
+            });
+            return response;
+        }
+        if ((await bcrypt.compare(payload.newPassword, user.password))) {
+            response.hasError = true;
+            response.validationErrors.push({
+                value: "password",
+                msg: getMessage("passwordCanNotBeSameAsOld", acceptedLanguages),
+                param: "password",
+                location: "body"
+            });
+            return response;
+        }
 
         user.password = await bcrypt.hash(payload.newPassword, 10);
         await user.save();
 
         await RedisService.updateUser(user);
 
-        return user;
+        return response;
     }
 
     public static async registerUser(acceptedLanguages: Array<string>, payload: RegisterUserDTO): Promise<object> {
@@ -571,6 +621,7 @@ export class UserAccess {
 
     public static async followUser(acceptedLanguages: Array<string>, userId: string, payload: UserFollowUserRequestDTO): Promise<object> {
         let followId: string;
+        const response: { followId: string, followStatus: FollowStatus } = { followId: "", followStatus: FollowStatus.None };
         const user = await UserEntity.findOne({ _id: payload.requestedId }, { "privacySettings": 1, "_id": 0, "blockedUserIds": 1 }).lean(true);
 
         if (!user)
@@ -591,6 +642,8 @@ export class UserAccess {
                 followingId: payload.requestedId
             });
             followId = followEntity.id;
+            response.followStatus = FollowStatus.Accepted;
+            response.followId = followId;
         } else {
             const followReq = await FollowRequestEntity.exists({ ownerId: userId, requestedId: payload.requestedId, recordStatus: RecordStatus.Active });
             if (followReq)
@@ -602,9 +655,11 @@ export class UserAccess {
                 requestedId: payload.requestedId
             });
             followId = followReqEntity.id;
+            response.followStatus = FollowStatus.Pending;
+            response.followId = followId;
         }
 
-        return { followId: followId };
+        return response;
     }
 
     public static async unfollowUser(acceptedLanguages: Array<string>, userId: string, payload: UserUnfollowDTO): Promise<boolean> {

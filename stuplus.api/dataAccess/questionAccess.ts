@@ -5,25 +5,32 @@ import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
-import { stringify } from "../../stuplus-lib/utils/general";
+import { searchable, searchableWithSpaces, stringify } from "../../stuplus-lib/utils/general";
 import { LikeType, RecordStatus } from "../../stuplus-lib/enums/enums";
 import { QuestionCommentDocument } from "../../stuplus-lib/entities/QuestionCommentEntity";
 import sanitizeHtml from 'sanitize-html';
 
 export class QuestionAccess {
     public static async addQuestion(acceptedLanguages: Array<string>, payload: QuestionAddDTO, currentUserId: string): Promise<Boolean> {
-        const user = await UserEntity.findOne({ _id: currentUserId }, ["relatedSchoolIds"], { lean: true });
-
-        if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
-
         if (typeof payload.relatedSchoolIds === "string")
             payload.relatedSchoolIds = payload.relatedSchoolIds.split(",");
 
         payload.text = sanitizeHtml(payload.text);
 
+        const redisOps: Promise<any>[] = [];
+        if (payload.hashTags && payload.hashTags.length > 0) {
+            payload.hashTags.forEach(async (x, index, arr) => {
+                arr[index] = searchable(x);
+                redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagEntity + `${arr[index]}`));
+                redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagGroupPopularityIncr + `${arr[index]}:questionPopularity`));
+            });
+            await Promise.all(redisOps);
+        }
+
         await QuestionEntity.create(new QuestionEntity({
             ...payload,
             ownerId: currentUserId,
+            titlesch: searchableWithSpaces(payload.title),
         }));
 
         return true;

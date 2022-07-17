@@ -44,34 +44,44 @@ export const validateUpdateSchool = [
 
 export const validateUpdateProfile = [
     check('firstName')
+        .notEmpty()
+        .withMessage("İsim boş olamaz.")
+        .bail()
         .isLength({ min: 1, max: 50 })
-        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.selectedLangs(), ["İsim"]))
+        .withMessage((value: any, { req }: any) => "50 karakterden fazla olamaz.")
         .bail(),
     check('lastName')
+        .notEmpty()
+        .withMessage("Soyisim boş olamaz.")
+        .bail()
         .isLength({ min: 1, max: 50 })
-        .withMessage((value: any, { req }: any) => getMessage("xNotValid", req.selectedLangs(), ["Soyisim"]))
-        .bail(),
-    check('phoneNumber')
-        .if((value: any, { req }: any) => value)
-        .isMobilePhone(["tr-TR"])
-        .not()
-        .withMessage("Telefon numarası geçerli değil. Lütfen belirtilen formatta giriş yapınız.")
+        .withMessage((value: any, { req }: any) => "50 karakterden fazla olamaz.")
         .bail(),
     check('avatarKey')
-        .isString()
-        .not()
-        .withMessage("avatarKey string olmalidir.")
+        .notEmpty()
+        .withMessage("Avatar boş olamaz.")
         .bail(),
     check('username')
-        .isString()
-        .not()
-        .withMessage("avatarKey string olmalidir.")
+        .notEmpty()
+        .withMessage("Kullanıcı adı boş olamaz.")
         .bail(),
-    // check('profilePhotoUrl')
-    //     .if((value: any, { req }: any) => value)
-    //     .isURL()
-    //     .withMessage("Geçersiz profil fotoğraf yolu.")
-    //     .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, "Lütfen gerekli bilgileri doldurun."));
+        next();
+    },
+];
+
+export const validateUpdatePrivacySettings = [
+    check('followLimitation')
+        .notEmpty()
+        .withMessage("followLimitation boş olamaz.")
+        .bail(),
+    check('messageLimitation')
+        .notEmpty()
+        .withMessage("messageLimitation boş olamaz.")
+        .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())

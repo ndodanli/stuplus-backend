@@ -9,8 +9,8 @@ import { authorize } from "../middlewares/auth";
 import { GroupChatUserRole, RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { SortOrder } from "mongoose";
 import RedisService from "../../stuplus-lib/services/redisService";
-import { GroupChatType } from "../../stuplus-lib/enums/enums_socket";
-import { searchables } from "../../stuplus-lib/utils/general";
+import { GroupChatType, RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
+import { searchable, searchables, searchableWithSpaces } from "../../stuplus-lib/utils/general";
 
 const router = Router();
 
@@ -45,7 +45,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<SchoolLis
     response.setErrorMessage(err.message)
 
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   return Ok(res, response)
@@ -74,9 +74,11 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
       const groupGuard = await RedisService.acquireUser("62ab8a204166fd1eaebbb3fa")
 
       const schoolHashtags = searchables(newSchool.title);
+      let redisOps: Promise<any>[] = [];
       const groupChatEntity = new GroupChatEntity({
         schoolId: newSchool._id.toString(),
         title: newSchool.title,
+        titlesch: searchableWithSpaces(newSchool.title),
         // about: newSchool.about,
         about: "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
         coverImageUrl: newSchool.coverImageUrl,
@@ -85,6 +87,13 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
         ownerId: groupGuard._id.toString(),
         hashTags: schoolHashtags
       });
+      groupChatEntity.hashTags.forEach(async (x, index, arr) => {
+        arr[index] = searchable(x);
+        redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagEntity + `${arr[index]}`));
+        redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagGroupPopularityIncr + `${arr[index]}:groupPopularity`));
+      });
+      await Promise.all(redisOps);
+      redisOps = [];
 
       await GroupChatEntity.create(groupChatEntity);
 
@@ -106,6 +115,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
             schoolId: newSchool._id.toString(),
             departmentId: departmentEntity._id.toString(),
             title: departmentEntity.title,
+            titlesch: searchableWithSpaces(departmentEntity.title),
             about: departmentEntity.about,
             coverImageUrl: departmentEntity.coverImageUrl,
             avatarKey: departmentEntity.avatarKey,
@@ -113,7 +123,13 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
             ownerId: groupGuard._id.toString(),
             hashTags: searchables(departmentEntity.title).concat(schoolHashtags)
           });
-
+          departmentGroupChatEntity.hashTags.forEach(async (x, index, arr) => {
+            arr[index] = searchable(x);
+            redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagEntity + `${arr[index]}`));
+            redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagGroupPopularityIncr + `${arr[index]}:groupPopularity`));
+          });
+          await Promise.all(redisOps);
+          redisOps = [];
           await GroupChatEntity.create(departmentGroupChatEntity);
 
           await GroupChatUserEntity.create({
@@ -130,6 +146,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
               schoolId: newSchool._id.toString(),
               departmentId: departmentEntity._id.toString(),
               title: departmentEntity.title + ` ${j}. Sınıf`,
+              titlesch: searchableWithSpaces(departmentEntity.title + ` ${j}. Sınıf`),
               about: departmentEntity.about,
               coverImageUrl: departmentEntity.coverImageUrl,
               avatarKey: departmentEntity.avatarKey,
@@ -139,6 +156,13 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
               hashTags: searchables(departmentEntity.title + ` ${j}. Sınıf`).concat(schoolHashtags),
               secondaryEducation: false
             });
+            departmentGradeGroupChatEntity.hashTags.forEach(async (x, index, arr) => {
+              arr[index] = searchable(x);
+              redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagEntity + `${arr[index]}`));
+              redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagGroupPopularityIncr + `${arr[index]}:groupPopularity`));
+            });
+            await Promise.all(redisOps);
+            redisOps = [];
             await GroupChatEntity.create(departmentGradeGroupChatEntity);
 
             await GroupChatUserEntity.create({
@@ -151,6 +175,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
                 schoolId: newSchool._id.toString(),
                 departmentId: departmentEntity._id.toString(),
                 title: departmentEntity.title + ` ${j}. Sınıf İÖ`,
+                titlesch: searchableWithSpaces(departmentEntity.title + ` ${j}. Sınıf İÖ`),
                 about: departmentEntity.about,
                 coverImageUrl: departmentEntity.coverImageUrl,
                 avatarKey: departmentEntity.avatarKey,
@@ -160,6 +185,13 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
                 hashTags: searchables(departmentEntity.title + ` ${j}. Sınıf İÖ`).concat(schoolHashtags),
                 secondaryEducation: true
               });
+              depSecondaryEducationGroupChatEntity.hashTags.forEach(async (x, index, arr) => {
+                arr[index] = searchable(x);
+                redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagEntity + `${arr[index]}`));
+                redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagGroupPopularityIncr + `${arr[index]}:groupPopularity`));
+              });
+              await Promise.all(redisOps);
+              redisOps = [];
               await GroupChatEntity.create(depSecondaryEducationGroupChatEntity);
 
               await GroupChatUserEntity.create({
@@ -174,6 +206,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
               schoolId: newSchool._id.toString(),
               departmentId: departmentEntity._id.toString(),
               title: departmentEntity.title + " Hazırlık",
+              titlesch: searchableWithSpaces(departmentEntity.title + " Hazırlık"),
               about: departmentEntity.about,
               coverImageUrl: departmentEntity.coverImageUrl,
               avatarKey: departmentEntity.avatarKey,
@@ -182,6 +215,13 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
               ownerId: groupGuard._id.toString(),
               hashTags: searchables(departmentEntity.title + " Hazırlık").concat(schoolHashtags)
             });
+            departmentGradeGroupChatEntity.hashTags.forEach(async (x, index, arr) => {
+              arr[index] = searchable(x);
+              redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagEntity + `${arr[index]}`));
+              redisOps.push(RedisService.client.incr(RedisKeyType.DBHashtagGroupPopularityIncr + `${arr[index]}:groupPopularity`));
+            });
+            await Promise.all(redisOps);
+            redisOps = [];
             await GroupChatEntity.create(departmentGradeGroupChatEntity);
 
             await GroupChatUserEntity.create({
@@ -200,7 +240,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   await RedisService.updateSchools();
@@ -250,7 +290,7 @@ router.delete("/deleteSchool", authorize([Role.Admin]), async (req: CustomReques
 
     response.setErrorMessage(err.message)
     if (err.status != 200)
-      return InternalError(res, response);
+      return InternalError(res, response, err);
   }
 
   await RedisService.updateSchools();

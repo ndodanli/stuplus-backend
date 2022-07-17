@@ -1,3 +1,4 @@
+import customExtensions from "../stuplus-lib/extensions/extensions";
 import "../stuplus-lib/extensions/extensionMethods"
 import express, { Request, Response, } from "express";
 import { initializeDatabese } from "./config/database";
@@ -17,7 +18,6 @@ import swaggerRoute from "./routes/swaggerRoute";
 import path from "path";
 import { config } from "./config/config";
 import interestRoute from "./routes/interestRoute";
-import customExtensions from "../stuplus-lib/extensions/extensions";
 import logger, { setLogger } from "../stuplus-lib/config/logger";
 
 dotenv.config();
@@ -27,8 +27,8 @@ setup();
 setLogger("Stuplus API-SOCKET");
 async function setup() {
   await initializeDatabese();
-  import("../cron/index");
-  import("../stuplus-lib/services/redisService");
+  await import("../stuplus-lib/services/redisService");
+  await import("../cron/index");
 }
 
 app.use(bodyParser.urlencoded({ extended: true }));

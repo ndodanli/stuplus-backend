@@ -4,8 +4,8 @@ import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectRe
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { authorize } from "../../stuplus.backoffice.api/middlewares/auth";
 import { NotificationType, Role, SearchedEntityType } from "../../stuplus-lib/enums/enums";
-import { validateSearchPeopleAndGroup } from "../middlewares/validation/search/validateSearchRoute";
-import { SearchGroupChatDTO, SearchPeopleAndGroupChatDTO, SearchPeopleDTO } from "../dtos/SearchDTOs";
+import { validateSearch } from "../middlewares/validation/search/validateSearchRoute";
+import { SearchGroupChatDTO, SearchHashTagDTO, SearchPeopleAndGroupChatDTO, SearchPeopleDTO, SearchQuestionDTO } from "../dtos/SearchDTOs";
 import { SearchAccess } from "../dataAccess/searchAccess";
 import { NotificationEntity, SearchHistoryEntity } from "../../stuplus-lib/entities/BaseEntity";
 import RedisService from "../../stuplus-lib/services/redisService";
@@ -13,7 +13,7 @@ import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
 import { stringify } from "../../stuplus-lib/utils/general";
 const router = Router();
 
-router.post("/people", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearchPeopleAndGroup, async (req: CustomRequest<SearchPeopleDTO>, res: any) => {
+router.post("/people", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchPeopleDTO>, res: any) => {
     /* #swagger.tags = ['Search']
         #swagger.description = 'Get searched results(only users).' */
     /*	#swagger.requestBody = {
@@ -37,7 +37,7 @@ router.post("/people", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
         const sData: object = {
             e: {
                 _id: searchHistoryEntity.id,
-                searchTerm: payload.searchString,
+                searchTerm: payload.searchTerm,
                 searchedEntities: [SearchedEntityType.User],
                 foundedCount: response.data.length,
                 ownerId: res.locals.user._id,
@@ -51,13 +51,13 @@ router.post("/people", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
 });
 
-router.post("/groupChats", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearchPeopleAndGroup, async (req: CustomRequest<SearchGroupChatDTO>, res: any) => {
+router.post("/groupChats", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchGroupChatDTO>, res: any) => {
     /* #swagger.tags = ['Search']
        #swagger.description = 'Get searched results(only group chats).' */
     /*	#swagger.requestBody = {
@@ -81,7 +81,7 @@ router.post("/groupChats", authorize([Role.User, Role.Admin, Role.ContentCreator
         const sData: object = {
             e: {
                 _id: searchHistoryEntity.id,
-                searchTerm: payload.searchString,
+                searchTerm: payload.searchTerm,
                 searchedEntities: [SearchedEntityType.Group],
                 foundedCount: response.data.length,
                 ownerId: res.locals.user._id,
@@ -95,13 +95,13 @@ router.post("/groupChats", authorize([Role.User, Role.Admin, Role.ContentCreator
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
 });
 
-router.post("/peopleAndGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearchPeopleAndGroup, async (req: CustomRequest<SearchPeopleAndGroupChatDTO>, res: any) => {
+router.post("/peopleAndGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchPeopleAndGroupChatDTO>, res: any) => {
     /* #swagger.tags = ['Search']
      #swagger.description = 'Get searched results(people and group chats).' */
     /*	#swagger.requestBody = {
@@ -139,7 +139,7 @@ router.post("/peopleAndGroupChats", authorize([Role.User, Role.Admin, Role.Conte
         const sData: object = {
             e: {
                 _id: searchHistoryEntity.id,
-                searchTerm: payload.searchString,
+                searchTerm: payload.searchTerm,
                 searchedEntities: [SearchedEntityType.Group, SearchedEntityType.User],
                 foundedCount: response.data.length,
                 ownerId: res.locals.user._id,
@@ -153,7 +153,139 @@ router.post("/peopleAndGroupChats", authorize([Role.User, Role.Admin, Role.Conte
         response.setErrorMessage(err.message);
 
         if (err.status != 200)
-            return InternalError(res, response);
+            return InternalError(res, response, err);
+    }
+
+    return Ok(res, response);
+});
+
+router.post("/hashtag", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchHashTagDTO>, res: any) => {
+    /* #swagger.tags = ['Search']
+        #swagger.description = 'Get hashtags by search term.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/SearchHashtagRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/SearchHashtagResponse"
+     }
+   } */
+    const response = new BaseResponse<any>();
+    try {
+        const payload = new SearchHashTagDTO(req.body);
+
+        response.data = await SearchAccess.getSearchedTags(res.locals.user._id, payload);
+
+        const now = new Date();
+        const searchHistoryEntity = new SearchHistoryEntity({});
+        const sData: object = {
+            e: {
+                _id: searchHistoryEntity.id,
+                searchTerm: payload.searchTerm,
+                searchedEntities: [SearchedEntityType.Hashtag],
+                foundedCount: response.data.length,
+                ownerId: res.locals.user._id,
+                createdAt: now,
+                updatedAt: now,
+            }
+        }
+
+        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
+    } catch (err: any) {
+        response.setErrorMessage(err.message);
+
+        if (err.status != 200)
+            return InternalError(res, response, err);
+    }
+
+    return Ok(res, response);
+});
+
+router.post("/question", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchQuestionDTO>, res: any) => {
+    /* #swagger.tags = ['Search']
+        #swagger.description = 'Get searched questions.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/SearchQuestionRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/SearchQuestionResponse"
+     }
+   } */
+    const response = new BaseResponse<any>();
+    try {
+        const payload = new SearchQuestionDTO(req.body);
+
+        response.data = await SearchAccess.getSearchedQuestions(res.locals.user._id, payload);
+
+        const now = new Date();
+        const searchHistoryEntity = new SearchHistoryEntity({});
+        const sData: object = {
+            e: {
+                _id: searchHistoryEntity.id,
+                searchTerm: payload.searchTerm,
+                searchedEntities: [SearchedEntityType.Question],
+                foundedCount: response.data.length,
+                ownerId: res.locals.user._id,
+                createdAt: now,
+                updatedAt: now,
+            }
+        }
+
+        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
+    } catch (err: any) {
+        response.setErrorMessage(err.message);
+
+        if (err.status != 200)
+            return InternalError(res, response, err);
+    }
+
+    return Ok(res, response);
+});
+
+router.post("/announcement", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchQuestionDTO>, res: any) => {
+    /* #swagger.tags = ['Search']
+        #swagger.description = 'Get searched questions.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/SearchQuestionRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/SearchQuestionResponse"
+     }
+   } */
+    const response = new BaseResponse<any>();
+    try {
+        const payload = new SearchQuestionDTO(req.body);
+
+        response.data = await SearchAccess.getSearchedAnnouncements(res.locals.user._id, payload);
+
+        const now = new Date();
+        const searchHistoryEntity = new SearchHistoryEntity({});
+        const sData: object = {
+            e: {
+                _id: searchHistoryEntity.id,
+                searchTerm: payload.searchTerm,
+                searchedEntities: [SearchedEntityType.Announcement],
+                foundedCount: response.data.length,
+                ownerId: res.locals.user._id,
+                createdAt: now,
+                updatedAt: now,
+            }
+        }
+
+        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
+    } catch (err: any) {
+        response.setErrorMessage(err.message);
+
+        if (err.status != 200)
+            return InternalError(res, response, err);
     }
 
     return Ok(res, response);
