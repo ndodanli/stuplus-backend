@@ -1,6 +1,7 @@
 import { Document, Schema } from "mongoose";
 import { NotificationType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
+import { GroupChat } from "./GroupChatEntity";
 import { User } from "./UserEntity";
 export interface Notification extends BaseEntity {
   ownerId: string; //owner user id
@@ -10,6 +11,7 @@ export interface Notification extends BaseEntity {
   type: NotificationType;
   //ignore
   relatedUser?: User | null; //ignore
+  groupChat?: GroupChat | null; //ignore
 
 }
 
@@ -52,6 +54,7 @@ NotificationSchema.methods.minify = async function (
     readed: this.readed,
     type: this.type,
     relatedUser: this.relatedUser,
+    groupChat: this.groupChat,
   };
   return response;
 };

@@ -791,9 +791,12 @@ export class UserAccess {
         if (notificationHistory.length > 0) {
             const notificationHistoryUserIds = notificationHistory.filter(x => x.relatedUserId).map(x => x.relatedUserId);
             const requiredUsers = await UserEntity.find({ _id: { $in: notificationHistoryUserIds } }, ["profilePhotoUrl", "username", "firstName", "lastName", "avatarKey"]).lean(true);
+            const notificationHistoryGroupChatIds = notificationHistory.filter(x => x.groupChatId).map(x => x.groupChatId);
+            const requiredGroupChats = await GroupChatEntity.find({ _id: { $in: notificationHistoryGroupChatIds } }, { title: 1 }).lean(true);
             for (let i = 0; i < notificationHistory.length; i++) {
                 const notification = notificationHistory[i];
                 notification.relatedUser = requiredUsers.find(x => x._id.toString() == notification.relatedUserId);
+                notification.groupChat = requiredGroupChats.find(x => x._id.toString() == notification.groupChatId);
             }
         }
         return notificationHistory;
