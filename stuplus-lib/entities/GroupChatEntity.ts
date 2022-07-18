@@ -43,6 +43,8 @@ export const GroupChatSchema: Schema = new Schema({
   secondaryEducation: { type: Boolean, required: false, default: null },
 });
 
+GroupChatSchema.index({ recordStatus: 1 });
+
 GroupChatSchema.plugin(mongoose_fuzzy_searching,
   {
     fields: [

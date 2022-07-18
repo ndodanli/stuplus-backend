@@ -28,6 +28,8 @@ export const QuestionCommentSchema: Schema = new Schema({
   score: { type: Number, required: false, default: 0 },
 });
 
+QuestionCommentSchema.index({ recordStatus: 1 });
+
 // Just to prove that hooks are still functioning as expected
 QuestionCommentSchema.pre("save", function (next) {
   //

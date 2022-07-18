@@ -3,7 +3,7 @@ import BaseEntity from "./BaseEntity";
 import { MessageFiles, ReplyToDTO } from "./MessageEntity";
 
 export interface GroupMessage extends BaseEntity {
-  fromId: string; //user id
+  ownerId: string; //user id
   text: string;
   forwarded: boolean;
   forwardedAt: Date;
@@ -21,7 +21,7 @@ export interface GroupMessageDocument extends GroupMessage, Document {
 }
 
 export const GroupMessageSchema: Schema = new Schema({
-  fromId: { type: String, required: true },
+  ownerId: { type: String, required: true },
   text: { type: String, required: true },
   forwarded: { type: Boolean, required: true, default: false },
   forwardedAt: { type: Date, required: false },
@@ -37,6 +37,8 @@ export const GroupMessageSchema: Schema = new Schema({
   replyToId: { type: String, required: false, default: null },
   groupChatId: { type: String, required: true },
 });
+
+GroupMessageSchema.index({ recordStatus: 1 });
 
 GroupMessageSchema.pre("save", function (next) {
   //
@@ -56,7 +58,7 @@ GroupMessageSchema.methods.minify = async function (
     recordStatus: this.recordStatus,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
-    fromId: this.fromId,
+    ownerId: this.ownerId,
     text: this.text,
     forwarded: this.forwarded,
     forwardedAt: this.forwardedAt,

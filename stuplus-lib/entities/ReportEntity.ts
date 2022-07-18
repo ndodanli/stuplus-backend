@@ -31,6 +31,8 @@ export const ReportSchema: Schema = new Schema({
   announcementText: { type: String, required: false, default: null },
 });
 
+// ReportSchema.index({ recordStatus: 1 });
+
 ReportSchema.pre("save", function (next) {
   //
   next()

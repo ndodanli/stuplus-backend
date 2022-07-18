@@ -91,9 +91,9 @@ export class GroupAccess {
         const notifications = [];
         for (let i = 0; i < socketUserDatas.length; i++) {
             const userData = socketUserDatas[i];
-            await MessageService.senGroupMessage({
+            await MessageService.sendGroupMessage({
                 groupChatId: groupChat._id.toString(),
-                fromId: "62ab8a204166fd1eaebbb3fa",
+                ownerId: "62ab8a204166fd1eaebbb3fa",
                 text: `${userData.uN} ${getMessage("addedToGroup", acceptedLanguages)}`,
                 fromUser: groupGuard
             })

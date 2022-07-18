@@ -6,7 +6,7 @@ import { LikeType } from "../../stuplus-lib/enums/enums";
 import { RedisGMOperationType, RedisKeyType, RedisPMOperationType } from "../../stuplus-lib/enums/enums_socket";
 import RedisService from "../../stuplus-lib/services/redisService";
 import IBaseCronJob from "./IBaseCronJob";
-import { AnyBulkWriteOperation } from "mongodb";
+import { chunk } from "../../stuplus-lib/utils/general";
 
 export default class RedisDatabaseJob implements IBaseCronJob {
     cronExpression: string;
@@ -110,9 +110,12 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 }
             }
             if (operations.length > 0) {
-                await Promise.all(operations.map(async (operation) => {
-                    operation.func(operation.arg1);
-                }));
+                const operationChunks = chunk(operations, 3);
+                for (let i = 0; i < operationChunks.length; i++) {
+                    await Promise.all(operationChunks[i].map(async (operation) => {
+                        await operation.func(operation.arg1);
+                    }));
+                }
             }
         } while (RedisDatabaseJob.currentCursor != 0 && currentKeySize < totalKeySize);
         // console.log("RedisDatabaseJob Cron job finished");
@@ -147,7 +150,6 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 resolve(true);
             });
         }
-
         async function handleSearchHistoryOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
                 const data = await RedisService.client.lRange(currentKey, 0, -1);
@@ -176,10 +178,10 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 resolve(true);
             });
         }
-
         async function handlePMOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.hVals(currentKey);
+                const keysToDelete = new Array<string>();
                 const privateMessageBatches: Array<Array<object>> = [];
                 const readedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
                 const forwardedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
@@ -210,6 +212,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                             default:
                                 break;
                         }
+                        keysToDelete.push(query.e._id);
                     }
                     iterator++;
                 }
@@ -296,7 +299,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     }
                 }
 
-                await RedisService.client.lTrim(currentKey, data.length, -1);
+                await RedisService.client.hDel(currentKey, keysToDelete);
                 resolve(true);
             });
 
@@ -397,7 +400,8 @@ export default class RedisDatabaseJob implements IBaseCronJob {
         }
         async function handleAnnouncementLikeOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.hVals(currentKey);
+                const keysToDelete = new Array<string>();
                 const announcementLikeBatches: Array<Array<object>> = [];
                 const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_LD_BATCH_SIZE;
                 let iterator = 0;
@@ -407,6 +411,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         announcementLikeBatches[iterator].push({ ...query.e, type: LikeType.Like });
+                        keysToDelete.push(query.e.ownerId);
                     }
                     iterator++;
                 }
@@ -419,13 +424,14 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         }
                     }
                 }
-                await RedisService.client.lTrim(currentKey, data.length, -1);
+                await RedisService.client.hDel(currentKey, keysToDelete);
                 resolve(true);
             });
         }
         async function handleAnnouncementDislikeOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.hVals(currentKey);
+                const keysToDelete = new Array<string>();
                 const announcementDislikeBatches: Array<Array<object>> = [];
                 const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_LD_BATCH_SIZE;
                 let iterator = 0;
@@ -435,6 +441,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         announcementDislikeBatches[iterator].push({ ...query.e, type: LikeType.Dislike });
+                        keysToDelete.push(query.e.ownerId);
                     }
                     iterator++;
                 }
@@ -447,13 +454,14 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         }
                     }
                 }
-                await RedisService.client.lTrim(currentKey, data.length, -1);
+                await RedisService.client.hDel(currentKey, keysToDelete);
                 resolve(true);
             });
         }
         async function handleAnnouncementCommentOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.hVals(currentKey);
+                const keysToDelete = new Array<string>();
                 const announcementCommentBatches: Array<Array<object>> = [];
                 const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_COMMENT_BATCH_SIZE;
                 let iterator = 0;
@@ -463,6 +471,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         announcementCommentBatches[iterator].push(query.e);
+                        keysToDelete.push(query.e.ownerId);
                     }
                     iterator++;
                 }
@@ -475,13 +484,14 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         }
                     }
                 }
-                await RedisService.client.lTrim(currentKey, data.length, -1);
+                await RedisService.client.hDel(currentKey, keysToDelete);
                 resolve(true);
             });
         }
         async function handleAnnouncementCommentLikeOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.hVals(currentKey);
+                const keysToDelete = new Array<string>();
                 const announcementCommentLikeBatches: Array<Array<object>> = [];
                 const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_COMMENT_LD_BATCH_SIZE;
                 let iterator = 0;
@@ -491,6 +501,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         announcementCommentLikeBatches[iterator].push({ ...query.e, type: LikeType.Like });
+                        keysToDelete.push(query.e.ownerId);
                     }
                     iterator++;
                 }
@@ -503,13 +514,14 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         }
                     }
                 }
-                await RedisService.client.lTrim(currentKey, data.length, -1);
+                await RedisService.client.hDel(currentKey, keysToDelete);
                 resolve(true);
             });
         }
         async function handleAnnouncementCommentDislikeOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.hVals(currentKey);
+                const keysToDelete = new Array<string>();
                 const announcementCommentDislikeBatches: Array<Array<object>> = [];
                 const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_COMMENT_LD_BATCH_SIZE;
                 let iterator = 0;
@@ -519,6 +531,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         announcementCommentDislikeBatches[iterator].push({ ...query.e, type: LikeType.Dislike });
+                        keysToDelete.push(query.e.ownerId);
                     }
                     iterator++;
                 }
@@ -531,13 +544,14 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         }
                     }
                 }
-                await RedisService.client.lTrim(currentKey, data.length, -1);
+                await RedisService.client.hDel(currentKey, keysToDelete);
                 resolve(true);
             });
         }
         async function handleQuestionLikeOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.hVals(currentKey);
+                const keysToDelete = new Array<string>();
                 const questionLikeBatches: Array<Array<object>> = [];
                 const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_LD_BATCH_SIZE;
                 let iterator = 0;
@@ -547,6 +561,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         questionLikeBatches[iterator].push({ ...query.e, type: LikeType.Like });
+                        keysToDelete.push(query.e.ownerId);
                     }
                     iterator++;
                 }
@@ -559,13 +574,14 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         }
                     }
                 }
-                await RedisService.client.lTrim(currentKey, data.length, -1);
+                await RedisService.client.hDel(currentKey, keysToDelete);
                 resolve(true);
             });
         }
         async function handleQuestionDislikeOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.hVals(currentKey);
+                const keysToDelete = new Array<string>();
                 const questionDislikeBatches: Array<Array<object>> = [];
                 const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_LD_BATCH_SIZE;
                 let iterator = 0;
@@ -575,6 +591,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         questionDislikeBatches[iterator].push({ ...query.e, type: LikeType.Dislike });
+                        keysToDelete.push(query.e.ownerId);
                     }
                     iterator++;
                 }
@@ -587,13 +604,14 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         }
                     }
                 }
-                await RedisService.client.lTrim(currentKey, data.length, -1);
+                await RedisService.client.hDel(currentKey, keysToDelete);
                 resolve(true);
             });
         }
         async function handleQuestionCommentOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.hVals(currentKey);
+                const keysToDelete = new Array<string>();
                 const questionCommentBatches: Array<Array<object>> = [];
                 const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_COMMENT_BATCH_SIZE;
                 let iterator = 0;
@@ -603,6 +621,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         questionCommentBatches[iterator].push(query.e);
+                        keysToDelete.push(query.e.ownerId);
                     }
                     iterator++;
                 }
@@ -615,13 +634,14 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         }
                     }
                 }
-                await RedisService.client.lTrim(currentKey, data.length, -1);
+                await RedisService.client.hDel(currentKey, keysToDelete);
                 resolve(true);
             });
         }
         async function handleQuestionCommentLikeOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.hVals(currentKey);
+                const keysToDelete = new Array<string>();
                 const questionCommentLikeBatches: Array<Array<object>> = [];
                 const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_COMMENT_LD_BATCH_SIZE;
                 let iterator = 0;
@@ -631,6 +651,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         questionCommentLikeBatches[iterator].push({ ...query.e, type: LikeType.Like });
+                        keysToDelete.push(query.e.ownerId);
                     }
                     iterator++;
                 }
@@ -643,13 +664,14 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         }
                     }
                 }
-                await RedisService.client.lTrim(currentKey, data.length, -1);
+                await RedisService.client.hDel(currentKey, keysToDelete);
                 resolve(true);
             });
         }
         async function handleQuestionCommentDislikeOperations(currentKey: string) {
             return new Promise(async (resolve, reject) => {
-                const data = await RedisService.client.lRange(currentKey, 0, -1);
+                const data = await RedisService.client.hVals(currentKey);
+                const keysToDelete = new Array<string>();
                 const questionCommentDislikeBatches: Array<Array<object>> = [];
                 const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_COMMENT_LD_BATCH_SIZE;
                 let iterator = 0;
@@ -659,6 +681,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let j = 0; j < currentBatch.length; j++) {
                         const query: any = currentBatch[j].toJSONObject();
                         questionCommentDislikeBatches[iterator].push({ ...query.e, type: LikeType.Dislike });
+                        keysToDelete.push(query.e.ownerId);
                     }
                     iterator++;
                 }
@@ -671,7 +694,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         }
                     }
                 }
-                await RedisService.client.lTrim(currentKey, data.length, -1);
+                await RedisService.client.hDel(currentKey, keysToDelete);
                 resolve(true);
             });
         }

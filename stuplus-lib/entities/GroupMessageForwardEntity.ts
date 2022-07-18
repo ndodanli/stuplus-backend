@@ -15,6 +15,8 @@ export const GroupMessageForwardSchema: Schema = new Schema({
   forwardedTo: { type: String, required: true }
 });
 
+GroupMessageForwardSchema.index({ recordStatus: 1 });
+
 GroupMessageForwardSchema.pre("save", function (next) {
   //
   next()

@@ -15,6 +15,8 @@ export const InterestSchema: Schema = new Schema({
   title: { type: String, required: true },
 });
 
+InterestSchema.index({ recordStatus: 1 });
+
 InterestSchema.pre("save", function (next) {
   //
   next()

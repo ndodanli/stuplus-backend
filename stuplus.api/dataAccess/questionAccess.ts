@@ -63,26 +63,24 @@ export class QuestionAccess {
             for (let i = 0; i < questions.length; i++) {
                 const question = questions[i];
                 //TODO:IMPROVEMENT: scan edilebilir
-                const redisQuestionLikes = await RedisService.client.lRange(RedisKeyType.DBQuestionLike + question._id.toString(), 0, -1);
-                const redisQuestionDislikes = await RedisService.client.lRange(RedisKeyType.DBQuestionDislike + question._id.toString(), 0, -1);
                 question.likeCount = await RedisService.acquire<number>(RedisKeyType.QuestionLikeCount + question._id.toString(), 10, async () => {
                     let likeCount = 0;
-                    likeCount += redisQuestionLikes.length;
+                    likeCount += await RedisService.client.hLen(RedisKeyType.DBQuestionLike + question._id.toString());
                     likeCount += await QuestionLikeEntity.countDocuments({ questionId: question._id, type: LikeType.Like })
                     return likeCount;
                 });
-                question.commentCount = await RedisService.acquire<number>(RedisKeyType.QuestionCommentCount + question._id, 30, async () => {
+                question.commentCount = await RedisService.acquire<number>(RedisKeyType.QuestionCommentCount + question._id.toString(), 10, async () => {
                     let commentCount = 0;
-                    commentCount += await RedisService.client.lLen(RedisKeyType.DBQuestionComment + question._id.toString());
+                    commentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionComment + question._id.toString());
                     commentCount += await QuestionCommentEntity.countDocuments({ questionId: question._id });
                     return commentCount;
                 });
                 question.owner = questionUsers.find(y => y._id.toString() === question.ownerId);
 
                 let likeType;
-                likeType = redisQuestionLikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+                likeType = await RedisService.client.hExists(RedisKeyType.DBQuestionLike + question._id.toString(), currentUserId);
                 if (!likeType) {
-                    likeType = redisQuestionDislikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+                    likeType = await RedisService.client.hExists(RedisKeyType.DBQuestionDislike + question._id.toString(), currentUserId);
                     if (!likeType) {
                         likeType = likedDislikedQuestions.find(y => y.questionId.toString() === question._id.toString());
                         if (likeType) question.likeType = likeType.type;
@@ -116,9 +114,8 @@ export class QuestionAccess {
             }
             const favoriteCommentIds = comments.map(x => x._id);
 
-            console.time("getComments");
             const redisComments = await RedisService.client
-                .lRange(RedisKeyType.DBQuestionComment + payload.questionId, 0, -1).then(x => x.map(y => JSON.parse(y).e));
+                .hVals(RedisKeyType.DBQuestionComment + payload.questionId).then(x => x.map(y => JSON.parse(y).e));
 
             payload.take -= redisComments.length
             let newComments: QuestionCommentDocument[] = [];
@@ -140,7 +137,6 @@ export class QuestionAccess {
             for (let i = 0; i < newComments.length; i++)
                 comments.push(newComments[i]);
 
-            console.timeEnd("getComments");
         } else {
             comments = await QuestionCommentEntity.find({
                 questionId: payload.questionId,
@@ -155,19 +151,17 @@ export class QuestionAccess {
             let commentUsers = await UserEntity.find({ _id: { $in: commentUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
             for (let i = 0; i < comments.length; i++) {
                 const comment = comments[i];
-                const redisCommentLikes = await RedisService.client.lRange(RedisKeyType.DBQuestionCommentLike + comment._id.toString(), 0, -1);
-                const redisCommentDislikes = await RedisService.client.lRange(RedisKeyType.DBQuestionCommentDislike + comment._id.toString(), 0, -1);
                 comment.owner = commentUsers.find(y => y._id.toString() === comment.ownerId);
                 comment.likeCount = await RedisService.acquire<number>(RedisKeyType.QuestionCommentLikeCount + comment._id, 20, async () => {
                     let likeCount = 0;
-                    likeCount += redisCommentLikes.length;
-                    likeCount += await QuestionCommentLikeEntity.countDocuments({ questionId: payload.questionId, commentId: comment._id, type: LikeType.Like });
+                    likeCount += await RedisService.client.hLen(RedisKeyType.DBQuestionCommentLike + comment._id.toString());
+                    likeCount += await QuestionCommentLikeEntity.countDocuments({ commentId: comment._id, type: LikeType.Like });
                     return likeCount;
                 });
                 let likeType;
-                likeType = redisCommentLikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+                likeType = await RedisService.client.hExists(RedisKeyType.DBQuestionCommentLike + comment._id.toString(), currentUserId);
                 if (!likeType) {
-                    likeType = redisCommentDislikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+                    likeType = await RedisService.client.hExists(RedisKeyType.DBQuestionCommentDislike + comment._id.toString(), currentUserId);
                     if (!likeType) {
                         likeType = likedDislikedComments.find(y => y.commentId === comment._id.toString());
                         if (likeType) comment.likeType = likeType.type;
@@ -184,32 +178,18 @@ export class QuestionAccess {
     }
 
     public static async likeDislikeQuestion(acceptedLanguages: Array<string>, payload: QuestionLikeDislikeDTO, currentUserId: string): Promise<object> {
-        let redisQuestionLikes = await RedisService.client.lRange(RedisKeyType.DBQuestionLike + payload.questionId, 0, -1);
-        let redisQuestionDislikes = await RedisService.client.lRange(RedisKeyType.DBQuestionDislike + payload.questionId, 0, -1);
         if (payload.beforeType == LikeType.Like) {
-            let deleted = false;
-            const redisLike = redisQuestionLikes.find(x => JSON.parse(x).e.ownerId === currentUserId);
-            if (redisLike) {
-                deleted = await RedisService.client.lRem(RedisKeyType.DBQuestionLike + payload.questionId, -1, redisLike) != 0 ? true : false;
-                //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
-                if (!deleted)
-                    deleted = await QuestionLikeEntity.findOneAndUpdate({ questionId: payload.questionId, ownerId: currentUserId, type: LikeType.Like }, { recordStatus: RecordStatus.Deleted }) ? true : false;
-            } else {
-                deleted = await QuestionLikeEntity.findOneAndUpdate({ questionId: payload.questionId, ownerId: currentUserId, type: LikeType.Like }, { recordStatus: RecordStatus.Deleted }) ? true : false;
-            }
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionLike + payload.questionId, currentUserId);
+            //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
+            if (!deleted)
+                await QuestionLikeEntity.findOneAndUpdate({ questionId: payload.questionId, ownerId: currentUserId, type: LikeType.Like }, { recordStatus: RecordStatus.Deleted });
             //TODO: if (!deleted) 
             //throw error on socket
         } else if (payload.beforeType == LikeType.Dislike) {
-            let deleted = false;
-            const redisDislike = redisQuestionDislikes.find(x => JSON.parse(x).e.ownerId === currentUserId);
-            if (redisDislike) {
-                deleted = await RedisService.client.lRem(RedisKeyType.DBQuestionDislike + payload.questionId, -1, redisDislike) != 0 ? true : false;
-                //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
-                if (!deleted)
-                    deleted = await QuestionLikeEntity.findOneAndUpdate({ questionId: payload.questionId, ownerId: currentUserId, type: LikeType.Dislike }, { recordStatus: RecordStatus.Deleted }) ? true : false;
-            } else {
-                deleted = await QuestionLikeEntity.findOneAndUpdate({ questionId: payload.questionId, ownerId: currentUserId, type: LikeType.Dislike }, { recordStatus: RecordStatus.Deleted }) ? true : false;
-            }
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionDislike + payload.questionId, currentUserId);
+            //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
+            if (!deleted)
+                await QuestionLikeEntity.findOneAndUpdate({ questionId: payload.questionId, ownerId: currentUserId, type: LikeType.Dislike }, { recordStatus: RecordStatus.Deleted });
             //TODO: if (!deleted) 
             //throw error on socket
         }
@@ -219,9 +199,9 @@ export class QuestionAccess {
 
         let likeDislikeBefore = undefined;
         if (payload.type == LikeType.Like)
-            likeDislikeBefore = redisQuestionLikes.find(x => JSON.parse(x).e.ownerId === currentUserId);
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionLike + payload.questionId, currentUserId);
         else
-            likeDislikeBefore = redisQuestionDislikes.find(x => JSON.parse(x).e.ownerId === currentUserId);
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionDislike + payload.questionId, currentUserId);
 
         if (!likeDislikeBefore)
             likeDislikeBefore = await QuestionLikeEntity.findOne({ questionId: payload.questionId, ownerId: currentUserId });
@@ -243,7 +223,7 @@ export class QuestionAccess {
         }
         let redisKey = payload.type === LikeType.Like ? RedisKeyType.DBQuestionLike : RedisKeyType.DBQuestionDislike;
         redisKey += payload.questionId;
-        await RedisService.client.rPush(redisKey, stringify(questionLikeDislikeData));
+        await RedisService.client.hSet(redisKey, currentUserId, stringify(questionLikeDislikeData));
 
         return { beforeType: payload.type };
     }
@@ -257,18 +237,22 @@ export class QuestionAccess {
             || (question.toDate && question.toDate < now))) throw new NotValidError(getMessage("questionNotAvailable", acceptedLanguages));
 
         question.owner = await UserEntity.findOne({ _id: question.ownerId }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
-        const redisQuestionLikes = await RedisService.client.lRange(RedisKeyType.DBQuestionLike + question._id.toString(), 0, -1);
-        const redisQuestionDislikes = await RedisService.client.lRange(RedisKeyType.DBQuestionDislike + question._id.toString(), 0, -1);
         question.likeCount = await RedisService.acquire<number>(RedisKeyType.QuestionLikeCount + question._id.toString(), 30, async () => {
             let likeCount = 0;
-            likeCount += redisQuestionLikes.length;
+            likeCount += await RedisService.client.hLen(RedisKeyType.DBQuestionLike + question._id.toString());
             likeCount += await QuestionLikeEntity.countDocuments({ questionId: question._id, type: LikeType.Like });
             return likeCount;
         });
+        question.commentCount = await RedisService.acquire<number>(RedisKeyType.QuestionCommentCount + question._id.toString(), 10, async () => {
+            let commentCount = 0;
+            commentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionComment + question._id.toString());
+            commentCount += await QuestionCommentEntity.countDocuments({ questionId: question._id });
+            return commentCount;
+        });
         let likeType;
-        likeType = redisQuestionLikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+        likeType = await RedisService.client.hExists(RedisKeyType.DBQuestionLike + question._id.toString(), currentUserId);
         if (!likeType) {
-            likeType = redisQuestionDislikes.map(y => JSON.parse(y).e.ownerId).includes(currentUserId);
+            likeType = await RedisService.client.hExists(RedisKeyType.DBQuestionDislike + question._id.toString(), currentUserId);
             if (!likeType) {
                 likeType = await QuestionLikeEntity.findOne({ questionId: question._id, ownerId: currentUserId }, { "_id": 0, "type": 1 });
                 if (likeType) question.likeType = likeType.type;
@@ -302,35 +286,23 @@ export class QuestionAccess {
                 updatedAt: now
             },
         }
-        await RedisService.client.rPush(RedisKeyType.DBQuestionComment + payload.questionId, stringify(questionCommentData));
+        await RedisService.client.hSet(RedisKeyType.DBQuestionComment + payload.questionId, currentUserId, stringify(questionCommentData));
         return true;
     }
 
     public static async commentLikeDislikeQuestion(acceptedLanguages: Array<string>, payload: QuestionCommenLikeDisliketDTO, currentUserId: string): Promise<object> {
-        let redisQuestionCommentLikes = await RedisService.client.lRange(RedisKeyType.DBQuestionCommentLike + payload.commentId, 0, -1);
-        let redisQuestionCommentDislikes = await RedisService.client.lRange(RedisKeyType.DBQuestionCommentDislike + payload.commentId, 0, -1);
         if (payload.beforeType == LikeType.Like) {
-            let deleted = false;
-            const redisLike = redisQuestionCommentLikes.find(x => JSON.parse(x).e.ownerId === currentUserId);
-            if (redisLike) {
-                deleted = await RedisService.client.lRem(RedisKeyType.DBQuestionCommentLike + payload.commentId, -1, redisLike) != 0 ? true : false;
-                if (!deleted)
-                    deleted = await QuestionCommentLikeEntity.findOneAndUpdate({ commentId: payload.commentId, ownerId: currentUserId, type: LikeType.Like }, { recordStatus: RecordStatus.Deleted }) ? true : false;
-            } else {
-                deleted = await QuestionCommentLikeEntity.findOneAndUpdate({ commentId: payload.commentId, ownerId: currentUserId, type: LikeType.Like }, { recordStatus: RecordStatus.Deleted }) ? true : false;
-            }
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionCommentLike + payload.questionId, currentUserId);
+            //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
+            if (!deleted)
+                await QuestionCommentLikeEntity.findOneAndUpdate({ commentId: payload.commentId, ownerId: currentUserId, type: LikeType.Like }, { recordStatus: RecordStatus.Deleted });
             //TODO: if (!deleted) 
             //throw error on socket
         } else if (payload.beforeType == LikeType.Dislike) {
-            let deleted = false;
-            const redisDislike = redisQuestionCommentDislikes.find(x => JSON.parse(x).e.ownerId === currentUserId);
-            if (redisDislike) {
-                deleted = await RedisService.client.lRem(RedisKeyType.DBQuestionCommentDislike + payload.commentId, -1, redisDislike) != 0 ? true : false;
-                if (!deleted)
-                    deleted = await QuestionCommentLikeEntity.findOneAndUpdate({ commentId: payload.commentId, ownerId: currentUserId, type: LikeType.Dislike }, { recordStatus: RecordStatus.Deleted }) ? true : false;
-            } else {
-                deleted = await QuestionCommentLikeEntity.findOneAndUpdate({ commentId: payload.commentId, ownerId: currentUserId, type: LikeType.Dislike }, { recordStatus: RecordStatus.Deleted }) ? true : false;
-            }
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionCommentDislike + payload.questionId, currentUserId);
+            //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
+            if (!deleted)
+                await QuestionCommentLikeEntity.findOneAndUpdate({ commentId: payload.commentId, ownerId: currentUserId, type: LikeType.Dislike }, { recordStatus: RecordStatus.Deleted });
             //TODO: if (!deleted) 
             //throw error on socket
         }
@@ -340,9 +312,9 @@ export class QuestionAccess {
 
         let likeDislikeBefore = undefined;
         if (payload.type == LikeType.Like)
-            likeDislikeBefore = redisQuestionCommentLikes.find(x => JSON.parse(x).e.ownerId === currentUserId);
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionCommentLike + payload.questionId, currentUserId);
         else
-            likeDislikeBefore = redisQuestionCommentDislikes.find(x => JSON.parse(x).e.ownerId === currentUserId);
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionCommentDislike + payload.questionId, currentUserId);
 
         if (!likeDislikeBefore)
             likeDislikeBefore = await QuestionCommentLikeEntity.findOne({ commentId: payload.commentId, ownerId: currentUserId });
@@ -365,7 +337,7 @@ export class QuestionAccess {
         }
         let redisKey = payload.type === LikeType.Like ? RedisKeyType.DBQuestionCommentLike : RedisKeyType.DBQuestionCommentDislike;
         redisKey += payload.commentId;
-        await RedisService.client.rPush(redisKey, stringify(questionCommentLikeDislikeData));
+        await RedisService.client.hSet(redisKey, currentUserId, stringify(questionCommentLikeDislikeData));
         return { beforeType: payload.type };
     }
 }

@@ -43,6 +43,8 @@ export const QuestionSchema: Schema = new Schema({
   hashTags: { type: Array.of(String), required: false, default: [] },
 });
 
+QuestionSchema.index({ recordStatus: 1 });
+
 QuestionSchema.plugin(mongoose_fuzzy_searching,
   {
     fields: [

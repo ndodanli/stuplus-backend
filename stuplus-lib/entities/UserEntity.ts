@@ -165,6 +165,8 @@ export const UserSchema: Schema = new Schema({
   playerId: { type: String, required: false, default: null },
 });
 
+UserSchema.index({ recordStatus: 1 });
+
 UserSchema.plugin(mongoose_fuzzy_searching,
   {
     fields: [

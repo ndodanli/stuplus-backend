@@ -25,6 +25,8 @@ export const NotificationSchema: Schema = new Schema({
   type: { type: Number, required: true },
 });
 
+NotificationSchema.index({ recordStatus: 1 });
+
 NotificationSchema.pre("save", function (next) {
   //
   next()

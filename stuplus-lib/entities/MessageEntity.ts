@@ -3,7 +3,7 @@ import BaseEntity from "./BaseEntity";
 import { User } from "./UserEntity";
 
 export interface Message extends BaseEntity {
-  fromId: string; //user id
+  ownerId: string; //user id
   text: string;
   forwarded: boolean;
   forwardedAt: Date;
@@ -47,7 +47,7 @@ export interface MessageDocument extends Message, Document {
 }
 
 export const MessageSchema: Schema = new Schema({
-  fromId: { type: String, required: true },
+  ownerId: { type: String, required: true },
   text: { type: String, required: true },
   forwarded: { type: Boolean, required: true, default: false },
   forwardedAt: { type: Date, required: false, default: null },
@@ -65,6 +65,8 @@ export const MessageSchema: Schema = new Schema({
   deletedForUserIds: { type: Array.of(String), required: false, default: [] },
   deletedForUserDate: { type: Date, required: false, default: null },
 });
+
+MessageSchema.index({ recordStatus: 1 });
 
 // MessageSchema.index({ text: "text", description: "text" });
 
@@ -86,7 +88,7 @@ MessageSchema.methods.minify = async function (
     recordStatus: this.recordStatus,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
-    fromId: this.fromId,
+    ownerId: this.ownerId,
     text: this.text,
     forwarded: this.forwarded,
     forwardedAt: this.forwardedAt,

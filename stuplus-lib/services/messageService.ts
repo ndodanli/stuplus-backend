@@ -11,7 +11,7 @@ import { io } from "../../stuplus.api/socket";
 import { User } from "../entities/UserEntity";
 export default class MessageService {
 
-    public static async senGroupMessage({ fromId, text, groupChatId, fromUser }: { fromId: string; text: string; groupChatId: string; fromUser: User; }): Promise<void> {
+    public static async sendGroupMessage({ ownerId, text, groupChatId, fromUser }: { ownerId: string; text: string; groupChatId: string; fromUser: User; }): Promise<void> {
         return new Promise(async (resolve, reject) => {
             try {
                 const now = new Date();
@@ -19,7 +19,7 @@ export default class MessageService {
                 const chatData: any = {
                     e: {
                         _id: gMessageEntity.id,
-                        fromId: fromId,
+                        ownerId: ownerId,
                         text: text,
                         groupChatId: groupChatId,
                         createdAt: now,
@@ -28,7 +28,7 @@ export default class MessageService {
                     t: RedisGMOperationType.InsertMessage
                 }
 
-                await RedisService.client.rPush(RedisKeyType.DBGroupMessage + chatData.e.groupChatId, stringify(chatData));
+                await RedisService.client.hSet(RedisKeyType.DBGroupMessage + chatData.e.groupChatId, gMessageEntity.id, stringify(chatData));
                 io.in(groupChatName(chatData.e.groupChatId)).emit("cGmSend", {
                     t: chatData.e.text, mi: gMessageEntity.id, gCi: chatData.e.groupChatId, f: {
                         uN: fromUser.username, //username
@@ -44,14 +44,14 @@ export default class MessageService {
                 logger.error({ err: error }, `MessageService(senGroupMessage) failed. {Data}`, stringify(
                     {
                         ErorMessage: error.message,
-                        FromId: fromId,
+                        ownerId: ownerId,
                         Text: text,
                         GroupChatId: groupChatId,
                     }));
                 console.log({ err: error }, `MessageService(senGroupMessage) failed. {Data}`, stringify(
                     {
                         ErorMessage: error.message,
-                        FromId: fromId,
+                        ownerId: ownerId,
                         Text: text,
                         GroupChatId: groupChatId,
                     }));

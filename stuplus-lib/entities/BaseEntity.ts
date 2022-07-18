@@ -47,7 +47,7 @@ const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
 collections.forEach((collectionName: string) => {
   baseSpreadator[collectionName] = model(collectionName + "Base", new Schema({
     recordStatus: { type: Number, required: false, default: RecordStatus.Active },
-  }, { collection: collectionName, timestamps: true }))
+  }, { collection: collectionName, timestamps: true }));
 })
 
 registerHooks();

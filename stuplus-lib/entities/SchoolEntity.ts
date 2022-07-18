@@ -20,6 +20,8 @@ export const SchoolSchema: Schema = new Schema({
   type: { type: Number, required: true },
 });
 
+SchoolSchema.index({ recordStatus: 1 });
+
 // Just to prove that hooks are still functioning as expected
 SchoolSchema.pre("save", function (next) {
   //

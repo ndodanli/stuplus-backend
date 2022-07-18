@@ -149,7 +149,7 @@ io.on("connection", async (socket: ISocket) => {
             const chatData: object = {
                 e: {
                     _id: messageEntity.id,
-                    fromId: socket.data.user._id,
+                    ownerId: socket.data.user._id,
                     text: data.m,
                     chatId: data.ci,
                     replyToId: data.rToId,
@@ -160,7 +160,7 @@ io.on("connection", async (socket: ISocket) => {
 
             responseData["mi"] = messageEntity.id;
 
-            await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + data.ci, stringify(chatData));
+            await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, messageEntity.id + RedisPMOperationType.InsertMessage, stringify(chatData));
 
             const emitData = { t: data.m, mi: messageEntity.id, ci: data.ci, f: null };
 
@@ -170,6 +170,7 @@ io.on("connection", async (socket: ISocket) => {
             if (await OnlineUserService.isOnline(data.to)) {
                 io.to(data.to).emit("cPmSend", emitData);
             }
+
             else {
                 const playerId = await RedisService.acquirePlayerId(data.to);
                 await OneSignalService.sendNotification({
@@ -202,7 +203,7 @@ io.on("connection", async (socket: ISocket) => {
                         updatedAt: now,
                     }, t: RedisPMOperationType.UpdateForwarded
                 };
-                await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + data.ci, stringify(chatData));
+                await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, mi + RedisPMOperationType.UpdateForwarded, stringify(chatData));
             }
 
             io.to(data.to).emit("cPmForwarded", { mids: data.mids, ci: data.ci });
@@ -234,7 +235,7 @@ io.on("connection", async (socket: ISocket) => {
                     }, t: RedisPMOperationType.UpdateReaded
                 }
 
-                await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + data.ci, stringify(chatData));
+                await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, mi + RedisPMOperationType.UpdateReaded, stringify(chatData));
             }
 
             io.to(data.to).emit("cPmReaded", { mids: data.mids, ci: data.ci });
@@ -265,7 +266,7 @@ io.on("connection", async (socket: ISocket) => {
             const chatData: object = {
                 e: {
                     _id: gMessageEntity.id,
-                    fromId: socket.data.user._id,
+                    ownerId: socket.data.user._id,
                     text: data.m,
                     groupChatId: data.gCi,
                     replyToId: data.rToId,
@@ -539,37 +540,24 @@ router.post("/deleteSinglePM", authorize([Role.User, Role.Admin, Role.ContentCre
     const response = new BaseResponse<any>();
     try {
         const payload = new DeleteSinglePMDTO(req.body);
-        let deleted;
+
         const now = new Date();
-        const redisChatKey = RedisKeyType.DBPrivateMessage + payload.chatId;
-        const redisMessageString = await RedisService.client.lRange(redisChatKey, 0, -1).then(x => x.find(y => {
-            const data = JSON.parse(y);
-            if (data.t == RedisPMOperationType.InsertMessage && data.e._id == payload.messageId && data.e.fromId == res.locals.user._id)
-                return true;
-        }));
-
+        const redisMultiRes = await RedisService.client.multi()
+            .hGet(RedisKeyType.DBPrivateMessage + payload.chatId, payload.messageId + RedisPMOperationType.InsertMessage)
+            .hDel(RedisKeyType.DBPrivateMessage + payload.chatId, payload.messageId + RedisPMOperationType.InsertMessage)
+            .exec();
+        const message = redisMultiRes[0] as string;
         if (payload.deleteFor == DeleteChatForType.Both) {
-            if (redisMessageString) {
-                deleted = await RedisService.client.lRem(RedisKeyType.DBPrivateMessage + payload.chatId, -1, redisMessageString) != 0 ? true : false;
-                if (!deleted) {
-                    deleted = await MessageEntity.findOneAndUpdate(
-                        { _id: payload.messageId, fromId: res.locals.user._id },
-                        {
-                            recordStatus: RecordStatus.Deleted,
-                            recordDeletionDate: now
-                        });
-                } else {
-                    const newMessageEntity = new MessageEntity({}); //for duplications with clearing history, assing a new id
-                    const newRedisMessage = JSON.parse(redisMessageString).e;
-                    newRedisMessage._id = newMessageEntity.id;
-                    newRedisMessage.recordStatus = RecordStatus.Deleted;
-                    newRedisMessage.recordDeletionDate = now;
-                    await RedisService.client.lPush(redisChatKey, stringify(newRedisMessage));
-
-                }
+            if (message) {
+                const newMessageEntity = new MessageEntity({}); //for duplications with clearing history, assing a new id
+                const newRedisMessage = JSON.parse(message).e;
+                newRedisMessage._id = newMessageEntity.id;
+                newRedisMessage.recordStatus = RecordStatus.Deleted;
+                newRedisMessage.recordDeletionDate = now;
+                await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + payload.chatId, payload.messageId + RedisPMOperationType.InsertMessage, stringify(newRedisMessage));
             } else {
-                deleted = await MessageEntity.findOneAndUpdate(
-                    { _id: payload.messageId, fromId: res.locals.user._id },
+                await MessageEntity.findOneAndUpdate(
+                    { _id: payload.messageId, ownerId: res.locals.user._id },
                     {
                         recordStatus: RecordStatus.Deleted,
                         recordDeletionDate: now
@@ -578,31 +566,17 @@ router.post("/deleteSinglePM", authorize([Role.User, Role.Admin, Role.ContentCre
             }
             response.setMessage(getMessage("singleMessageDeletedMeSuccess", req.selectedLangs()));
         } else {
-            if (redisMessageString) {
-                deleted = await RedisService.client.lRem(RedisKeyType.DBPrivateMessage + payload.chatId, -1, redisMessageString) != 0 ? true : false;
-                if (!deleted) {
-                    deleted = await MessageEntity.findOneAndUpdate(
-                        { _id: payload.messageId, fromId: res.locals.user._id },
-                        {
-                            $push: {
-                                deletedForUserIds: res.locals.user._id,
-                            },
-                            deletedForUserDate: now
-                        }
-                    );
-                } else {
-                    const newMessageEntity = new MessageEntity({}); //for duplications with clearing history, assing a new id
-                    const newRedisMessage = JSON.parse(redisMessageString).e;
-                    newRedisMessage._id = newMessageEntity.id;
-                    if (!newRedisMessage.deletedForUserIds) newRedisMessage.deletedForUserIds = [];
-                    newRedisMessage.deletedForUserIds.push(res.locals.user._id);
-                    newRedisMessage.deletedForUserDate = now;
-                    await RedisService.client.lPush(redisChatKey, stringify(newRedisMessage));
-
-                }
+            if (message) {
+                const newMessageEntity = new MessageEntity({}); //for duplications with clearing history, assing a new id
+                const newRedisMessage = JSON.parse(message).e;
+                newRedisMessage._id = newMessageEntity.id;
+                if (!newRedisMessage.deletedForUserIds) newRedisMessage.deletedForUserIds = [];
+                newRedisMessage.deletedForUserIds.push(res.locals.user._id);
+                newRedisMessage.deletedForUserDate = now;
+                await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + payload.chatId, payload.messageId + RedisPMOperationType.InsertMessage, stringify(newRedisMessage));
             } else {
-                deleted = await MessageEntity.findOneAndUpdate(
-                    { _id: payload.messageId, fromId: res.locals.user._id },
+                await MessageEntity.findOneAndUpdate(
+                    { _id: payload.messageId, ownerId: res.locals.user._id },
                     {
                         $push: {
                             deletedForUserIds: res.locals.user._id,
@@ -614,8 +588,8 @@ router.post("/deleteSinglePM", authorize([Role.User, Role.Admin, Role.ContentCre
             response.setMessage(getMessage("singleMessageDeletedBothSuccess", req.selectedLangs()));
         }
 
-        if (!deleted)
-            throw new NotValidError(getMessage("unknownError", req.selectedLangs()));
+        // if (!deleted)
+        //     throw new NotValidError(getMessage("unknownError", req.selectedLangs()));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -642,8 +616,8 @@ router.post("/clearPMChatHistory", authorize([Role.User, Role.Admin, Role.Conten
             throw new NotValidError(getMessage("unauthorized", res.selectedLangs()));
 
         const redisChatKey = RedisKeyType.DBPrivateMessage + payload.chatId;
-        const redisMessagesString = await RedisService.client.lRange(redisChatKey, 0, -1);
-        await RedisService.client.del(redisChatKey);
+        const redisMultiResponse = await RedisService.client.multi().hVals(redisChatKey).del(redisChatKey).exec();
+        const redisMessagesString = redisMultiResponse[0] as string[];
 
         const redisMessages = redisMessagesString.map(y => {
             const data = JSON.parse(y);
@@ -653,13 +627,16 @@ router.post("/clearPMChatHistory", authorize([Role.User, Role.Admin, Role.Conten
 
 
         const now = new Date();
+        let redisHashMessagesObj: any = {};
         if (payload.deleteFor == DeleteChatForType.Both) {
-            for (let i = 0; i < redisMessages.length; i++) {
+            for (let i = redisMessages.length - 1; i >= 0; i--) {
                 const redisMessage = redisMessages[i];
                 redisMessage.recordStatus = RecordStatus.Deleted;
                 redisMessage.recordDeletionDate = now;
+                const type = redisMessage.t;
+                redisHashMessagesObj[redisMessage._id + type] = stringify(redisMessage);
             }
-            await RedisService.client.lPush(redisChatKey, redisMessages.map(x => stringify(x)).reverse());
+            await RedisService.client.hSet(redisChatKey, redisHashMessagesObj);
 
             await MessageEntity.updateMany({
                 chatId: payload.chatId,
@@ -671,13 +648,15 @@ router.post("/clearPMChatHistory", authorize([Role.User, Role.Admin, Role.Conten
 
         }
         else {
-            for (let i = 0; i < redisMessages.length; i++) {
+            for (let i = redisMessages.length - 1; i >= 0; i--) {
                 const redisMessage = redisMessages[i];
                 if (!redisMessage.deletedForUserIds) redisMessage.deletedForUserIds = [];
                 redisMessage.deletedForUserIds.push(res.locals.user._id);
                 redisMessage.deletedForUserDate = now;
+                const type = redisMessage.t;
+                redisHashMessagesObj[redisMessage._id + type] = stringify(redisMessage);
             }
-            await RedisService.client.lPush(redisChatKey, redisMessages.map(x => stringify(x)).reverse());
+            await RedisService.client.hSet(redisChatKey, redisHashMessagesObj);
             await MessageEntity.updateMany({
                 chatId: payload.chatId,
             }, {
@@ -759,16 +738,16 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
             userPMChat.unreadMessageCount = await MessageEntity.countDocuments({
                 chatId: userPMChat._id,
                 readed: false,
-                fromId: { $ne: res.locals.user._id }
+                ownerId: { $ne: res.locals.user._id }
             });
 
-            userPMChat.unreadMessageCount += redisPMs.filter((x: { fromId: any; readed: any; }) => !x.readed && x.fromId != res.locals.user._id).length;
+            userPMChat.unreadMessageCount += redisPMs.filter((x: { ownerId: any; readed: any; }) => !x.readed && x.ownerId != res.locals.user._id).length;
 
             userPMChat.lastMessage = redisPMs.length ?
                 redisPMs[redisPMs.length - 1] : null;
 
             if (userPMChat.lastMessage)
-                lastMessageUserIds.push(userPMChat.lastMessage.fromId);
+                lastMessageUserIds.push(userPMChat.lastMessage.ownerId);
             else
                 notFoundLastMessageChatIds.push(userPMChat._id.toString());
 
@@ -792,7 +771,7 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
             {
                 $group: {
                     _id: "$chatId",
-                    fromId: { $first: "$fromId" },
+                    ownerId: { $first: "$ownerId" },
                     text: { $first: "$text" },
                     forwarded: { $first: "$forwarded" },
                     forwardedAt: { $first: "$forwardedAt" },
@@ -803,7 +782,7 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
                 }
             }
         ]);
-        lastMessageUserIds.push(notFoundLastMessages.map((x: { fromId: string; }) => x.fromId));
+        lastMessageUserIds.push(notFoundLastMessages.map((x: { ownerId: string; }) => x.ownerId));
 
         const lastMessageUsers = await UserEntity.find({ _id: { $in: lastMessageUserIds } }, {
             _id: 1, username: 1, firstName: 1, lastName: 1,
@@ -813,7 +792,7 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
             const userPMChat = userPMChats[i];
             if (!userPMChat.lastMessage)
                 userPMChat.lastMessage = notFoundLastMessages.find((x: { _id: any; }) => x._id.toString() === userPMChat._id.toString());
-            const lastMessageUser = lastMessageUsers.find(x => x._id.toString() === userPMChat.lastMessage?.fromId.toString());
+            const lastMessageUser = lastMessageUsers.find(x => x._id.toString() === userPMChat.lastMessage?.ownerId.toString());
             if (userPMChat.lastMessage)
                 userPMChat.lastMessage.from = lastMessageUser;
 
@@ -886,16 +865,16 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
             userGroupChat.unreadMessageCount = await GroupMessageReadEntity.countDocuments({
                 groupChatId: userGroupChat._id,
                 readed: false,
-                fromId: { $ne: res.locals.user._id }
+                ownerId: { $ne: res.locals.user._id }
             });
 
-            userGroupChat.unreadMessageCount += redisGMs.filter((x: { fromId: any; readed: any; }) => !x.readed && x.fromId != res.locals.user._id).length;
+            userGroupChat.unreadMessageCount += redisGMs.filter((x: { ownerId: any; readed: any; }) => !x.readed && x.ownerId != res.locals.user._id).length;
 
             userGroupChat.lastMessage = redisGMs.length ?
                 redisGMs[redisGMs.length - 1] : null;
 
             if (userGroupChat.lastMessage)
-                lastMessageUserIds.push(userGroupChat.lastMessage.fromId);
+                lastMessageUserIds.push(userGroupChat.lastMessage.ownerId);
             else
                 notFoundLastMessageChatIds.push(userGroupChat._id.toString());
 
@@ -907,7 +886,7 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
             {
                 $group: {
                     _id: "$chatId",
-                    fromId: { $first: "$fromId" },
+                    ownerId: { $first: "$ownerId" },
                     text: { $first: "$text" },
                     // forwarded: { $first: "$forwarded" },
                     // forwardedAt: { $first: "$forwardedAt" },
@@ -918,7 +897,7 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
                 }
             }
         ]);
-        lastMessageUserIds.push(notFoundLastMessages.map((x: { fromId: string; }) => x.fromId));
+        lastMessageUserIds.push(notFoundLastMessages.map((x: { ownerId: string; }) => x.ownerId));
 
         const lastMessageUsers = await UserEntity.find({ _id: { $in: lastMessageUserIds } }, {
             _id: 1, username: 1, firstName: 1, lastName: 1,
@@ -928,7 +907,7 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
             const userGMChat = userGroupChats[i];
             if (!userGMChat.lastMessage)
                 userGMChat.lastMessage = notFoundLastMessages.find((x: { _id: any; }) => x._id.toString() === userGMChat._id.toString());
-            const lastMessageUser = lastMessageUsers.find(x => x._id.toString() === userGMChat.lastMessage?.fromId.toString());
+            const lastMessageUser = lastMessageUsers.find(x => x._id.toString() === userGMChat.lastMessage?.ownerId.toString());
             if (userGMChat.lastMessage) {
                 userGMChat.lastMessage.from = lastMessageUser;
             }
@@ -1026,7 +1005,7 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
         const chatData: any = {
             e: {
                 _id: gMessageEntity.id,
-                fromId: "62ab8a204166fd1eaebbb3fa",
+                ownerId: "62ab8a204166fd1eaebbb3fa",
                 text: responseMessage,
                 groupChatId: groupChatEntity.id,
                 createdAt: now,
@@ -1267,7 +1246,7 @@ router.post("/getMessages", authorize([Role.User, Role.Admin, Role.ContentCreato
                 if (message.replyToId) {
                     const repliedMessage = messages.find(x => x._id.toString() == message.replyToId);
                     if (repliedMessage) {
-                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.fromId, repliedMessage.text, repliedMessage.files);
+                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, repliedMessage.text, repliedMessage.files);
                     } else {
                         messagesNotFound.push({ index: i, messageId: message.replyToId, type: RedisMessagesNotFoundType.Reply });
                     }
@@ -1282,7 +1261,7 @@ router.post("/getMessages", authorize([Role.User, Role.Admin, Role.ContentCreato
                     const message = messagesNotFoundFromDB.find(x => x._id.toString() == messageNotFound.messageId);
                     if (message) {
                         // if (messageNotFound.type == RedisMessagesNotFoundType.Reply)
-                        messages[messageNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.fromId, message.text, message.files);
+                        messages[messageNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, message.text, message.files);
                         // else if (messageNotFound.type == RedisMessagesNotFoundType.Forward)
                         //     messages[messageNotFound.index].forwarded = message.forwarded;
                         // else if (messageNotFound.type == RedisMessagesNotFoundType.Read)
@@ -1317,7 +1296,7 @@ router.post("/getMessages", authorize([Role.User, Role.Admin, Role.ContentCreato
                 if (message.replyToId) {
                     const repliedMessage = messages.find(x => x._id.toString() == message.replyToId);
                     if (repliedMessage) {
-                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.fromId, repliedMessage.text, repliedMessage.files);
+                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, repliedMessage.text, repliedMessage.files);
                     } else {
                         messagesRepliesNotFound.push({ index: i, messageId: message.replyToId });
                     }
@@ -1331,7 +1310,7 @@ router.post("/getMessages", authorize([Role.User, Role.Admin, Role.ContentCreato
                     const messageReplyNotFound = messagesRepliesNotFound[i];
                     const message = messagesNotFoundFromDB.find(x => x._id.toString() == messageReplyNotFound.messageId);
                     if (message) {
-                        messages[messageReplyNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.fromId, message.text, message.files);
+                        messages[messageReplyNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, message.text, message.files);
                     }
                 }
             }
@@ -1549,7 +1528,7 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
         const chatData: object = {
             e: {
                 _id: messageEntity.id,
-                fromId: res.locals.user._id,
+                ownerId: res.locals.user._id,
                 text: payload.m,
                 chatId: payload.ci,
                 files: files,
@@ -1638,13 +1617,13 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
             message = await MessageEntity.findById(payload.mi);
             if (!message)
                 throw new NotValidError(getMessage("messageNotFound", req.selectedLangs()));
-            if (message.fromId != res.locals.user._id)
+            if (message.ownerId != res.locals.user._id)
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
             message.files.push(new MessageFiles(req.file?.location, req.file.mimetype, req.file.size));
             message.markModified("files");
             await message?.save();
         } else {
-            if (message.fromId != res.locals.user._id)
+            if (message.ownerId != res.locals.user._id)
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
             const chatData: object = {
                 e: {
@@ -1729,7 +1708,7 @@ router.post("/getGroupMessages", authorize([Role.User, Role.Admin, Role.ContentC
                 if (message.replyToId) {
                     const repliedMessage = messages.find(x => x._id.toString() == message.replyToId);
                     if (repliedMessage) {
-                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.fromId, repliedMessage.text, repliedMessage.files);
+                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, repliedMessage.text, repliedMessage.files);
                     } else {
                         messagesNotFound.push({ index: i, messageId: message.replyToId, type: RedisMessagesNotFoundType.Reply });
                     }
@@ -1744,7 +1723,7 @@ router.post("/getGroupMessages", authorize([Role.User, Role.Admin, Role.ContentC
                     const message = messagesNotFoundFromDB.find(x => x._id.toString() == messageNotFound.messageId);
                     if (message) {
                         // if (messageNotFound.type == RedisMessagesNotFoundType.Reply)
-                        messages[messageNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.fromId, message.text, message.files);
+                        messages[messageNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, message.text, message.files);
                         // else if (messageNotFound.type == RedisMessagesNotFoundType.Forward)
                         //     messages[messageNotFound.index].forwarded = message.forwarded;
                         // else if (messageNotFound.type == RedisMessagesNotFoundType.Read)
@@ -1764,7 +1743,7 @@ router.post("/getGroupMessages", authorize([Role.User, Role.Admin, Role.ContentC
                 if (message.replyToId) {
                     const repliedMessage = messages.find(x => x._id.toString() == message.replyToId);
                     if (repliedMessage) {
-                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.fromId, repliedMessage.text, repliedMessage.files);
+                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, repliedMessage.text, repliedMessage.files);
                     } else {
                         messagesRepliesNotFound.push({ index: i, messageId: message.replyToId });
                     }
@@ -1778,7 +1757,7 @@ router.post("/getGroupMessages", authorize([Role.User, Role.Admin, Role.ContentC
                     const messageReplyNotFound = messagesRepliesNotFound[i];
                     const message = messagesNotFoundFromDB.find(x => x._id.toString() == messageReplyNotFound.messageId);
                     if (message) {
-                        messages[messageReplyNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.fromId, message.text, message.files);
+                        messages[messageReplyNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, message.text, message.files);
                     }
                 }
             }
@@ -1902,7 +1881,7 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
         const chatData: object = {
             e: {
                 _id: messageEntity.id,
-                fromId: res.locals.user._id,
+                ownerId: res.locals.user._id,
                 text: payload.m,
                 groupChatId: payload.gCi,
                 files: files,
@@ -1992,13 +1971,13 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
             message = await GroupMessageEntity.findById(payload.mi);
             if (!message)
                 throw new NotValidError(getMessage("messageNotFound", req.selectedLangs()));
-            if (message.fromId != res.locals.user._id)
+            if (message.ownerId != res.locals.user._id)
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
             message.files.push(new MessageFiles(req.file?.location, req.file.mimetype, req.file.size));
             message.markModified("files");
             await message?.save();
         } else {
-            if (message.fromId != res.locals.user._id)
+            if (message.ownerId != res.locals.user._id)
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
             const chatData: object = {
                 e: {
@@ -2123,8 +2102,8 @@ router.post("/makeUsersGroupAdmin", authorize([Role.User, Role.Admin, Role.Conte
 
         for (let i = 0; i < socketUserDatas.length; i++) {
             const userData = socketUserDatas[i];
-            await MessageService.senGroupMessage({
-                fromId: "62ab8a204166fd1eaebbb3fa",
+            await MessageService.sendGroupMessage({
+                ownerId: "62ab8a204166fd1eaebbb3fa",
                 text: `${userData.uN} seni ${groupChat.title} grubunda admin yaptı.`,
                 groupChatId: payload.groupChatId,
                 fromUser: groupGuard,
@@ -2251,8 +2230,8 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
 
         for (let i = 0; i < socketUserDatas.length; i++) {
             const userData = socketUserDatas[i];
-            MessageService.senGroupMessage({
-                fromId: "62ab8a204166fd1eaebbb3fa",
+            MessageService.sendGroupMessage({
+                ownerId: "62ab8a204166fd1eaebbb3fa",
                 text: `${userData.uN} ${getMessage("removedFromGroup", req.selectedLangs())}`,
                 groupChatId: payload.groupChatId,
                 fromUser: groupGuard,
@@ -2260,26 +2239,26 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
         }
 
         if (findOwnerInDeletedUsers != -1) {
-            MessageService.senGroupMessage({
-                fromId: "62ab8a204166fd1eaebbb3fa",
+            MessageService.sendGroupMessage({
+                ownerId: "62ab8a204166fd1eaebbb3fa",
                 text: `Bak sen şu işe...`,
                 groupChatId: payload.groupChatId,
                 fromUser: groupGuard,
             });
-            MessageService.senGroupMessage({
-                fromId: "62ab8a204166fd1eaebbb3fa",
+            MessageService.sendGroupMessage({
+                ownerId: "62ab8a204166fd1eaebbb3fa",
                 text: `Grup kurucusu kendini uçurdu😱, sakin olup düşünmem gerekli🤔. Buldum💡`,
                 groupChatId: payload.groupChatId,
                 fromUser: groupGuard,
             });
-            await MessageService.senGroupMessage({
-                fromId: "62ab8a204166fd1eaebbb3fa",
+            await MessageService.sendGroupMessage({
+                ownerId: "62ab8a204166fd1eaebbb3fa",
                 text: `Yeni yöneticimizi kutlayalım ${randomOldMember.username}.`,
                 groupChatId: payload.groupChatId,
                 fromUser: groupGuard,
             })
-            MessageService.senGroupMessage({
-                fromId: "62ab8a204166fd1eaebbb3fa",
+            MessageService.sendGroupMessage({
+                ownerId: "62ab8a204166fd1eaebbb3fa",
                 text: `Çoook eskilerden bir dostumuzu yönetici yaptım. Tam gaz devam👻`,
                 groupChatId: payload.groupChatId,
                 fromUser: groupGuard,
@@ -2363,8 +2342,8 @@ router.post("/leaveGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
 
         const leavedUser = await UserEntity.findOne({ _id: res.locals.user._id }, { "username": 1, "firstName": 1, "lastName": 1, "profilePhotoUrl": 1, "avatarKey": 1 }).lean(true);
 
-        await MessageService.senGroupMessage({
-            fromId: "62ab8a204166fd1eaebbb3fa",
+        await MessageService.sendGroupMessage({
+            ownerId: "62ab8a204166fd1eaebbb3fa",
             text: `${leavedUser?.firstName} ${getMessage("removedFromGroup", req.selectedLangs())}`,
             groupChatId: payload.groupChatId,
             fromUser: groupGuard,
@@ -2396,26 +2375,26 @@ router.post("/leaveGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
                     content: `Kendi grubundan ayrıldın, iyi misin?. Herhangi bir problemin varsa ya da sadece kötü hissettiysen bizimle iletişime geçebilirsin, her zaman buradayız.`,
                     playerIds: [user.playerId],
                 })
-                MessageService.senGroupMessage({
-                    fromId: "62ab8a204166fd1eaebbb3fa",
+                MessageService.sendGroupMessage({
+                    ownerId: "62ab8a204166fd1eaebbb3fa",
                     text: `Bak sen şu işe...`,
                     groupChatId: payload.groupChatId,
                     fromUser: groupGuard,
                 });
-                MessageService.senGroupMessage({
-                    fromId: "62ab8a204166fd1eaebbb3fa",
+                MessageService.sendGroupMessage({
+                    ownerId: "62ab8a204166fd1eaebbb3fa",
                     text: `Grup kurucusu ayrıldı😱, sakin olup düşünmem gerekli🤔. Buldum💡`,
                     groupChatId: payload.groupChatId,
                     fromUser: groupGuard,
                 });
-                await MessageService.senGroupMessage({
-                    fromId: "62ab8a204166fd1eaebbb3fa",
+                await MessageService.sendGroupMessage({
+                    ownerId: "62ab8a204166fd1eaebbb3fa",
                     text: `Yeni yöneticimizi kutlayalım ${randomOldMember.username}.`,
                     groupChatId: payload.groupChatId,
                     fromUser: groupGuard,
                 })
-                MessageService.senGroupMessage({
-                    fromId: "62ab8a204166fd1eaebbb3fa",
+                MessageService.sendGroupMessage({
+                    ownerId: "62ab8a204166fd1eaebbb3fa",
                     text: `Çoook eskilerden bir dostumuzu yönetici yaptım. Tam gaz devam👻`,
                     groupChatId: payload.groupChatId,
                     fromUser: groupGuard,

@@ -15,6 +15,8 @@ export const GroupMessageReadSchema: Schema = new Schema({
   readedBy: { type: String, required: true }
 });
 
+GroupMessageReadSchema.index({ recordStatus: 1 });
+
 GroupMessageReadSchema.pre("save", function (next) {
   //
   next()

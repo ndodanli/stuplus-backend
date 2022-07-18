@@ -21,6 +21,8 @@ export const ChatSchema: Schema = new Schema({
   participantId: { type: String, required: true },
 });
 
+ChatSchema.index({ recordStatus: 1 });
+
 ChatSchema.pre("save", function (next) {
   //
   next()

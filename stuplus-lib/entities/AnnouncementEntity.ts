@@ -43,6 +43,8 @@ export const AnnouncementSchema: Schema = new Schema({
   hashTags: { type: Array.of(String), required: false, default: [] },
 });
 
+AnnouncementSchema.index({ recordStatus: 1 });
+
 AnnouncementSchema.plugin(mongoose_fuzzy_searching,
   {
     fields: [

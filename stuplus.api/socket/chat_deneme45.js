@@ -22,7 +22,7 @@ $(document).ready(async function () {
     const messages = messageData.data;
     for (let i = messages.length - 1; i >= 0; i--) {
         const message = messages[i];
-        if (user._id == message.fromId) {
+        if (user._id == message.ownerId) {
             console.log(message)
             appendMessage(PERSON_NAME, PERSON_IMG, "right", message.text, message._id);
             $(`<span style="color:yellow;">sended</span>`).appendTo(`#${message._id}`);
@@ -36,8 +36,8 @@ $(document).ready(async function () {
 
         }
     }
-    const forwardMessages = messages.filter(x => x.fromId != user._id && x.forwarded == false).map(x => x._id);
-    const readMessages = messages.filter(x => x.fromId != user._id && x.readed == false).map(x => x._id);
+    const forwardMessages = messages.filter(x => x.ownerId != user._id && x.forwarded == false).map(x => x._id);
+    const readMessages = messages.filter(x => x.ownerId != user._id && x.readed == false).map(x => x._id);
     if (forwardMessages.length > 0)
         socket.emit("pm-forwarded", {
             to: USER_TO,

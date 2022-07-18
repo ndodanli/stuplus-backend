@@ -32,8 +32,36 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
 "$ref": "#/definitions/GetAccountUserResponse"
 }
 } */
+  const dels = [];
+  console.time("insert");
+  for (let i = 0; i < 10000; i++) {
+    // await RedisService.client.rPush("testSubkeytestSubkey" + i, JSON.stringify({ test: "test" }));
+    // await RedisService.client.hSet("testtest", "testSubkeytestSubkey" + i, JSON.stringify({ test: "test" }));
+    // dels.push("testSubkeytestSubkey" + i)
+  }
+  console.timeEnd("insert");
+
+  // dels.pop();
+  // console.time("del");
+  // const exist = await RedisService.client.hExists("testtest", "testSubkeytestSubkey167512");
+  // if (exist)
+  //   console.log("exists")
+  // const del = await RedisService.client.hDel("testtest", ["testSubkeytestSubkey8600", "dsadsa", "dasdasdas"]);
+  // if (del)
+  //   console.log("del")
+  // const redisMultiResponse = await RedisService.client.multi().hVals("testtestd").hDel("testtest", "testSubkeytestSubkey5888").exec();
+  // const vals = redisMultiResponse[0] as string[];
+  // const redisMessages = vals.map(y => {
+  //   const data = JSON.parse(y);
+  //       return data.e;
+// })
+  // console.timeEnd("del");
+  // await RedisService.client.hSet("testtest", { testSubkeytestSubkey7675: "test", testSubkeytestSubkey5888: "test2" });
+  // await RedisService.client.hDel("test", ["testSubkey1", "testSubkey3"]);
+  const value = await RedisService.client.hGetAll("test");
   const response = new BaseResponse<User>();
   try {
+
     response.data = await RedisService.acquireUser(res.locals.user._id, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
       "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
       "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings"]);

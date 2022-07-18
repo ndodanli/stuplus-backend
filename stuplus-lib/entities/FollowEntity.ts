@@ -19,6 +19,8 @@ export const FollowSchema: Schema = new Schema({
   followingId: { type: String, required: true },
 });
 
+FollowSchema.index({ recordStatus: 1 });
+
 FollowSchema.pre("save", function (next) {
   //
   next()
