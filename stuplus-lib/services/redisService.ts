@@ -67,7 +67,7 @@ export default class RedisService {
     static async acquireUser(userId: string, project?: string[] | any): Promise<User> {
         const redisUser = await this.acquire<User>(RedisKeyType.User + userId, 60 * 120, async () => {
 
-            const user = await UserEntity.findOne({ _id: userId }, {}, { lean: true })
+            const user = await UserEntity.findOne({ _id: userId }, { username_fuzzy: 0, firstName_fuzzy: 0, lastName_fuzzy: 0 }, { lean: true })
 
             if (!user) throw new NotValidError(getMessage("userNotFound", ["tr"]));
 
