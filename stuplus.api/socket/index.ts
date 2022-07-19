@@ -170,14 +170,12 @@ io.on("connection", async (socket: ISocket) => {
             if (await OnlineUserService.isOnline(data.to)) {
                 io.to(data.to).emit("cPmSend", emitData);
             }
-
             else {
-                const playerId = await RedisService.acquirePlayerId(data.to);
-                await OneSignalService.sendNotification({
-                    heading: socket.data.user.username,
-                    playerIds: [playerId],
-                    content: data.m,
-                })
+                // await OneSignalService.sendNotificationWithUserIds({
+                //     heading: socket.data.user.username,
+                //     userIds: [data.to],
+                //     content: data.m,
+                // })
             }
 
             cb(responseData);
@@ -276,7 +274,7 @@ io.on("connection", async (socket: ISocket) => {
                 t: RedisGMOperationType.InsertMessage
             }
 
-            await RedisService.client.rPush(RedisKeyType.DBGroupMessage + data.gCi, stringify(chatData));
+            await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, gMessageEntity.id + RedisGMOperationType.InsertMessage, stringify(chatData));
 
             const gcName = groupChatName(data.gCi);
             socket.to(gcName).emit("cGmSend", { t: data.m, mi: gMessageEntity.id, gCi: data.gCi, f: socket.data.user });
@@ -292,8 +290,6 @@ io.on("connection", async (socket: ISocket) => {
                 //you can do whatever you need with this
 
             }
-
-
 
             //TODO: send notification to offline users
 
@@ -322,7 +318,7 @@ io.on("connection", async (socket: ISocket) => {
                     },
                     t: RedisGMOperationType.InsertForwarded
                 }
-                await RedisService.client.rPush(RedisKeyType.DBGroupMessage + data.gCi, stringify(chatData));
+                await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, gMessageForwardEntity.id + RedisGMOperationType.InsertForwarded, stringify(chatData));
             }
 
             socket.to(groupChatName(data.gCi)).emit("cGmForwarded",
@@ -366,7 +362,7 @@ io.on("connection", async (socket: ISocket) => {
                     },
                     t: RedisGMOperationType.InsertReaded
                 }
-                await RedisService.client.rPush(RedisKeyType.DBGroupMessage + data.gCi, stringify(chatData));
+                await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, gMessageReadEntity.id + RedisGMOperationType.InsertReaded, stringify(chatData));
             }
 
             socket.to(groupChatName(data.gCi)).emit("cGmReaded",
@@ -714,7 +710,7 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
         const notFoundLastMessageChatIds: string[] = [];
         for (let i = 0; i < userPMChats.length; i++) {
             const userPMChat = userPMChats[i];
-            const redisPMAll = await RedisService.client.lRange(RedisKeyType.DBPrivateMessage + userPMChat._id.toString(), 0, -1);
+            const redisPMAll = await RedisService.client.hVals(RedisKeyType.DBPrivateMessage + userPMChat._id.toString());
             for (let i = 0; i < redisPMAll.length; i++) {
                 const chatData = JSON.parse(redisPMAll[i]);
                 if (chatData.t == RedisPMOperationType.UpdateReaded)
@@ -841,7 +837,7 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
         const notFoundLastMessageChatIds: string[] = [];
         for (let i = 0; i < userGroupChats.length; i++) {
             const userGroupChat = userGroupChats[i];
-            const redisGMAll = await RedisService.client.lRange(RedisKeyType.DBGroupMessage + userGroupChat._id.toString(), 0, -1);
+            const redisGMAll = await RedisService.client.hVals(RedisKeyType.DBGroupMessage + userGroupChat._id.toString());
             for (let i = 0; i < redisGMAll.length; i++) {
                 const chatData = JSON.parse(redisGMAll[i]);
                 if (chatData.t == RedisGMOperationType.InsertReaded)
@@ -962,14 +958,15 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
                 hashTags: payload.hashTags,
             });
 
+        const groupChatId = groupChatEntity._id.toString();
         const findGuardInPayloadUsers = payload.userIds.findIndex(userId => userId == "62ab8a204166fd1eaebbb3fa");
         if (findGuardInPayloadUsers != -1)
             payload.userIds.splice(findGuardInPayloadUsers, 1);
 
         let chatUsers = payload.userIds.map((userId: string) => {
-            return new GroupChatUserEntity({ userId: userId, groupChatId: groupChatEntity._id.toString(), groupRole: GroupChatUserRole.Member });
+            return new GroupChatUserEntity({ userId: userId, groupChatId: groupChatId, groupRole: GroupChatUserRole.Member });
         });
-        chatUsers.push(new GroupChatUserEntity({ userId: res.locals.user._id, groupChatId: groupChatEntity._id.toString(), groupRole: GroupChatUserRole.Owner }));
+        chatUsers.push(new GroupChatUserEntity({ userId: res.locals.user._id, groupChatId: groupChatId, groupRole: GroupChatUserRole.Owner }));
         await GroupChatUserEntity.insertMany(chatUsers);
         const usersIdsNotFound = [];
         payload.userIds.push(res.locals.user._id); //add current user to group
@@ -979,7 +976,7 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
             if (socketId) {
                 const socketUser = io.sockets.sockets.get(socketId);
                 if (!socketUser) continue;
-                socketUser.join(groupChatName(groupChatEntity._id.toString()));
+                socketUser.join(groupChatName(groupChatId));
             } else {
                 usersIdsNotFound.push(userId);
                 //TODO:offline send notification
@@ -990,7 +987,7 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
                 t: groupChatEntity.title,
                 gCoIm: groupChatEntity.coverImage,
                 gAvKey: groupChatEntity.avatarKey,
-                gCi: groupChatEntity.id,
+                gCi: groupChatId,
             });
 
         let responseMessage = payload.title + " ";
@@ -1000,30 +997,11 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
             responseMessage += getMessage("groupCreatedSuccess", req.selectedLangs());
         const groupGuard = await RedisService.acquireUser("62ab8a204166fd1eaebbb3fa")
 
-        const now = new Date();
-        const gMessageEntity = new GroupMessageEntity({});
-        const chatData: any = {
-            e: {
-                _id: gMessageEntity.id,
-                ownerId: "62ab8a204166fd1eaebbb3fa",
-                text: responseMessage,
-                groupChatId: groupChatEntity.id,
-                createdAt: now,
-                updatedAt: now,
-            },
-            t: RedisGMOperationType.InsertMessage
-        }
-
-        await RedisService.client.rPush(RedisKeyType.DBGroupMessage + chatData.e.groupChatId, stringify(chatData));
-        io.in(groupChatName(chatData.e.groupChatId)).emit("cGmSend", {
-            t: chatData.e.text, mi: gMessageEntity.id, gCi: chatData.e.groupChatId, f: {
-                uN: groupGuard.username, //username
-                fN: groupGuard.firstName, //first name
-                lN: groupGuard.lastName, //last name
-                uId: groupGuard._id.toString(), //user id
-                ppUrl: groupGuard.profilePhotoUrl, //profile picture url
-                avKey: groupGuard.avatarKey, //avatar key
-            }
+        await MessageService.sendGroupMessage({
+            ownerId: "62ab8a204166fd1eaebbb3fa",
+            text: responseMessage,
+            groupChatId: groupChatId,
+            fromUser: groupGuard
         });
 
         response.data = {
@@ -1523,30 +1501,16 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
             response.data["ci"] = payload.ci;
         }
         const files = [new MessageFiles(req.file.location, req.file.mimetype, req.file.size)];
-        const now = new Date();
-        const messageEntity = new MessageEntity({});
-        const chatData: object = {
-            e: {
-                _id: messageEntity.id,
-                ownerId: res.locals.user._id,
-                text: payload.m,
-                chatId: payload.ci,
-                files: files,
-                createdAt: now,
-                updatedAt: now,
-            }, t: RedisPMOperationType.InsertMessage
-        }
+        const messageEntity = await MessageService.sendPrivateMessage({
+            toUserId: payload.to,
+            ownerId: res.locals.user._id,
+            text: payload.m,
+            chatId: payload.ci,
+            files: files,
+            fromUser: await RedisService.acquireUser(res.locals.user._id, ["_id", "username", "firstName", "lastName", "profilePhotoUrl", "avatarKey"])
+        })
 
         response.data["mi"] = messageEntity.id;
-
-        await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + payload.ci, stringify(chatData));
-        const emitData: any = { message: payload.m, mi: messageEntity.id, ci: payload.ci, files: files, f: null };
-
-        if (!payload.ci)
-            emitData["f"] = await RedisService.acquireUser(res.locals.user._id, ["_id", "username", "firstName", "lastName", "profilePhotoUrl", "avatarKey"]);
-
-        io.to(payload.to).emit("cPmSend", emitData);
-
 
     } catch (err: any) {
         response.setErrorMessage(err.message);
@@ -1603,16 +1567,10 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
         }
 
         const payload = new RedisUpdateFileMessageDTO(req.body);
-        let message;
 
-        let redisChatMessages = await RedisService.client.lRange(RedisKeyType.DBPrivateMessage + payload.ci, 0, -1).then(x => x.map(y => {
-            const chatData = JSON.parse(y);
-            if (chatData.t == RedisPMOperationType.InsertMessage)
-                return chatData.e;
-        }));
         const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size)];
 
-        message = redisChatMessages.find(x => x._id == payload.mi);
+        let message = await RedisService.client.hGet(RedisKeyType.DBPrivateMessage + payload.ci, payload.mi + RedisPMOperationType.InsertMessage).then(x => JSON.parse(x ?? "").e);
         if (!message) {
             message = await MessageEntity.findById(payload.mi);
             if (!message)
@@ -1632,11 +1590,12 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
                 }, t: RedisPMOperationType.UpdateSendFileMessage
             }
 
-            await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + payload.ci, stringify(chatData));
+            await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + payload.ci, payload.mi + RedisPMOperationType.UpdateSendFileMessage, stringify(chatData));
         }
 
         //TODO: offline durumu
         response.data = { ci: null, mi: null };
+        response.data["ci"] = payload.ci;
         response.data["mi"] = payload.mi;
 
         const emitData: any = { mi: payload.mi, ci: payload.ci, files: files, f: null };
@@ -1875,32 +1834,18 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
             throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
         }
 
+        const senderUser = await RedisService.acquireUser(res.locals.user._id, ["_id", "username", "firstName", "lastName", "profilePhotoUrl", "avatarKey"]);
+
         const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size)];
-        const now = new Date();
-        const messageEntity = new GroupMessageEntity({});
-        const chatData: object = {
-            e: {
-                _id: messageEntity.id,
-                ownerId: res.locals.user._id,
-                text: payload.m,
-                groupChatId: payload.gCi,
-                files: files,
-                replyToId: payload.replyToId,
-                createdAt: now,
-                updatedAt: now,
-            }, t: RedisPMOperationType.InsertMessage
-        }
-
-        response.data["mi"] = messageEntity.id;
-
-        await RedisService.client.rPush(RedisKeyType.DBPrivateMessage + payload.gCi, stringify(chatData));
-
-        const emitData: any = { message: payload.m, mi: messageEntity.id, gCi: payload.gCi, files: files, f: null };
-
-        emitData["f"] = await RedisService.acquireUser(res.locals.user._id, ["_id", "username", "firstName", "lastName", "profilePhotoUrl", "avatarKey"]);
-
-        io.in(groupChatName(payload.gCi)).emit("cGmSend", emitData);
-
+        const groupMessageEntity = await MessageService.sendGroupMessage({
+            ownerId: res.locals.user._id,
+            text: payload.m,
+            groupChatId: payload.gCi,
+            files: files,
+            fromUser: senderUser
+        });
+        response.data["gCi"] = payload.gCi;
+        response.data["mi"] = groupMessageEntity.id;
 
     } catch (err: any) {
         response.setErrorMessage(err.message);
@@ -1957,16 +1902,11 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
         }
 
         const payload = new RedisGroupUpdateFileMessageDTO(req.body);
-        let message;
 
-        let redisGroupChatMessages = await RedisService.client.lRange(RedisKeyType.DBGroupMessage + payload.gCi, 0, -1).then(x => x.map(y => {
-            const chatData = JSON.parse(y);
-            if (chatData.t == RedisGMOperationType.InsertMessage)
-                return chatData.e;
-        }));;
+
         const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size)];
 
-        message = redisGroupChatMessages.find(x => x._id == payload.mi);
+        let message = await RedisService.client.hGet(RedisKeyType.DBGroupMessage + payload.gCi, payload.mi + RedisGMOperationType.InsertMessage).then(x => JSON.parse(x ?? "").e);
         if (!message) {
             message = await GroupMessageEntity.findById(payload.mi);
             if (!message)
@@ -1986,7 +1926,7 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
                 }, t: RedisGMOperationType.UpdateSendFileMessage
             }
 
-            await RedisService.client.rPush(RedisKeyType.DBGroupMessage + payload.gCi, stringify(chatData));
+            await RedisService.client.hSet(RedisKeyType.DBGroupMessage + payload.gCi, payload.mi + RedisGMOperationType.UpdateSendFileMessage, stringify(chatData));
         }
 
         //TODO: offline durumu
@@ -2078,11 +2018,11 @@ router.post("/makeUsersGroupAdmin", authorize([Role.User, Role.Admin, Role.Conte
             }
         }
 
-        await OneSignalService.sendNotificationWithUserIds({
-            userIds: usersIdsNotFound,
-            heading: `${groupChat.title} grubunda admin oldun, helal sana.`,
-            content: `${user.username} seni ${groupChat.title} grubunda admin yaptı.`,
-        })
+        // await OneSignalService.sendNotificationWithUserIds({
+        //     userIds: usersIdsNotFound,
+        //     heading: `${groupChat.title} grubunda admin oldun, helal sana.`,
+        //     content: `${user.username} seni ${groupChat.title} grubunda admin yaptı.`,
+        // })
 
         const usersNotFound = await UserEntity.find({ _id: { $in: usersIdsNotFound } }, { "username": 1, "firstName": 1, "lastName": 1, "profilePhotoUrl": 1, "avatarKey": 1 }).lean(true);
         for (let i = 0; i < usersNotFound.length; i++) {
@@ -2206,11 +2146,11 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
 
         await RedisService.delMultipleGCIdsFromUsers(payload.userIds);
 
-        await OneSignalService.sendNotificationWithUserIds({
-            userIds: usersIdsNotFound,
-            heading: `${groupChat.title} grubundan uçuruldun.`,
-            content: `${user.username} seni ${groupChat.title} grubundan uçurdu.`,
-        })
+        // await OneSignalService.sendNotificationWithUserIds({
+        //     userIds: usersIdsNotFound,
+        //     heading: `${groupChat.title} grubundan uçuruldun.`,
+        //     content: `${user.username} seni ${groupChat.title} grubundan uçurdu.`,
+        // })
 
         const usersNotFound = await UserEntity.find({ _id: { $in: usersIdsNotFound } }, { "username": 1, "firstName": 1, "lastName": 1, "profilePhotoUrl": 1, "avatarKey": 1 }).lean(true);
         for (let i = 0; i < usersNotFound.length; i++) {

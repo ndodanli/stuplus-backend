@@ -7,8 +7,7 @@ import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { authorize } from "../middlewares/auth";
-
-
+import OneSignalService from "../../stuplus-lib/services/oneSignalService";
 
 const router = Router();
 

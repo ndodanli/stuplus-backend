@@ -166,6 +166,9 @@ export const UserSchema: Schema = new Schema({
 });
 
 UserSchema.index({ recordStatus: 1 });
+//create unique index for username and email
+UserSchema.index({ username: 1 }, { unique: true });
+UserSchema.index({ email: 1 }, { unique: true });
 
 UserSchema.plugin(mongoose_fuzzy_searching,
   {

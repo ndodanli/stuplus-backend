@@ -64,7 +64,8 @@ export const RedisKeyType = {
    UserPlayerIds: "28:",
 }
 export const RedisSubKeyType = {
-   FollowerCount: "0"
+   FollowerCount: "0",
+   FollowingCount: "1",
 }
 export const SocketRoomTypes = {
    WatchRoom: "w",

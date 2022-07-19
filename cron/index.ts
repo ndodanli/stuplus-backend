@@ -1,9 +1,6 @@
 import CronService from "./cronService";
 import IBaseCronJob from "./jobs/IBaseCronJob";
 import RedisDatabaseJob from "./jobs/RedisDatabaseJob";
-import express from "express";
-import { config } from "./config/config";
-import logger from "./config/logger";
 import UpdateScoresJob from "./jobs/UpdateScoresJob";
 import cronTimes from "../stuplus-lib/constants/cronTimes";
 

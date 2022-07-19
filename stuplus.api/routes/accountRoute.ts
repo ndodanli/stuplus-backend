@@ -54,11 +54,10 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
   // const redisMessages = vals.map(y => {
   //   const data = JSON.parse(y);
   //       return data.e;
-// })
+  // })
   // console.timeEnd("del");
   // await RedisService.client.hSet("testtest", { testSubkeytestSubkey7675: "test", testSubkeytestSubkey5888: "test2" });
   // await RedisService.client.hDel("test", ["testSubkey1", "testSubkey3"]);
-  const value = await RedisService.client.hGetAll("test");
   const response = new BaseResponse<User>();
   try {
 
@@ -68,6 +67,16 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
 
     if (!response.data)
       throw new NotValidError(getMessage("userNotFound", ["tr"]));
+
+    await OneSignalService.sendNotificationWithUserIds({
+      heading: "test 5",
+      content: "test 5",
+      userIds: [response.data._id],
+      chatId: "testChatId5",
+      smallIcon: "https://www.pngkit.com/png/detail/0-4506_facebook-logo-png-transparent-facebook-icon-small-png.png",
+      largeIcon: "https://haloarc.co.uk/wp-content/uploads/cost-quality.png"
+    });
+
 
     response.data.followerCount = await RedisService.acquire(RedisKeyType.User + response.data._id + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
       return await FollowEntity.countDocuments({ followingId: response.data?._id });

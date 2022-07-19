@@ -5,7 +5,7 @@ import logger from "./config/logger";
 import { stringify } from "../stuplus-lib/utils/general";
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export default class CronService {
-    private static lock = new AsyncLock({ timeout: 7000 });
+    private static lock = new AsyncLock({ timeout: 15000 });
 
     static init(jobs: Array<IBaseCronJob>): void {
         for (let i = 0; i < jobs.length; i++) {
