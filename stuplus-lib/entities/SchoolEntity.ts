@@ -7,6 +7,9 @@ export interface School extends BaseEntity {
   title: string;
   coverImageUrl: string;
   type: SchoolType;
+  cityId: string;
+  districtId: string;
+  neighborhoodId: string;
 }
 
 export interface SchoolDocument extends School, Document {
@@ -18,6 +21,9 @@ export const SchoolSchema: Schema = new Schema({
   title: { type: String, required: true },
   coverImageUrl: { type: String, required: false, default: null },
   type: { type: Number, required: true },
+  cityId: { type: String, required: false, default: null },
+  districtId: { type: String, required: false, default: null },
+  neighborhoodId: { type: String, required: false, default: null },
 });
 
 SchoolSchema.index({ recordStatus: 1 });
@@ -47,6 +53,9 @@ SchoolSchema.methods.minify = async function (
     updatedAt: this.updatedAt,
     type: this.type,
     recordDeletionDate: this.recordDeletionDate,
+    cityId: this.cityId,
+    districtId: this.districtId,
+    neighborhoodId: this.neighborhoodId,
   };
 
   return response;

@@ -1031,7 +1031,7 @@ router.get("/removeGroup/:groupChatId", authorize([Role.User, Role.Admin, Role.C
     try {
         const groupChatId = req.params.groupChatId as string;
 
-        const groupChatEntity = await GroupChatEntity.findById(groupChatId);
+        const groupChatEntity = await GroupChatEntity.findOne({ _id: groupChatId });
         if (!groupChatEntity)
             throw new NotValidError(getMessage("groupChatNotFound", req.selectedLangs()));
 
@@ -1166,7 +1166,7 @@ router.post("/getMessages", authorize([Role.User, Role.Admin, Role.ContentCreato
         // const redisMaxMessagesWithFRCount = -60;
 
         const redisMessagesWithFR = await RedisService.client
-            .lRange(RedisKeyType.DBPrivateMessage + payload.chatId, 0, -1).then(x => x.map(y => JSON.parse(y)));
+            .hVals(RedisKeyType.DBPrivateMessage + payload.chatId).then(x => x.map(y => JSON.parse(y)));
         let forwards = redisMessagesWithFR.filter(x => x.t == RedisPMOperationType.UpdateForwarded).map(x => x.e);
         let reads = redisMessagesWithFR.filter(x => x.t == RedisPMOperationType.UpdateReaded).map(x => x.e);
         if (isFirstPage) {
@@ -1570,9 +1570,9 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
 
         const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size)];
 
-        let message = await RedisService.client.hGet(RedisKeyType.DBPrivateMessage + payload.ci, payload.mi + RedisPMOperationType.InsertMessage).then(x => JSON.parse(x ?? "").e);
+        let message = await RedisService.client.hGet(RedisKeyType.DBPrivateMessage + payload.ci, payload.mi + RedisPMOperationType.InsertMessage).then(x => JSON.parse(x ?? "")?.e);
         if (!message) {
-            message = await MessageEntity.findById(payload.mi);
+            message = await MessageEntity.findOne({ _id: payload.mi });
             if (!message)
                 throw new NotValidError(getMessage("messageNotFound", req.selectedLangs()));
             if (message.ownerId != res.locals.user._id)
@@ -1632,7 +1632,7 @@ router.post("/getGroupMessages", authorize([Role.User, Role.Admin, Role.ContentC
         // const redisMaxMessagesWithFRCount = -60;
 
         const redisMessagesWithFileUpdates = await RedisService.client
-            .lRange(RedisKeyType.DBGroupMessage + payload.groupChatId, 0, -1).then(x => x.map(y => JSON.parse(y)));
+            .hVals(RedisKeyType.DBGroupMessage + payload.groupChatId).then(x => x.map(y => JSON.parse(y)));
 
         if (isFirstPage) {
             let redisMessages = redisMessagesWithFileUpdates.filter(x => x.t == RedisGMOperationType.InsertMessage).map(x => x.e);
@@ -1906,9 +1906,9 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
 
         const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size)];
 
-        let message = await RedisService.client.hGet(RedisKeyType.DBGroupMessage + payload.gCi, payload.mi + RedisGMOperationType.InsertMessage).then(x => JSON.parse(x ?? "").e);
+        let message = await RedisService.client.hGet(RedisKeyType.DBGroupMessage + payload.gCi, payload.mi + RedisGMOperationType.InsertMessage).then(x => JSON.parse(x ?? "")?.e);
         if (!message) {
-            message = await GroupMessageEntity.findById(payload.mi);
+            message = await GroupMessageEntity.findOne({ _id: payload.mi });
             if (!message)
                 throw new NotValidError(getMessage("messageNotFound", req.selectedLangs()));
             if (message.ownerId != res.locals.user._id)

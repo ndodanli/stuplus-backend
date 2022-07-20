@@ -56,7 +56,7 @@ router.post("/addUpdatequestion", authorize([Role.Admin]), async (req: CustomReq
   try {
     const question = new AddUpdateQuestionDTO(req.body);
     if (question._id) {
-      const questionToUpdate = await QuestionEntity.findById(question._id);
+      const questionToUpdate = await QuestionEntity.findOne({ _id: question._id });
       if (!questionToUpdate) {
         response.setErrorMessage("question not found");
         throw new NotValidError("question not found", 404);

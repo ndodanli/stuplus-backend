@@ -3,7 +3,6 @@ import AsyncLock from "async-lock"
 import IBaseCronJob from "./jobs/IBaseCronJob";
 import logger from "./config/logger";
 import { stringify } from "../stuplus-lib/utils/general";
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export default class CronService {
     private static lock = new AsyncLock({ timeout: 15000 });
 
@@ -21,9 +20,11 @@ export default class CronService {
                 jobLock.acquire(lockKey, async function (done: any) {
                     try {
                         await job.run();
+                        done();
                     } catch (error: any) {
                         logger.error({ err: error }, `Job ${job.title} failed. {Data}`, stringify({ ErorMessage: error.message }));
                         console.log(`Job ${job.title} failed. Error: `, error);
+                        done();
                     } finally {
                         done();
                     }

@@ -42,6 +42,11 @@
           <span>{{ row.emailFormat }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="City" prop="cityId" align="center">
+        <template slot-scope="{ row }">
+          <span>{{ cities.find(x => x._id == row.cityId)?.title }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="Created/Updated At" width="250px" align="center">
         <template slot-scope="{ row }">
           <span>{{ formatDate(row.createdAt) }}</span> <br>
@@ -86,7 +91,13 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="Departments">
+        <el-form-item>
+          <el-select v-model="temp.cityId" filterable placeholder="Select city...">
+            <el-option v-for="city in cities" :key="city._id" :label="city.title" :value="city._id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="dialogStatus == 'create'" label="Departments">
           <div v-for="dep in temp.departments">
             <el-input v-model="dep.title" />
             <el-input v-model="dep.about" />
@@ -99,7 +110,7 @@
             <el-checkbox v-model="dep.preparation">Option</el-checkbox>
           </div>
         </el-form-item>
-        <div class="d-flex" style="gap:10px;">
+        <div v-if="dialogStatus == 'create'" class="d-flex" style="gap:10px;">
           <el-input style="flex: 0 0 25%;" placeholder="Title" v-model="department.title" />
           <el-form-item label="Department Cover Image">
             <el-upload name="file" class="avatar-uploader" :action="uploadFilePathDepartment" :show-file-list="false"
@@ -215,6 +226,7 @@ export default {
         coverImageUrl: null,
         type: null,
         departments: [],
+        cityId: null,
       },
       dialogFormVisible: false,
       dialogStatus: '',
@@ -230,6 +242,9 @@ export default {
         ],
         coverImageUrl: [
           { required: true, message: 'Cover image is required', trigger: 'blur' }
+        ],
+        cityId: [
+          { required: true, message: 'City is required', trigger: 'blur' }
         ]
       },
       downloadLoading: false,
@@ -244,7 +259,8 @@ export default {
         coverImageUrl: null,
         preparation: false,
         secondaryEducation: false
-      }
+      },
+      cities: []
     }
   },
   created() {
@@ -286,6 +302,7 @@ export default {
       fetchList(this.listQuery).then((response) => {
         console.log('response DD', response)
         this.list = response.data.items
+        this.cities = response.data.cities
         this.total = response.data.total
         this.listLoading = false
       })
@@ -323,6 +340,7 @@ export default {
         coverImageUrl: null,
         type: null,
         departments: [],
+        cityId: null,
       }
     },
     handleCreate() {

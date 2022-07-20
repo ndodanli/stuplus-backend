@@ -20,6 +20,7 @@ export class AddUpdateSchoolDTO extends BaseFilter {
     coverImageUrl: string = "";
     type: SchoolType = SchoolType.Government;
     departments: Department[] = [];
+    cityId: string = "";
     constructor(obj: any) {
         super(obj);
         if (obj) {

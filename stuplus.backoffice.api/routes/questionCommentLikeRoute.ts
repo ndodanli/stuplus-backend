@@ -57,7 +57,7 @@ router.post("/addUpdateQuestionCommentLike", authorize([Role.Admin]), async (req
   try {
     const questionCommentLike = new AddUpdateQuestionCommentLikeDTO(req.body);
     if (questionCommentLike._id) {
-      const questionCommentLikeToUpdate = await QuestionCommentLikeEntity.findById(questionCommentLike._id);
+      const questionCommentLikeToUpdate = await QuestionCommentLikeEntity.findOne({ _id: questionCommentLike._id });
       if (!questionCommentLikeToUpdate) {
         response.setErrorMessage("QuestionCommentLike not found");
         throw new NotValidError("QuestionCommentLike not found", 404);

@@ -55,7 +55,7 @@ router.post("/addUpdateFaculty", authorize([Role.Admin]), async (req: CustomRequ
   try {
     const faculty = new AddUpdateFacultyDTO(req.body);
     if (faculty._id) {
-      const facultyToUpdate = await FacultyEntity.findById(faculty._id);
+      const facultyToUpdate = await FacultyEntity.findOne({ _id: faculty._id });
       if (!facultyToUpdate) {
         response.setErrorMessage("Faculty not found");
         throw new NotValidError("Faculty not found", 404);

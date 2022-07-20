@@ -12,7 +12,7 @@ import { QuestionAddDTO, QuestionCommenLikeDisliketDTO, QuestionCommentDTO, Ques
 import { QuestionAccess } from "../dataAccess/questionAccess";
 const router = Router();
 
-router.post("/add", authorize([Role.ContentCreator, Role.Admin]), uploadFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "question/cover_images/", 5242880), validateAddQuestion, async (req: CustomRequest<QuestionAddDTO>, res: any) => {
+router.post("/add", authorize([Role.ContentCreator, Role.User, Role.Admin]), uploadFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "question/cover_images/", 5242880), validateAddQuestion, async (req: CustomRequest<QuestionAddDTO>, res: any) => {
     /* #swagger.tags = ['Question']
        #swagger.description = 'Add an question.' */
     /*	#swagger.requestBody = {

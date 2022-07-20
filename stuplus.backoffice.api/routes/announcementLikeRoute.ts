@@ -56,7 +56,7 @@ router.post("/addUpdateAnnouncementLike", authorize([Role.Admin]), async (req: C
   try {
     const announcementLike = new AddUpdateAnnouncementLikeDTO(req.body);
     if (announcementLike._id) {
-      const announcementLikeToUpdate = await AnnouncementLikeEntity.findById(announcementLike._id);
+      const announcementLikeToUpdate = await AnnouncementLikeEntity.findOne({ _id: announcementLike._id });
       if (!announcementLikeToUpdate) {
         response.setErrorMessage("AnnouncementLike not found");
         throw new NotValidError("AnnouncementLike not found", 404);

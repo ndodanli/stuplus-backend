@@ -87,7 +87,7 @@ export class GroupAccess {
             }
         }
 
-        const groupGuard = await RedisService.acquireUser("62ab8a204166fd1eaebbb3fa")
+        const groupGuard = await RedisService.acquireUser("62ab8a204166fd1eaebbb3fa");
         const notifications = [];
         for (let i = 0; i < socketUserDatas.length; i++) {
             const userData = socketUserDatas[i];
@@ -96,7 +96,7 @@ export class GroupAccess {
                 ownerId: "62ab8a204166fd1eaebbb3fa",
                 text: `${userData.uN} ${getMessage("addedToGroup", acceptedLanguages)}`,
                 fromUser: groupGuard
-            })
+            });
             notifications.push(new NotificationEntity({
                 ownerId: userData.uId,
                 relatedUserId: userId,

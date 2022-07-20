@@ -7,6 +7,8 @@ import { AnnouncementDocument, AnnouncementSchema } from "./AnnouncementEntity";
 import { AnnouncementLikeDocument, AnnouncementLikeSchema } from "./AnnouncementLikeEntity";
 import { ChatDocument, ChatSchema } from "./ChatEntity";
 import { DepartmentDocument, DepartmentSchema } from "./DepartmentEntity";
+import { DistrictDocument, DistrictSchema } from "./DistrictEntity";
+import { CityDocument, CitySchema } from "./CityEntity";
 import { FacultyDocument, FacultySchema } from "./FacultyEntity";
 import { FollowDocument, FollowSchema } from "./FollowEntity";
 import { FollowRequestDocument, FollowRequestSchema } from "./FollowRequestEntity";
@@ -19,6 +21,7 @@ import { HashtagDocument, HashtagSchema } from "./HashtagEntity";
 import { ImageStatisticDocument, ImageStatisticSchema } from "./ImageStatistic";
 import { InterestDocument, InterestSchema } from "./InterestEntity";
 import { MessageDocument, MessageSchema } from "./MessageEntity";
+import { NeighborhoodDocument, NeighborhoodSchema } from "./NeighborhoodEntity";
 import { NotificationDocument, NotificationSchema } from "./NotificationEntity";
 import { QuestionCommentDocument, QuestionCommentSchema } from "./QuestionCommentEntity";
 import { QuestionCommentLikeDocument, QuestionCommentLikeSchema } from "./QuestionCommentLikeEntity";
@@ -40,7 +43,7 @@ export default interface BaseEntity {
 const collections = ["User", "School", "Faculty", "Department", "Interest", "Announcement", "AnnouncementLike",
   "AnnouncementComment", "GroupChat", "GroupChatUser", "GroupMessage", "GroupMessageForward", "GroupMessageRead",
   "Message", "Chat", "AnnouncementCommentLike", "Follow", "FollowRequest", "Question", "QuestionLike", "QuestionComment",
-  "QuestionCommentLike", "Report", "Notification", "ImageStatistic", "SearchHistory", "Hashtag"];
+  "QuestionCommentLike", "Report", "Notification", "ImageStatistic", "SearchHistory", "Hashtag", "City", "District", "Neighborhood"];
 
 const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
 
@@ -51,6 +54,21 @@ collections.forEach((collectionName: string) => {
 })
 
 registerHooks();
+
+export const CityEntity = baseSpreadator["City"].discriminator<
+  CityDocument,
+  Model<CityDocument>
+>("City", CitySchema);
+
+export const DistrictEntity = baseSpreadator["District"].discriminator<
+  DistrictDocument,
+  Model<DistrictDocument>
+>("District", DistrictSchema);
+
+export const NeighborhoodEntity = baseSpreadator["Neighborhood"].discriminator<
+  NeighborhoodDocument,
+  Model<NeighborhoodDocument>
+>("Neighborhood", NeighborhoodSchema);
 
 export const HashtagEntity = baseSpreadator["Hashtag"].discriminator<
   HashtagDocument,
@@ -188,6 +206,66 @@ export const FollowRequestEntity = baseSpreadator["FollowRequest"].discriminator
 >("FollowRequest", FollowRequestSchema);
 
 function registerHooks(): void {
+  CitySchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  CitySchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  CitySchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  CitySchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  DistrictSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  DistrictSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  DistrictSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  DistrictSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  NeighborhoodSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  NeighborhoodSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  NeighborhoodSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  NeighborhoodSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
   HashtagSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     // this.select({ __v: 0 });

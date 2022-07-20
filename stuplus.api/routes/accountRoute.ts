@@ -68,14 +68,14 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
     if (!response.data)
       throw new NotValidError(getMessage("userNotFound", ["tr"]));
 
-    await OneSignalService.sendNotificationWithUserIds({
-      heading: "test 5",
-      content: "test 5",
-      userIds: [response.data._id],
-      chatId: "testChatId5",
-      smallIcon: "https://www.pngkit.com/png/detail/0-4506_facebook-logo-png-transparent-facebook-icon-small-png.png",
-      largeIcon: "https://haloarc.co.uk/wp-content/uploads/cost-quality.png"
-    });
+    // await OneSignalService.sendNotificationWithUserIds({
+    //   heading: "test 5",
+    //   content: "test 5",
+    //   userIds: [response.data._id],
+    //   chatId: "testChatId5",
+    //   smallIcon: "https://www.pngkit.com/png/detail/0-4506_facebook-logo-png-transparent-facebook-icon-small-png.png",
+    //   largeIcon: "https://haloarc.co.uk/wp-content/uploads/cost-quality.png"
+    // });
 
 
     response.data.followerCount = await RedisService.acquire(RedisKeyType.User + response.data._id + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {

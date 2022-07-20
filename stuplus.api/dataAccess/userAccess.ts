@@ -29,7 +29,7 @@ export class UserAccess {
     public static async getUserProfile(acceptedLanguages: Array<string>, userId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
         const response = new UserProfileResponseDTO();
         response.user = await RedisService.acquireUser(targetUserId, ["_id", "firstName", "lastName", "profilePhotoUrl",
-            "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
+            "role", "grade", "schoolId", "departmentId", "isAccEmailConfirmed", "relatedSchoolIds",
             "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings", "lastSeenDate", "blockedUserIds"]);
 
         if (response.user.blockedUserIds.includes(userId))

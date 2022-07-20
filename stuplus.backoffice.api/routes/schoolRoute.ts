@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { DepartmentEntity, FacultyEntity, GroupChatEntity, GroupChatUserEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { CityEntity, DepartmentEntity, FacultyEntity, GroupChatEntity, GroupChatUserEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
@@ -40,7 +40,8 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<SchoolLis
     }
     let schools = await temp;
     const total = await SchoolEntity.countDocuments();
-    response.data = { items: schools, total: total };
+    const cities = await CityEntity.find({});
+    response.data = { items: schools, total: total, cities: cities };
   } catch (err: any) {
     response.setErrorMessage(err.message)
 
@@ -56,7 +57,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
   try {
     const school = new AddUpdateSchoolDTO(req.body);
     if (school._id) {
-      const schoolToUpdate = await SchoolEntity.findById(school._id);
+      const schoolToUpdate = await SchoolEntity.findOne({_id:school._id});
       if (!schoolToUpdate) {
         response.setErrorMessage("School not found");
         throw new NotValidError("School not found", 404);
@@ -65,6 +66,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
       schoolToUpdate.emailFormat = school.emailFormat;
       schoolToUpdate.coverImageUrl = school.coverImageUrl;
       schoolToUpdate.type = school.type;
+      schoolToUpdate.cityId = school.cityId;
 
       await schoolToUpdate.save();
     }
@@ -234,6 +236,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
         }
       }
       //#endregion
+
       await newSchool.save();
     }
   } catch (err: any) {

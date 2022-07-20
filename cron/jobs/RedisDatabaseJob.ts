@@ -212,7 +212,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                             default:
                                 break;
                         }
-                        keysToDelete.push(query.e._id);
+                        keysToDelete.push(query.e._id + query.t);
                     }
                     iterator++;
                 }
@@ -338,7 +338,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                             default:
                                 break;
                         }
-                        keysToDelete.push(query.e._id);
+                        keysToDelete.push(query.e._id + query.t);
                     }
                     iterator++;
                 }

@@ -131,4 +131,21 @@ export class SearchAccess {
         return hashTags;
     }
 
+    public static async getAccountSuggestions(relatedUserId: string, relatedUser: User | null, payload: SearchGroupChatDTO): Promise<Hashtag[]> {
+        const rUser = relatedUser ?
+            relatedUser :
+            await UserEntity.find({ _id: relatedUserId }, { schoolId: 1, departmentId: 1, grade: 1, relatedSchoolIds: 1 }).lean(true);
+
+
+        let hashTagQuery = HashtagEntity.find({ tag: { $regex: searchable(payload.searchTerm), $options: "i" } });
+        //TODO: add school relation to sort(schoolId)
+        const hashTags = await hashTagQuery
+            .sort({ overallPopularity: -1 })
+            .skip(payload.skip)
+            .limit(payload.pageSize)
+            .lean(true) as Hashtag[];
+
+        return hashTags;
+    }
+
 }

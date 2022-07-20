@@ -56,7 +56,7 @@ router.post("/addUpdateQuestionLike", authorize([Role.Admin]), async (req: Custo
   try {
     const questionLike = new AddUpdateQuestionLikeDTO(req.body);
     if (questionLike._id) {
-      const questionLikeToUpdate = await QuestionLikeEntity.findById(questionLike._id);
+      const questionLikeToUpdate = await QuestionLikeEntity.findOne({ _id: questionLike._id });
       if (!questionLikeToUpdate) {
         response.setErrorMessage("QuestionLike not found");
         throw new NotValidError("QuestionLike not found", 404);

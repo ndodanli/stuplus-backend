@@ -1,8 +1,6 @@
-import oneSignalClient from "../config/oneSignal";
 const OneSignal = require("@onesignal/node-onesignal");
-import { config } from "../config/config";
-import { chunk, stringify } from "../utils/general";
-import { GroupMessageEntity, MessageEntity, UserEntity } from "../entities/BaseEntity";
+import { stringify } from "../utils/general";
+import { GroupMessageEntity, MessageEntity } from "../entities/BaseEntity";
 import logger from "../config/logger";
 import { RedisGMOperationType, RedisKeyType, RedisPMOperationType } from "../enums/enums_socket";
 import RedisService from "./redisService";
@@ -11,7 +9,6 @@ import { io } from "../../stuplus.api/socket";
 import { User } from "../entities/UserEntity";
 import { MessageFiles } from "../entities/MessageEntity";
 export default class MessageService {
-
     public static async sendGroupMessage({ ownerId, text, groupChatId, fromUser, files }: { ownerId: string; text: string; groupChatId: string; fromUser: User; files?: MessageFiles[] }): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -29,7 +26,7 @@ export default class MessageService {
                     t: RedisGMOperationType.InsertMessage
                 }
 
-                await RedisService.client.hSet(RedisKeyType.DBGroupMessage + chatData.e.groupChatId, gMessageEntity.i + RedisGMOperationType.InsertMessage, stringify(chatData));
+                await RedisService.client.hSet(RedisKeyType.DBGroupMessage + chatData.e.groupChatId, gMessageEntity.id + RedisGMOperationType.InsertMessage, stringify(chatData));
                 const emitData: any = {
                     t: chatData.e.text, mi: gMessageEntity.id, gCi: chatData.e.groupChatId, f: {
                         uN: fromUser.username, //username
@@ -81,7 +78,7 @@ export default class MessageService {
                     t: RedisGMOperationType.InsertMessage
                 }
 
-                await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + chatData.e.chatId, messageEntity.i + RedisPMOperationType.InsertMessage, stringify(chatData));
+                await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + chatData.e.chatId, messageEntity.id + RedisPMOperationType.InsertMessage, stringify(chatData));
                 const emitData: any = {
                     t: chatData.e.text, mi: messageEntity.id, ci: chatData.e.chatId, f: {
                         uN: fromUser.username, //username

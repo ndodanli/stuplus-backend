@@ -56,7 +56,7 @@ router.post("/addUpdateAnnouncement", authorize([Role.Admin]), async (req: Custo
   try {
     const Announcement = new AddUpdateAnnouncementDTO(req.body);
     if (Announcement._id) {
-      const announcementToUpdate = await AnnouncementEntity.findById(Announcement._id);
+      const announcementToUpdate = await AnnouncementEntity.findOne({ _id: Announcement._id });
       if (!announcementToUpdate) {
         response.setErrorMessage("Announcement not found");
         throw new NotValidError("Announcement not found", 404);

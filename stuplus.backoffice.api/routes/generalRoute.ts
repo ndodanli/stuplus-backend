@@ -39,7 +39,7 @@ router.post("/uploadFile", authorize([Role.Admin]), uploadFileS3.single("file", 
 router.get("/getAllSchools", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    response.data = await RedisService.acquire<SchoolDocument[]>(RedisKeyType.Schools, 60 * 60 * 2, async () => await SchoolEntity.find({}, {}, { lean: true }));
+    response.data = await RedisService.acquireAllSchools();
 
   } catch (err: any) {
     response.setErrorMessage(err.message);

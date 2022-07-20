@@ -52,7 +52,7 @@ router.post("/addUpdateInterest", authorize([Role.Admin]), async (req: CustomReq
   try {
     const Interest = new AddUpdateInterestDTO(req.body);
     if (Interest._id) {
-      const interestToUpdate = await InterestEntity.findById(Interest._id);
+      const interestToUpdate = await InterestEntity.findOne({ _id: Interest._id });
       if (!interestToUpdate) {
         response.setErrorMessage("Interest not found");
         throw new NotValidError("Interest not found", 404);

@@ -57,7 +57,7 @@ router.post("/addUpdateAnnouncementCommentLike", authorize([Role.Admin]), async 
   try {
     const announcementCommentLike = new AddUpdateAnnouncementCommentLikeDTO(req.body);
     if (announcementCommentLike._id) {
-      const announcementCommentLikeToUpdate = await AnnouncementCommentLikeEntity.findById(announcementCommentLike._id);
+      const announcementCommentLikeToUpdate = await AnnouncementCommentLikeEntity.findOne({ _id: announcementCommentLike._id });
       if (!announcementCommentLikeToUpdate) {
         response.setErrorMessage("AnnouncementCommentLike not found");
         throw new NotValidError("AnnouncementCommentLike not found", 404);

@@ -65,7 +65,7 @@ router.post("/addUpdateUser", authorize([Role.Admin]), async (req: CustomRequest
   try {
     const user = new AddUpdateUserDTO(req.body);
     if (user._id) {
-      const userToUpdate = await UserEntity.findById(user._id);
+      const userToUpdate = await UserEntity.findOne({_id:user._id});
       if (!userToUpdate) {
         response.setErrorMessage("User not found");
         throw new NotValidError("User not found", 404);

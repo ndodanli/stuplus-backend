@@ -55,7 +55,7 @@ router.post("/addUpdateQuestionComment", authorize([Role.Admin]), async (req: Cu
   try {
     const questionComment = new AddUpdateQuestionCommentDTO(req.body);
     if (questionComment._id) {
-      const questionCommentToUpdate = await QuestionCommentEntity.findById(questionComment._id);
+      const questionCommentToUpdate = await QuestionCommentEntity.findOne({_id:questionComment._id});
       if (!questionCommentToUpdate) {
         response.setErrorMessage("QuestionComment not found");
         throw new NotValidError("QuestionComment not found", 404);

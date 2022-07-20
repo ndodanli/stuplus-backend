@@ -10,13 +10,14 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import bcrypt from "bcryptjs"
 import { getNewToken } from "../utils/token";
+import { Role } from "../../stuplus-lib/enums/enums";
 
 const router = Router();
 
 router.post("/", validateLogin, async (req: CustomRequest<LoginUserDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    const user = await UserEntity.findOne({ $or: [{ email: req.body.email }, { username: req.body.email }] });
+    const user = await UserEntity.findOne({ role: Role.Admin, $or: [{ email: req.body.email }, { username: req.body.email }] });
 
     if (!user || !(await bcrypt.compare(req.body.password, user.password)))
       throw new NotValidError(getMessage("userNotFoundWithEnteredInfo", ["tr"]));

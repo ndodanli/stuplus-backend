@@ -8,6 +8,7 @@ import NotValidError from '../errors/NotValidError';
 import { getMessage } from '../localization/responseMessages';
 import { Document } from "mongoose";
 import { RedisAcquireEntityFilterOrder } from '../enums/enums';
+import { School } from '../entities/SchoolEntity';
 
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
@@ -67,7 +68,10 @@ export default class RedisService {
     static async acquireUser(userId: string, project?: string[] | any): Promise<User> {
         const redisUser = await this.acquire<User>(RedisKeyType.User + userId, 60 * 120, async () => {
 
-            const user = await UserEntity.findOne({ _id: userId }, { username_fuzzy: 0, firstName_fuzzy: 0, lastName_fuzzy: 0 }, { lean: true })
+            const user = await UserEntity.findOne({ _id: userId }, {
+                username_fuzzy: 0, firstName_fuzzy: 0, lastName_fuzzy: 0, externalLogins: 0,
+
+            }, { lean: true })
 
             if (!user) throw new NotValidError(getMessage("userNotFound", ["tr"]));
 
@@ -116,6 +120,39 @@ export default class RedisService {
 
     static async updateUser(user: UserDocument): Promise<void> {
         await this.client.set(RedisKeyType.User + user.id, JSON.stringify(user), { EX: 60 * 120 });
+    }
+
+    static async acquireAllSchools(): Promise<any[]> {
+        let schools: any = await this.client.hVals(RedisKeyType.Schools).then(values => {
+            return values.map(value => JSON.parse(value));
+        }
+        ).catch(err => {
+            logger.error({ err: err }, "An error occurred while acquiring all schools.");
+            console.error({ err: err }, "An error occurred while acquiring all schools.");
+        });
+        if (!schools || schools.length === 0) {
+            schools = await SchoolEntity.find({}, {}, { lean: true });
+            for (let i = 0; i < schools.length; i++) {
+                const school = schools[i];
+                await this.client.hSet(RedisKeyType.Schools, school._id.toString(), JSON.stringify(school));
+            }
+        }
+        return schools;
+    }
+
+    static async acquireSingleSchool(schoolId: string): Promise<any> {
+        let school: any = await this.client.hGet(RedisKeyType.Schools, schoolId).then(value => JSON.parse(value ?? "")).catch(err => {
+            logger.error({ err: err }, "An error occurred while acquiring school.");
+            console.error({ err: err }, "An error occurred while acquiring school.");
+        });
+        if (!school) {
+            await this.acquireAllSchools();
+            school = await this.client.hGet(RedisKeyType.Schools, schoolId).then(value => JSON.parse(value ?? "")).catch(err => {
+                logger.error({ err: err }, "An error occurred while acquiring school.");
+                console.error({ err: err }, "An error occurred while acquiring school.");
+            });
+        }
+        return school;
     }
 
     static async updateSchools(): Promise<void> {

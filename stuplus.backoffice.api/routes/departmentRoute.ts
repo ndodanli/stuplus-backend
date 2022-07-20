@@ -55,7 +55,7 @@ router.post("/addUpdateDepartment", authorize([Role.Admin]), async (req: CustomR
   try {
     const department = new AddUpdateDepartmentDTO(req.body);
     if (department._id) {
-      const departmentToUpdate = await DepartmentEntity.findById(department._id);
+      const departmentToUpdate = await DepartmentEntity.findOne({ _id: department._id });
       if (!departmentToUpdate) {
         response.setErrorMessage("Department not found");
         throw new NotValidError("Department not found", 404);
