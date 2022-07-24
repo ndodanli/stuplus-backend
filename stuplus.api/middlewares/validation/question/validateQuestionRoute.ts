@@ -74,6 +74,37 @@ export const validateCommentQuestion = [
     },
 ];
 
+export const validateSubCommentQuestion = [
+    check('questionId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('commentId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('comment')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
 export const validateCommentLikeDislikeQuestion = [
     check('questionId')
         .notEmpty()
@@ -113,9 +144,78 @@ export const validateCommentLikeDislikeQuestion = [
     },
 ];
 
+export const validateSubCommentLikeDislikeQuestion = [
+    check('questionId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('commentId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('subCommentId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('type')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .isNumeric({ no_symbols: true })
+        .bail(),
+    check('beforeType')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .isNumeric({ no_symbols: true })
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
 
 export const validateGetCommentsQuestion = [
     check('questionId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('pageSize')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
+export const validateGetSubCommentsQuestion = [
+    check('commentId')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail()

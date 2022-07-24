@@ -24,7 +24,7 @@ export interface GroupMessageDocument extends GroupMessage, Document {
 
 export const GroupMessageSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
-  text: { type: String, required: true },
+  text: { type: String, required: false, default: null },
   forwarded: { type: Boolean, required: true, default: false },
   forwardedAt: { type: Date, required: false },
   readed: { type: Boolean, required: true, default: false },

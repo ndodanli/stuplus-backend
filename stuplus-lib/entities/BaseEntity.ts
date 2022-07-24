@@ -31,6 +31,9 @@ import { ReportDocument, ReportSchema } from "./ReportEntity";
 import { SchoolDocument, SchoolSchema } from "./SchoolEntity";
 import { SearchHistoryDocument, SearchHistorySchema } from "./SearchHistoryEntity";
 import { UserDocument, UserSchema } from "./UserEntity";
+import { QuestionSubCommentDocument, QuestionSubCommentSchema } from "./QuestionSubCommentEntity";
+import { QuestionSubCommentLikeDocument, QuestionSubCommentLikeSchema } from "./QuestionSubCommentLikeEntity";
+import { DailyUserStatisticDocument, DailyUserStatisticSchema } from "./DailyUserStatistic";
 
 export default interface BaseEntity {
   [key: string]: any;
@@ -43,7 +46,8 @@ export default interface BaseEntity {
 const collections = ["User", "School", "Faculty", "Department", "Interest", "Announcement", "AnnouncementLike",
   "AnnouncementComment", "GroupChat", "GroupChatUser", "GroupMessage", "GroupMessageForward", "GroupMessageRead",
   "Message", "Chat", "AnnouncementCommentLike", "Follow", "FollowRequest", "Question", "QuestionLike", "QuestionComment",
-  "QuestionCommentLike", "Report", "Notification", "ImageStatistic", "SearchHistory", "Hashtag", "City", "District", "Neighborhood"];
+  "QuestionCommentLike", "Report", "Notification", "ImageStatistic", "SearchHistory", "Hashtag", "City", "District",
+  "Neighborhood", "QuestionSubComment", "QuestionSubCommentLike", "DailyUserStatistic"];
 
 const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
 
@@ -54,6 +58,21 @@ collections.forEach((collectionName: string) => {
 })
 
 registerHooks();
+
+export const DailyUserStatisticEntity = baseSpreadator["DailyUserStatistic"].discriminator<
+  DailyUserStatisticDocument,
+  Model<DailyUserStatisticDocument>
+>("DailyUserStatistic", DailyUserStatisticSchema);
+
+export const QuestionSubCommentLikeEntity = baseSpreadator["QuestionSubCommentLike"].discriminator<
+  QuestionSubCommentLikeDocument,
+  Model<QuestionSubCommentLikeDocument>
+>("QuestionSubCommentLike", QuestionSubCommentLikeSchema);
+
+export const QuestionSubCommentEntity = baseSpreadator["QuestionSubComment"].discriminator<
+  QuestionSubCommentDocument,
+  Model<QuestionSubCommentDocument>
+>("QuestionSubComment", QuestionSubCommentSchema);
 
 export const CityEntity = baseSpreadator["City"].discriminator<
   CityDocument,
@@ -206,6 +225,66 @@ export const FollowRequestEntity = baseSpreadator["FollowRequest"].discriminator
 >("FollowRequest", FollowRequestSchema);
 
 function registerHooks(): void {
+  DailyUserStatisticSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  DailyUserStatisticSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  DailyUserStatisticSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  DailyUserStatisticSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  QuestionSubCommentLikeSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  QuestionSubCommentLikeSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  QuestionSubCommentLikeSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  QuestionSubCommentLikeSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  QuestionSubCommentSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  QuestionSubCommentSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  QuestionSubCommentSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  QuestionSubCommentSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
   CitySchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     // this.select({ __v: 0 });
@@ -428,22 +507,22 @@ function registerHooks(): void {
   });
   QuestionSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    // this.select({ __v: 0 });
+    this.select({ __v: 0, titlesch_fuzzy: 0, hashTags_fuzzy: 0 });
     next();
   })
   QuestionSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    // this.select({ __v: 0 });
+    this.select({ __v: 0, titlesch_fuzzy: 0, hashTags_fuzzy: 0 });
     next();
   })
   QuestionSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    // this.select({ __v: 0 });
+    this.select({ __v: 0, titlesch_fuzzy: 0, hashTags_fuzzy: 0 });
     next();
   });
   QuestionSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    // this.select({ __v: 0 });
+    this.select({ __v: 0, titlesch_fuzzy: 0, hashTags_fuzzy: 0 });
     next();
   });
   FollowRequestSchema.pre("find", function (next) {
@@ -568,22 +647,22 @@ function registerHooks(): void {
   });
   AnnouncementSchema.pre("find", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    // this.select({ __v: 0 });
+    this.select({ __v: 0, titlesch_fuzzy: 0, hashTags_fuzzy: 0 });
     next();
   })
   AnnouncementSchema.pre("findOne", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    // this.select({ __v: 0 });
+    this.select({ __v: 0, titlesch_fuzzy: 0, hashTags_fuzzy: 0 });
     next();
   })
   AnnouncementSchema.pre("findOneAndUpdate", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    // this.select({ __v: 0 });
+    this.select({ __v: 0, titlesch_fuzzy: 0, hashTags_fuzzy: 0 });
     next();
   });
   AnnouncementSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
-    // this.select({ __v: 0 });
+    this.select({ __v: 0, titlesch_fuzzy: 0, hashTags_fuzzy: 0 });
     next();
   });
   AnnouncementLikeSchema.pre("find", function (next) {

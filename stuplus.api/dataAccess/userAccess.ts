@@ -598,6 +598,8 @@ export class UserAccess {
                 FollowEntity.create(followEntity),
                 NotificationEntity.insertMany(notifications)
             ]);
+            await RedisService.refreshFollowingsIfNotExists(userId);
+            await RedisService.client.sAdd(RedisKeyType.UserFollowings + followRequest.ownerId, followRequest.requestedId);
         } catch (error) {
             followRequest.status = rollbackStatus.status;
             followRequest.recordStatus = rollbackStatus.recordStatus;
@@ -615,6 +617,8 @@ export class UserAccess {
                 ownerId: followRequest.requestedId,
                 type: NotificationType.StartedFollowingYou
             });
+            await RedisService.refreshFollowingsIfNotExists(userId);
+            await RedisService.client.sRem(RedisKeyType.UserFollowings + followRequest.ownerId, followRequest.requestedId);
             throw error;
         }
 
@@ -642,6 +646,8 @@ export class UserAccess {
     }
 
     public static async followUser(acceptedLanguages: Array<string>, userId: string, payload: UserFollowUserRequestDTO): Promise<object> {
+        if(await RedisService.isDailyFollowLimitExceeded(userId))
+            throw new NotValidError(getMessage("dailyFollowLimitExceeded", acceptedLanguages));
         let followId: string;
         const response: { followId: string, followStatus: FollowStatus } = { followId: "", followStatus: FollowStatus.None };
         const user = await UserEntity.findOne({ _id: payload.requestedId }, { "privacySettings": 1, "_id": 0, "blockedUserIds": 1 }).lean(true);
@@ -662,6 +668,13 @@ export class UserAccess {
                 _id: 0, schoolId: 1,
                 username: 1, firstName: 1, lastName: 1
             }).lean(true);
+
+
+            await NotificationEntity.create({
+                ownerId: payload.requestedId,
+                relatedUserId: userId,
+                type: NotificationType.StartedFollowingYou
+            });
 
             //TODO: followingId'ye sahip user var mi kontrol edilmiyor. *maybe
             const followEntity = await FollowEntity.create({
@@ -692,6 +705,8 @@ export class UserAccess {
             response.followId = followId;
         }
 
+        await RedisService.incrementDailyFollowCount(userId);
+
         return response;
     }
 
@@ -700,6 +715,12 @@ export class UserAccess {
         const unfollow = await FollowEntity.findOneAndUpdate({ _id: payload.followId, followerId: userId }, { recordStatus: RecordStatus.Deleted });
         if (!unfollow)
             throw new NotValidError(getMessage("noUserToUnfollow", acceptedLanguages));
+
+        await NotificationEntity.create({
+            ownerId: unfollow.followingId,
+            relatedUserId: userId,
+            type: NotificationType.UnfollowedYou
+        });
 
         await RedisService.refreshFollowingsIfNotExists(userId);
         await RedisService.client.sRem(RedisKeyType.UserFollowings + userId, unfollow.followingId);

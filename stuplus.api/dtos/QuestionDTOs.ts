@@ -59,7 +59,34 @@ export class QuestionCommentDTO extends BaseFilter {
     }
 }
 
+export class QuestionSubCommentDTO extends BaseFilter {
+    questionId: string = "";
+    commentId: string = "";
+    comment: string = "";
+    replyToId: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
 export class QuestionCommenLikeDisliketDTO extends BaseFilter {
+    commentId: string = "";
+    questionId: string = "";
+    type: LikeType = LikeType.Like;
+    beforeType: LikeType = LikeType.None;
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class QuestionSubCommenLikeDisliketDTO extends BaseFilter {
+    subCommentId: string = "";
     commentId: string = "";
     questionId: string = "";
     type: LikeType = LikeType.Like;
@@ -74,6 +101,16 @@ export class QuestionCommenLikeDisliketDTO extends BaseFilter {
 
 export class QuestionGetCommentsDTO extends BaseFilter {
     questionId: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class QuestionGetSubCommentsDTO extends BaseFilter {
+    commentId: string = "";
     constructor(obj: any) {
         super(obj);
         if (obj) {

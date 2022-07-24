@@ -89,6 +89,7 @@ export enum NotificationType {
    StartedFollowingYou = 0,
    FollowRequestAccepted = 1,
    AddedYouToGroupChat = 2,
+   UnfollowedYou = 3,
 }
 
 export enum SearchedEntityType {

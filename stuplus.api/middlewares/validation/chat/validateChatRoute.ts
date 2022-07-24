@@ -127,11 +127,58 @@ export const validateCreateGroup = [
     },
 ];
 export const validateSendFileMessage = [
-    check('m')
+    check('to')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
         .bail(),
-    check('to')
+    check('ci')
+        .if((value: any, { req }: any) => value)
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
+        .bail(),
+    check('replyToId')
+        .if((value: any, { req }: any) => value)
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+export const validateSendFileGM = [
+    check('gCi')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
+        .bail(),
+    check('replyToId')
+        .if((value: any, { req }: any) => value)
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail()
@@ -167,6 +214,35 @@ export const validateUpdateFileMessage = [
     check('ci')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
+export const validateUpdateFileGM = [
+    check('mi')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    check('gCi')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
@@ -214,6 +290,52 @@ export const validateRemoveFromGroup = [
                 if (!isValidObjectId(value[i])) {
                     throw new Error(getMessage("incorrectId", req.selectedLangs()));
                 }
+            }
+        })
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
+export const validateGetGroupMessages = [
+    check('pageSize')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    check('groupChatId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
+export const validateGetPrivateMessages = [
+    check('pageSize')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    check('chatId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
             }
         })
         .bail(),

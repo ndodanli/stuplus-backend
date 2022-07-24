@@ -2067,7 +2067,7 @@
         "tags": [
           "Question"
         ],
-        "description": "Get comments of an question.",
+        "description": "Get comments of a question.",
         "parameters": [],
         "responses": {
           "200": {
@@ -2113,7 +2113,7 @@
         "tags": [
           "Question"
         ],
-        "description": "Comment to an question.",
+        "description": "Comment to a question.",
         "parameters": [],
         "responses": {
           "200": {
@@ -2194,6 +2194,144 @@
             "application/xml": {
               "schema": {
                 "$ref": "#/components/schemas/QuestionCommentLikeDislikeRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/question/getSubComments": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "description": "Get sub comments of a comment.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionGetSubCommentsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionGetSubCommentsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionGetSubCommentsRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionGetSubCommentsRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/question/subComment": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "description": "Comment to a comment.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionSubCommentRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionSubCommentRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/question/subCommentLikeDislike": {
+      "post": {
+        "tags": [
+          "Question"
+        ],
+        "description": "Like or dislike a question",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionSubCommentLikeDislikeRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionSubCommentLikeDislikeRequest"
               }
             }
           }
@@ -2781,16 +2919,50 @@
         ]
       }
     },
-    "/chat/getMessages": {
+    "/chat/getPMs": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Ger private chat messages.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatGetPrivateMessagesResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatGetPrivateMessagesResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetPrivateMessagesRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetPrivateMessagesRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/getSearchedPMs": {
@@ -2865,7 +3037,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "message": {
+                  "t": {
                     "type": "string",
                     "description": "Message",
                     "example": "Hello"
@@ -2876,11 +3048,21 @@
                   },
                   "files": {
                     "type": "string",
-                    "format": "binary"
+                    "format": "binary",
+                    "description": "Single file."
+                  },
+                  "ci": {
+                    "type": "string",
+                    "description": "Chat ID"
+                  },
+                  "replyToId": {
+                    "type": "string",
+                    "description": "Reply to message ID"
                   }
                 },
                 "required": [
-                  "files"
+                  "files",
+                  "to"
                 ]
               }
             }
@@ -2901,12 +3083,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NullResponse"
+                  "$ref": "#/components/schemas/ChatUpdatePMFileResponse"
                 }
               },
               "application/xml": {
                 "schema": {
-                  "$ref": "#/components/schemas/NullResponse"
+                  "$ref": "#/components/schemas/ChatUpdatePMFileResponse"
                 }
               }
             }
@@ -2934,13 +3116,19 @@
                     "description": "Chat ID",
                     "example": "62ab8a204166fd1eaebbb3fa"
                   },
+                  "to": {
+                    "type": "string",
+                    "description": "Recipient ID",
+                    "example": "62ab8a204166fd1eaebbb3fa"
+                  },
                   "files": {
                     "type": "string",
                     "format": "binary"
                   }
                 },
                 "required": [
-                  "files"
+                  "files",
+                  "mi"
                 ]
               }
             }
@@ -2948,16 +3136,50 @@
         }
       }
     },
-    "/chat/getGroupMessages": {
+    "/chat/getGMs": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Ger group chat messages.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatGetGroupMessagesResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatGetGroupMessagesResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetGroupMessagesRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetGroupMessagesRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/getGroupUsers": {
@@ -3008,22 +3230,27 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "message": {
+                  "t": {
                     "type": "string",
                     "description": "Message",
                     "example": "Hello"
                   },
-                  "to": {
+                  "gCi": {
                     "type": "string",
                     "description": "Recipient ID"
                   },
                   "files": {
                     "type": "string",
                     "format": "binary"
+                  },
+                  "replyToId": {
+                    "type": "string",
+                    "description": "Reply to message ID"
                   }
                 },
                 "required": [
-                  "files"
+                  "files",
+                  "gCi"
                 ]
               }
             }
@@ -3044,12 +3271,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NullResponse"
+                  "$ref": "#/components/schemas/ChatUpdateGMFileResponse"
                 }
               },
               "application/xml": {
                 "schema": {
-                  "$ref": "#/components/schemas/NullResponse"
+                  "$ref": "#/components/schemas/ChatUpdateGMFileResponse"
                 }
               }
             }
@@ -3069,13 +3296,11 @@
                 "properties": {
                   "mi": {
                     "type": "string",
-                    "description": "Message ID",
-                    "example": "62ab8a204166fd1eaebbb3fa"
+                    "description": "Message ID"
                   },
-                  "ci": {
+                  "gCi": {
                     "type": "string",
-                    "description": "Chat ID",
-                    "example": "62ab8a204166fd1eaebbb3fa"
+                    "description": "Group Chat ID"
                   },
                   "files": {
                     "type": "string",
@@ -7648,6 +7873,10 @@
                 "likeType": {
                   "type": "number",
                   "example": 2
+                },
+                "subCommentCount": {
+                  "type": "number",
+                  "example": 12
                 }
               }
             }
@@ -7655,6 +7884,30 @@
         },
         "xml": {
           "name": "QuestionGetCommentsResponse"
+        }
+      },
+      "QuestionGetSubCommentsRequest": {
+        "type": "object",
+        "properties": {
+          "lastRecordDate": {
+            "type": "string",
+            "example": "2022-07-02T20:12:59.891Z"
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          },
+          "commentId": {
+            "type": "string",
+            "example": "commentId"
+          }
+        },
+        "required": [
+          "pageSize",
+          "commentId"
+        ],
+        "xml": {
+          "name": "QuestionGetSubCommentsRequest"
         }
       },
       "QuestionGetQuestionResponse": {
@@ -7846,6 +8099,10 @@
                       }
                     }
                   }
+                },
+                "commentCount": {
+                  "type": "number",
+                  "example": 66
                 }
               }
             }
@@ -7944,6 +8201,31 @@
           "name": "QuestionCommentRequest"
         }
       },
+      "QuestionSubCommentRequest": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "example": "questionId"
+          },
+          "commentId": {
+            "type": "string",
+            "example": "commentId."
+          },
+          "comment": {
+            "type": "string",
+            "example": "some comment."
+          }
+        },
+        "required": [
+          "questionId",
+          "commentId",
+          "comment"
+        ],
+        "xml": {
+          "name": "QuestionSubCommentRequest"
+        }
+      },
       "QuestionCommentLikeDislikeRequest": {
         "type": "object",
         "properties": {
@@ -8016,6 +8298,504 @@
         ],
         "xml": {
           "name": "QuestionCommentLikeDislikeRequest"
+        }
+      },
+      "QuestionSubCommentLikeDislikeRequest": {
+        "type": "object",
+        "properties": {
+          "subCommentId": {
+            "type": "string",
+            "example": "subCommentId"
+          },
+          "commentId": {
+            "type": "string",
+            "example": "commentId"
+          },
+          "questionId": {
+            "type": "string",
+            "example": "questionId"
+          },
+          "type": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          },
+          "beforeType": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "description": {
+                "type": "string",
+                "example": "Type of the previous like/dislike."
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "None": {
+                    "type": "number",
+                    "example": 2
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "subCommentId",
+          "commentId",
+          "questionId",
+          "type",
+          "beforeType"
+        ],
+        "xml": {
+          "name": "QuestionSubCommentLikeDislikeRequest"
+        }
+      },
+      "ChatGetGroupMessagesRequest": {
+        "type": "object",
+        "properties": {
+          "groupChatId": {
+            "type": "string",
+            "example": "groupChatId"
+          },
+          "lastRecordDate": {
+            "type": "string",
+            "example": "2022-07-02T20:12:59.891Z"
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "groupChatId",
+          "pageSize"
+        ],
+        "xml": {
+          "name": "ChatGetGroupMessagesRequest"
+        }
+      },
+      "ChatGetGroupMessagesResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62dd5322b8f26724a0a6cae5"
+                    },
+                    "ownerId": {
+                      "type": "string",
+                      "example": "62ab8a204166fd1eaebbb3fa"
+                    },
+                    "text": {},
+                    "forwarded": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "readed": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "example": "https://stuplus-bucket.s3.amazonaws.com/public/chat/group_message_files/1658671900289-2703-1657569337023-6615-a%C3%83%C2%83%C3%82%C2%A7%C3%83%C2%84%C3%82%C2%B1k%C3%83"
+                          },
+                          "mimeType": {
+                            "type": "string",
+                            "example": "image/png"
+                          },
+                          "size": {
+                            "type": "number",
+                            "example": 1501486
+                          },
+                          "_id": {
+                            "type": "string",
+                            "example": "62dd5330b8f26724a0a6cae7"
+                          }
+                        }
+                      }
+                    },
+                    "replyToId": {},
+                    "deletedForUserIds": {
+                      "type": "array",
+                      "example": [],
+                      "items": {}
+                    },
+                    "deletedForUserDate": {},
+                    "groupChatId": {
+                      "type": "string",
+                      "example": "62cc37746d89dc2f329e0beb"
+                    },
+                    "recordStatus": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "example": "2022-07-24T14:11:45.369Z"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "2022-07-24T14:11:45.369Z"
+                    },
+                    "__t": {
+                      "type": "string",
+                      "example": "GroupMessage"
+                    },
+                    "__v": {
+                      "type": "number",
+                      "example": 0
+                    }
+                  }
+                }
+              },
+              "groupChat": {
+                "type": "object",
+                "properties": {
+                  "memberCount": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "ChatGetGroupMessagesResponse"
+        }
+      },
+      "ChatGetPrivateMessagesRequest": {
+        "type": "object",
+        "properties": {
+          "chatId": {
+            "type": "string",
+            "example": "chatId"
+          },
+          "lastRecordDate": {
+            "type": "string",
+            "example": "2022-07-02T20:12:59.891Z"
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "chatId",
+          "pageSize"
+        ],
+        "xml": {
+          "name": "ChatGetPrivateMessagesRequest"
+        }
+      },
+      "ChatGetPrivateMessagesResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "example": "62dd4a20423dfa3a80bc849d"
+                },
+                "ownerId": {
+                  "type": "string",
+                  "example": "62ab8a204166fd1eaebbb3fa"
+                },
+                "text": {},
+                "forwarded": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "forwardedAt": {},
+                "readed": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "readedAt": {},
+                "chatId": {
+                  "type": "string",
+                  "example": "62dd4a15bc72d4ea5a381173"
+                },
+                "replyToId": {},
+                "deletedForUserIds": {
+                  "type": "array",
+                  "example": [],
+                  "items": {}
+                },
+                "deletedForUserDate": {},
+                "recordStatus": {
+                  "type": "number",
+                  "example": 1
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "example": "2022-07-24T13:33:20.627Z"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2022-07-24T13:33:20.627Z"
+                },
+                "__t": {
+                  "type": "string",
+                  "example": "Message"
+                },
+                "files": {
+                  "type": "array",
+                  "example": [],
+                  "items": {}
+                },
+                "__v": {
+                  "type": "number",
+                  "example": 0
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "ChatGetPrivateMessagesResponse"
+        }
+      },
+      "ChatUpdatePMFileResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "ci": {
+                "type": "string",
+                "example": "62dd4a15bc72d4ea5a381173"
+              },
+              "mi": {
+                "type": "string",
+                "example": "62dd4c23eec956be9f969c5d"
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "ChatUpdatePMFileResponse"
+        }
+      },
+      "ChatUpdateGMFileResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "gCi": {
+                "type": "string",
+                "example": "62cc37746d89dc2f329e0beb"
+              },
+              "mi": {
+                "type": "string",
+                "example": "62dd547f638e8ddf4e7f5712"
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "ChatUpdateGMFileResponse"
         }
       }
     },

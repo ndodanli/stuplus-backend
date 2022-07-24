@@ -77,7 +77,7 @@ const systemLangs: Record<string, Function> = {
             noUserToRemoveFollow: "Takibi silinecek kimseyi bulunamadık. Yok olmuş olabilir.",
             notValidDate: "Geçersiz tarih.",
             messageNotFound: "Mesaj bulunamadı.",
-            incorrectId: "Bulunamadı.",
+            incorrectId: "Id geçersiz, yanlış işler peşindeysen hemen bırak.",
             groupUsersRemovedSuccess: "Kullanıcıları başarıyla uçurduk. Uçan kullanıcılarda bir sorun varsa bize bildir ki bir daha konamasınlar.",
             groupUsersRemovedGuardSuccess: "Kullanıcıları uçururken beni silmek istediğini gördüm ve çok üzüldüm. Lütfen beni üzmeyin :'(.",
             groupAdminsAddedSuccess: "Yöneticileri başarıyla ekledim.",
@@ -116,6 +116,10 @@ const systemLangs: Record<string, Function> = {
             groupHasNoMemberCannotDelete: "Bu grubun hiç üyesi yok ki sileyim, kendini silme de kapat git madem.",
             cannotRemoveOwner: "Yöneticini silmek? Buna izin veremem, kim yönetecek bizi sonra?",
             privacySettingsUpdated: "Gizlilik ayarlarınızı başarıyla güncelledik.",
+            dailyCommentLimitExceeded: "Bugünlük bu kadar yorum yeter, yarın tekrar dene",
+            dailyLikeLimitExceeded: "Bugünlük bu kadar beğenme yeter, yarın tekrar dene",
+            dailyNewPMLimitExceeded: "Bugünlük bu kadar yeni mesaj yeter, yarın tekrar dene",
+            dailyFollowLimitExceeded: "Bugünlük bu kadar takip yeter, yarın tekrar dene",
         }
     },
     "en": function (args: string[] = []) {

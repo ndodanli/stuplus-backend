@@ -4,61 +4,62 @@ import BaseEntity from "./BaseEntity";
 import { School } from "./SchoolEntity";
 import { User } from "./UserEntity";
 
-export interface QuestionComment extends BaseEntity {
+export interface QuestionSubComment extends BaseEntity {
   ownerId: string; //user id
   questionId: string;
+  commentId: string;
   comment: string;
-  score: number;
+  popularity: number;
   //ignore
   owner?: User | null; // ignore
   ownerSchool?: School | null; //ignore
   likeCount: number; // ignore
-  subCommentCount: number // ignore
   likeType: LikeType; // ignore
 
 }
 
-export interface QuestionCommentDocument extends QuestionComment, Document {
+export interface QuestionSubCommentDocument extends QuestionSubComment, Document {
   minify(): unknown;
 }
 
-export const QuestionCommentSchema: Schema = new Schema({
+export const QuestionSubCommentSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
   questionId: { type: String, required: true },
+  commentId: { type: String, required: true },
   comment: { type: String, required: true },
-  score: { type: Number, required: false, default: 0 },
+  popularity: { type: Number, required: false, default: 0 },
 });
 
-QuestionCommentSchema.index({ recordStatus: 1, questionId: -1, score: -1, createdAt: -1 });
+QuestionSubCommentSchema.index({ recordStatus: 1, questionId: -1, commentId: -1, popularity: -1, createdAt: -1 });
 
 // Just to prove that hooks are still functioning as expected
-QuestionCommentSchema.pre("save", function (next) {
+QuestionSubCommentSchema.pre("save", function (next) {
   //
   next()
 })
 
-QuestionCommentSchema.pre("deleteOne", function (next) {
+QuestionSubCommentSchema.pre("deleteOne", function (next) {
   //
   next()
 });
 
-QuestionCommentSchema.methods.minify = async function (
-  this: QuestionCommentDocument
+QuestionSubCommentSchema.methods.minify = async function (
+  this: QuestionSubCommentDocument
 ) {
-  const response: QuestionComment & { _id: string } = {
+  const response: QuestionSubComment & { _id: string } = {
     _id: this._id,
     recordStatus: this.recordStatus,
     ownerId: this.ownerId,
     questionId: this.questionId,
     comment: this.comment,
-    score: this.score,
+    popularity: this.popularity,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     recordDeletionDate: this.recordDeletionDate,
+    commentId: this.commentId,
     //ignore
     likeType: LikeType.None, // ignore
     likeCount: 0, // ignore
-    subCommentCount: 0, // ignore
     owner: null, // ignore
     ownerSchool: null, // ignore
   };

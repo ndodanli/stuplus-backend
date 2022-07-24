@@ -13,6 +13,6 @@
 
 
 
-
+*daily user statistic => yorum ve begeniler(announcement implementation)
 *vakit kalirsa*
 -s3 sifreleme

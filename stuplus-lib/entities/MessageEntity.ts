@@ -48,7 +48,7 @@ export interface MessageDocument extends Message, Document {
 
 export const MessageSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
-  text: { type: String, required: true },
+  text: { type: String, required: false, default: null },
   forwarded: { type: Boolean, required: true, default: false },
   forwardedAt: { type: Date, required: false, default: null },
   readed: { type: Boolean, required: true, default: false },

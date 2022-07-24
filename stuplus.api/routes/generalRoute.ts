@@ -38,7 +38,7 @@ router.post("/updateImageStats", async (req: CustomRequest<any>, res: any) => {
     }
 
   } catch (err: any) {
-    logger.error({ err: err }, `notifyReadNotifications failed. {Data}`, stringify({ ErorMessage: err.message }));
+    logger.error({ err: err }, `updateImageStats failed. {Data}`, stringify({ ErorMessage: err.message }));
   }
 
   return res.status(200).send();

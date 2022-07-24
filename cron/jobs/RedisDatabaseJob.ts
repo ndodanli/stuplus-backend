@@ -7,7 +7,6 @@ import { RedisGMOperationType, RedisKeyType, RedisPMOperationType } from "../../
 import RedisService from "../../stuplus-lib/services/redisService";
 import IBaseCronJob from "./IBaseCronJob";
 import { chunk, stringify } from "../../stuplus-lib/utils/general";
-import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import logger from "../../stuplus-lib/config/logger";
 
 export default class RedisDatabaseJob implements IBaseCronJob {

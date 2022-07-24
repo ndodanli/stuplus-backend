@@ -1779,7 +1779,8 @@ const doc = {
                         "__t": "User"
                     },
                     "likeCount": 22,
-                    "likeType": 2
+                    "likeType": 2,
+                    "subCommentCount" : 42
                 },
                 {
                     "_id": "62b6f0b662245f6dc443a9ae",
@@ -1800,10 +1801,74 @@ const doc = {
                         "__t": "User"
                     },
                     "likeCount": 22,
-                    "likeType": 2
+                    "likeType": 2,
+                    "subCommentCount" : 12
                 },
             ]
         },
+        QuestionGetSubCommentsRequest: {
+            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            $pageSize: 20,
+            $commentId: "commentId",
+        },
+        // QuestionGetSubCommentsResponse: {
+        //     hasError: {
+        //         type: "boolean",
+        //         description: "Indicates whether the operation was successful or not."
+        //     },
+        //     validationErrors: {
+        //         type: "array",
+        //         description: "List of validation errors.",
+        //     },
+        //     message: {
+        //         type: "string",
+        //         description: "Message describing the error."
+        //     },
+        //     data: [
+        //         {
+        //             "_id": "62b6f0b662245f6dc443a9ad",
+        //             "ownerId": "62ab8a204166fd1eaebbb3fa",
+        //             "questionId": "62af8aade035eb1764400d36",
+        //             "comment": "some comment.",
+        //             "score": 15,
+        //             "recordStatus": 1,
+        //             "__t": "QuestionComment",
+        //             "__v": 0,
+        //             "createdAt": "2022-06-25T11:26:00.538Z",
+        //             "updatedAt": "2022-06-25T13:22:02.391Z",
+        //             "owner": {
+        //                 "_id": "62ab8a204166fd1eaebbb3fa",
+        //                 "username": "ndodanli14",
+        //                 "schoolId": "schoolId1",
+        //                 "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
+        //                 "__t": "User"
+        //             },
+        //             "likeCount": 22,
+        //             "likeType": 2
+        //         },
+        //         {
+        //             "_id": "62b6f0b662245f6dc443a9ae",
+        //             "ownerId": "62ab8a204166fd1eaebbb3fa",
+        //             "questionId": "62af8aade035eb1764400d36",
+        //             "comment": "some comment.",
+        //             "score": 0,
+        //             "recordStatus": 1,
+        //             "__t": "QuestionComment",
+        //             "__v": 0,
+        //             "createdAt": "2022-06-25T11:26:00.539Z",
+        //             "updatedAt": "2022-06-25T13:22:02.391Z",
+        //             "owner": {
+        //                 "_id": "62ab8a204166fd1eaebbb3fa",
+        //                 "username": "ndodanli14",
+        //                 "schoolId": null,
+        //                 "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_images/1656159197445-1MFqZJCvcok.jpg",
+        //                 "__t": "User"
+        //             },
+        //             "likeCount": 22,
+        //             "likeType": 2
+        //         },
+        //     ]
+        // },
         QuestionGetQuestionResponse: {
             hasError: {
                 type: "boolean",
@@ -1874,7 +1939,8 @@ const doc = {
                             },
                             "likeCount": 22,
                             "likeType": 0
-                        },]
+                        },],
+                    "commentCount": 66
                 }
             ],
         },
@@ -1901,6 +1967,11 @@ const doc = {
             $questionId: "questionId",
             $comment: "some comment."
         },
+        QuestionSubCommentRequest: {
+            $questionId: "questionId",
+            $commentId: "commentId.",
+            $comment: "some comment."
+        },
         QuestionCommentLikeDislikeRequest: {
             $commentId: "commentId",
             $questionId: "questionId",
@@ -1920,6 +1991,313 @@ const doc = {
                     None: 2
                 }
             }
+        },
+        QuestionSubCommentLikeDislikeRequest: {
+            $subCommentId: "subCommentId",
+            $commentId: "commentId",
+            $questionId: "questionId",
+            $type: {
+                type: "enum",
+                values: {
+                    Dislike: 0,
+                    Like: 1
+                }
+            },
+            $beforeType: {
+                type: "enum",
+                description: "Type of the previous like/dislike.",
+                values: {
+                    Dislike: 0,
+                    Like: 1,
+                    None: 2
+                }
+            }
+        },
+        //#endregion
+        //#region Chat
+        ChatGetGroupMessagesRequest: {
+            $groupChatId: "groupChatId",
+            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            $pageSize: 20,
+        },
+        ChatGetGroupMessagesResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: {
+                "messages": [
+                    {
+                        "_id": "62dd547f638e8ddf4e7f5712",
+                        "ownerId": "62ab8a204166fd1eaebbb3fa",
+                        "text": null,
+                        "forwarded": false,
+                        "readed": false,
+                        "files": [
+                            {
+                                "url": "https://stuplus-bucket.s3.amazonaws.com/public/chat/group_message_files/1658672252496-8238-1657569337023-6615-a%C3%83%C2%83%C3%82%C2%A7%C3%83%C2%84%C3%82%C2%B1k%C3%83",
+                                "mimeType": "image/png",
+                                "size": 1501486,
+                                "_id": "62dd5489638e8ddf4e7f5714"
+                            },
+                            {
+                                "url": "https://stuplus-bucket.s3.amazonaws.com/public/chat/message_files/1658674373794-9335-1657324327987-S3eDQ3yqXMw.jpg",
+                                "mimeType": "image/jpeg",
+                                "size": 2250194,
+                                "_id": "62dd5cc94ee5eb9cf53c7bcd"
+                            },
+                            {
+                                "url": "https://stuplus-bucket.s3.amazonaws.com/public/chat/message_files/1658674540766-5060-1657324327987-S3eDQ3yqXMw.jpg",
+                                "mimeType": "image/jpeg",
+                                "size": 2250194,
+                                "_id": "62dd5d70ec5e34ad4b75012c"
+                            }
+                        ],
+                        "replyToId": "62aa35971c1df0aaea949dfe",
+                        "deletedForUserIds": [],
+                        "deletedForUserDate": null,
+                        "groupChatId": "62cc37746d89dc2f329e0beb",
+                        "recordStatus": 1,
+                        "updatedAt": "2022-07-24T14:55:44.876Z",
+                        "createdAt": "2022-07-24T14:17:35.525Z",
+                        "__t": "GroupMessage",
+                        "__v": 2
+                    },
+                    {
+                        "_id": "62dd5322b8f26724a0a6cae5",
+                        "ownerId": "62ab8a204166fd1eaebbb3fa",
+                        "text": null,
+                        "forwarded": false,
+                        "readed": false,
+                        "files": [
+                            {
+                                "url": "https://stuplus-bucket.s3.amazonaws.com/public/chat/group_message_files/1658671900289-2703-1657569337023-6615-a%C3%83%C2%83%C3%82%C2%A7%C3%83%C2%84%C3%82%C2%B1k%C3%83",
+                                "mimeType": "image/png",
+                                "size": 1501486,
+                                "_id": "62dd5330b8f26724a0a6cae7"
+                            }
+                        ],
+                        "replyToId": null,
+                        "deletedForUserIds": [],
+                        "deletedForUserDate": null,
+                        "groupChatId": "62cc37746d89dc2f329e0beb",
+                        "recordStatus": 1,
+                        "updatedAt": "2022-07-24T14:11:45.369Z",
+                        "createdAt": "2022-07-24T14:11:45.369Z",
+                        "__t": "GroupMessage",
+                        "__v": 0
+                    }
+                ],
+                "groupChat": {
+                    "memberCount": 1
+                }
+            },
+        },
+        ChatGetPrivateMessagesRequest: {
+            $chatId: "chatId",
+            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            $pageSize: 20,
+        },
+        ChatGetPrivateMessagesResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: [
+                {
+                    "_id": "62dd4c23eec956be9f969c5d",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "text": null,
+                    "forwarded": false,
+                    "forwardedAt": null,
+                    "readed": false,
+                    "readedAt": null,
+                    "chatId": "62dd4a15bc72d4ea5a381173",
+                    "files": [
+                        {
+                            "url": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/chat/message_files/1658670111604-7091-1658614127031-1657324327987-S3",
+                            "mimeType": "image/jpeg",
+                            "size": 2250194,
+                            "_id": "62dd4c28eec956be9f969c5f"
+                        },
+                        {
+                            "url": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/chat/message_files/1658673750835-5674-ataturk_uni.png",
+                            "mimeType": "image/png",
+                            "size": 1501486,
+                            "_id": "62dd5a63f3f7b4b5542c3a7e"
+                        }
+                    ],
+                    "replyToId": null,
+                    "deletedForUserIds": [],
+                    "deletedForUserDate": null,
+                    "recordStatus": 1,
+                    "updatedAt": "2022-07-24T14:42:45.118Z",
+                    "createdAt": "2022-07-24T13:41:55.351Z",
+                    "__t": "Message",
+                    "__v": 1
+                },
+                {
+                    "_id": "62dd4bd1e0a8ae0a67a3000b",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "text": null,
+                    "forwarded": false,
+                    "forwardedAt": null,
+                    "readed": false,
+                    "readedAt": null,
+                    "chatId": "62dd4a15bc72d4ea5a381173",
+                    "files": [
+                        {
+                            "url": "https://stuplus-bucket.s3.amazonaws.com/public/chat/message_files/1658670025994-3641-1658614127031-1657324327987-S3",
+                            "mimeType": "image/jpeg",
+                            "size": 2250194,
+                            "_id": "62dd4bdde0a8ae0a67a3000d"
+                        }
+                    ],
+                    "replyToId": null,
+                    "deletedForUserIds": [],
+                    "deletedForUserDate": null,
+                    "recordStatus": 1,
+                    "updatedAt": "2022-07-24T13:40:33.593Z",
+                    "createdAt": "2022-07-24T13:40:33.593Z",
+                    "__t": "Message",
+                    "__v": 0
+                },
+                {
+                    "_id": "62dd4b6aaa364d55018527d7",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "text": null,
+                    "forwarded": false,
+                    "forwardedAt": null,
+                    "readed": false,
+                    "readedAt": null,
+                    "chatId": "62dd4a15bc72d4ea5a381173",
+                    "files": [
+                        {
+                            "url": "https://stuplus-bucket.s3.amazonaws.com/public/chat/message_files/1658669919894-5464-1658614127031-1657324327987-S3",
+                            "mimeType": "image/jpeg",
+                            "size": 2250194,
+                            "_id": "62dd4bb0e0a8ae0a67a30008"
+                        }
+                    ],
+                    "replyToId": null,
+                    "deletedForUserIds": [],
+                    "deletedForUserDate": null,
+                    "recordStatus": 1,
+                    "updatedAt": "2022-07-24T13:38:50.314Z",
+                    "createdAt": "2022-07-24T13:38:50.314Z",
+                    "__t": "Message",
+                    "__v": 0
+                },
+                {
+                    "_id": "62dd4b2df0b3194fb940e642",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "text": null,
+                    "forwarded": false,
+                    "forwardedAt": null,
+                    "readed": false,
+                    "readedAt": null,
+                    "chatId": "62dd4a15bc72d4ea5a381173",
+                    "replyToId": null,
+                    "deletedForUserIds": [],
+                    "deletedForUserDate": null,
+                    "recordStatus": 1,
+                    "updatedAt": "2022-07-24T13:37:49.001Z",
+                    "createdAt": "2022-07-24T13:37:49.001Z",
+                    "__t": "Message",
+                    "files": [],
+                    "__v": 0
+                },
+                {
+                    "_id": "62dd4a85869aa18a7cd9ddfb",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "text": null,
+                    "forwarded": false,
+                    "forwardedAt": null,
+                    "readed": false,
+                    "readedAt": null,
+                    "chatId": "62dd4a15bc72d4ea5a381173",
+                    "replyToId": null,
+                    "deletedForUserIds": [],
+                    "deletedForUserDate": null,
+                    "recordStatus": 1,
+                    "updatedAt": "2022-07-24T13:35:01.373Z",
+                    "createdAt": "2022-07-24T13:35:01.373Z",
+                    "__t": "Message",
+                    "files": [],
+                    "__v": 0
+                },
+                {
+                    "_id": "62dd4a20423dfa3a80bc849d",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "text": null,
+                    "forwarded": false,
+                    "forwardedAt": null,
+                    "readed": false,
+                    "readedAt": null,
+                    "chatId": "62dd4a15bc72d4ea5a381173",
+                    "replyToId": null,
+                    "deletedForUserIds": [],
+                    "deletedForUserDate": null,
+                    "recordStatus": 1,
+                    "updatedAt": "2022-07-24T13:33:20.627Z",
+                    "createdAt": "2022-07-24T13:33:20.627Z",
+                    "__t": "Message",
+                    "files": [],
+                    "__v": 0
+                }
+            ],
+        },
+        ChatUpdatePMFileResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: {
+                "ci": "62dd4a15bc72d4ea5a381173",
+                "mi": "62dd4c23eec956be9f969c5d"
+            },
+        },
+        ChatUpdateGMFileResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            "data": {
+                "gCi": "62cc37746d89dc2f329e0beb",
+                "mi": "62dd547f638e8ddf4e7f5712"
+            },
         },
         //#endregion
     }

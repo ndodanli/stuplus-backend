@@ -68,7 +68,7 @@ export class RedisFileMessageUpdateDTO {
 
 
 export class RedisSendFileMessageDTO {
-    m: string = "";
+    t: string = "";
     ci: string = "";
     to: string = "";
     replyToId: string = "";

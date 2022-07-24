@@ -8,6 +8,7 @@ import NotValidError from '../errors/NotValidError';
 import { getMessage } from '../localization/responseMessages';
 import { Document } from "mongoose";
 import { RedisAcquireEntityFilterOrder } from '../enums/enums';
+import userLimits from '../constants/userLimits';
 
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
@@ -58,11 +59,11 @@ export default class RedisService {
     static async refreshFollowingsIfNotExists(userId: string): Promise<void> {
         if (!await RedisService.client.exists(RedisKeyType.UserFollowings + userId)) {
             const allFollowingIds = await FollowEntity.find({ followerId: userId }, { followingId: 1, _id: 0 }).lean(true);
-            if (allFollowingIds.length > 0){
+            if (allFollowingIds.length > 0) {
                 await RedisService.client.multi()
-                .sAdd(RedisKeyType.UserFollowings + userId, allFollowingIds.map(x => x.followingId))
-                .expire(RedisKeyType.UserFollowings + userId, 60 * 60 * 48)
-                .exec();
+                    .sAdd(RedisKeyType.UserFollowings + userId, allFollowingIds.map(x => x.followingId))
+                    .expire(RedisKeyType.UserFollowings + userId, 60 * 60 * 48)
+                    .exec();
             }
         }
     }
@@ -203,6 +204,38 @@ export default class RedisService {
         // await this.client.set(key, JSON.stringify(data), { EX: 60 * 120 });
 
         return documentList as unknown as T;
+    }
+
+    static async isDailyLikeLimitExceeded(userId: string): Promise<boolean> {
+        return await this.client.get(RedisKeyType.DailyLikeLimit + userId).then(x => parseInt(x ?? "0")) >= userLimits.MAX_LIKE_PER_DAY;
+    }
+
+    static async isDailyCommentLimitExceeded(userId: string): Promise<boolean> {
+        return await this.client.get(RedisKeyType.DailyCommentLimit + userId).then(x => parseInt(x ?? "0")) >= userLimits.MAX_COMMENT_PER_DAY;
+    }
+
+    static async isDailyNewPMLimitExceeded(userId: string): Promise<boolean> {
+        return await this.client.get(RedisKeyType.DailyNewPMLimit + userId).then(x => parseInt(x ?? "0")) >= userLimits.MAX_NEW_PM_PER_DAY;
+    }
+
+    static async isDailyFollowLimitExceeded(userId: string): Promise<boolean> {
+        return await this.client.get(RedisKeyType.DailyFollowLimit + userId).then(x => parseInt(x ?? "0")) >= userLimits.MAX_FOLLOW_PER_DAY;
+    }
+
+    static async incrementDailyCommentCount(userId: string): Promise<void> {
+        await this.client.incr(RedisKeyType.DailyCommentLimit + userId);
+    }
+
+    static async incrementDailyLikeCount(userId: string): Promise<void> {
+        await this.client.incr(RedisKeyType.DailyLikeLimit + userId);
+    }
+
+    static async incrementDailyNewPMCount(userId: string): Promise<void> {
+        await this.client.incr(RedisKeyType.DailyNewPMLimit + userId);
+    }
+
+    static async incrementDailyFollowCount(userId: string): Promise<void> {
+        await this.client.incr(RedisKeyType.DailyFollowLimit + userId);
     }
 }
 

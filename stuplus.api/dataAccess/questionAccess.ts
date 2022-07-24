@@ -1,6 +1,6 @@
-import { QuestionCommentEntity, QuestionCommentLikeEntity, QuestionEntity, QuestionLikeEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { QuestionCommentEntity, QuestionCommentLikeEntity, QuestionEntity, QuestionLikeEntity, QuestionSubCommentEntity, QuestionSubCommentLikeEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { QuestionDocument } from "../../stuplus-lib/entities/QuestionEntity";
-import { QuestionAddDTO, QuestionCommenLikeDisliketDTO, QuestionCommentDTO, QuestionLikeDislikeDTO, QuestionGetMultipleDTO, QuestionGetCommentsDTO } from "../dtos/QuestionDTOs";
+import { QuestionAddDTO, QuestionCommenLikeDisliketDTO, QuestionCommentDTO, QuestionLikeDislikeDTO, QuestionGetMultipleDTO, QuestionGetCommentsDTO, QuestionSubCommentDTO, QuestionSubCommenLikeDisliketDTO, QuestionGetSubCommentsDTO } from "../dtos/QuestionDTOs";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import RedisService from "../../stuplus-lib/services/redisService";
@@ -9,6 +9,7 @@ import { searchable, searchableWithSpaces, stringify } from "../../stuplus-lib/u
 import { LikeType, RecordStatus } from "../../stuplus-lib/enums/enums";
 import { QuestionCommentDocument } from "../../stuplus-lib/entities/QuestionCommentEntity";
 import sanitizeHtml from 'sanitize-html';
+import { QuestionSubCommentDocument } from "../../stuplus-lib/entities/QuestionSubCommentEntity";
 
 export class QuestionAccess {
     public static async addQuestion(acceptedLanguages: Array<string>, payload: QuestionAddDTO, currentUserId: string): Promise<Boolean> {
@@ -72,7 +73,9 @@ export class QuestionAccess {
                 question.commentCount = await RedisService.acquire<number>(RedisKeyType.QuestionCommentCount + question._id.toString(), 10, async () => {
                     let commentCount = 0;
                     commentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionComment + question._id.toString());
+                    commentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionSubComment + question._id.toString());
                     commentCount += await QuestionCommentEntity.countDocuments({ questionId: question._id });
+                    commentCount += await QuestionSubCommentEntity.countDocuments({ questionId: question._id });
                     return commentCount;
                 });
                 question.owner = questionUsers.find(y => y._id.toString() === question.ownerId);
@@ -105,7 +108,7 @@ export class QuestionAccess {
         if (isFirstPage) {
             let favoriteComments = await QuestionCommentEntity.find({
                 questionId: payload.questionId
-            }).sort({ score: -1, createdAt: -1 }).limit(favoriteTake).lean(true);
+            }).sort({ popularity: -1, createdAt: -1 }).limit(favoriteTake).lean(true);
             if (favoriteComments.length < favoriteTake)
                 payload.take = 0;
 
@@ -158,6 +161,12 @@ export class QuestionAccess {
                     likeCount += await QuestionCommentLikeEntity.countDocuments({ commentId: comment._id, type: LikeType.Like });
                     return likeCount;
                 });
+                comment.subCommentCount = await RedisService.acquire<number>(RedisKeyType.QuestionSubCommentCount + comment._id.toString(), 10, async () => {
+                    let subCommentCount = 0;
+                    subCommentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionSubComment + comment._id.toString());
+                    subCommentCount += await QuestionSubCommentEntity.countDocuments({ commentId: comment._id });
+                    return subCommentCount;
+                });
                 let likeType;
                 likeType = await RedisService.client.hExists(RedisKeyType.DBQuestionCommentLike + comment._id.toString(), currentUserId);
                 if (!likeType) {
@@ -175,6 +184,74 @@ export class QuestionAccess {
             }
         }
         return comments;
+    }
+
+    public static async getSubComments(acceptedLanguages: Array<string>, payload: QuestionGetSubCommentsDTO, currentUserId: string): Promise<QuestionSubCommentDocument[]> {
+        let subComments: QuestionSubCommentDocument[] = [];
+        let isFirstPage = !payload.lastRecordDate;
+        // const redisMaxCommentCount = -30;
+
+        if (isFirstPage) {
+            const redisSubComments = await RedisService.client
+                .hVals(RedisKeyType.DBQuestionSubComment + payload.commentId).then(x => x.map(y => JSON.parse(y).e));
+
+            payload.take -= redisSubComments.length
+            let newSubComments: QuestionSubCommentDocument[] = [];
+            if (payload.take > 0) {
+                let newSubCommentsQuery = QuestionSubCommentEntity.find({
+                    commentId: payload.commentId,
+                });
+
+                if (redisSubComments.length > 0)
+                    newSubCommentsQuery = newSubCommentsQuery.where({ createdAt: { $lt: redisSubComments[0].createdAt } });
+
+                newSubComments = await newSubCommentsQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);
+            }
+
+            for (let i = redisSubComments.length - 1; i >= 0; i--)
+                subComments.push(redisSubComments[i]);
+
+            for (let i = 0; i < newSubComments.length; i++)
+                subComments.push(newSubComments[i]);
+
+        } else {
+            subComments = await QuestionSubCommentEntity.find({
+                commentId: payload.commentId,
+                createdAt: { $lt: payload.lastRecordDate }
+            }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+        }
+
+        if (subComments.length) {
+            const subCommentIds = subComments.map(x => x._id);
+            const likedDislikedSubComments = await QuestionSubCommentLikeEntity.find({ subCommentId: { $in: subCommentIds }, ownerId: currentUserId }, { "_id": 0, "subCommentId": 1, "type": 1 }).lean(true);
+            let subCommentUserIds = [...new Set(subComments.map(x => x.ownerId))];
+            let subCommentUsers = await UserEntity.find({ _id: { $in: subCommentUserIds } }, { "_id": 1, "username": 1, "profilePhotoUrl": 1, "schoolId": 1, "avatarKey": 1 }, { lean: true });
+            for (let i = 0; i < subComments.length; i++) {
+                const subComment = subComments[i];
+                subComment.owner = subCommentUsers.find(y => y._id.toString() === subComment.ownerId);
+                subComment.likeCount = await RedisService.acquire<number>(RedisKeyType.QuestionSubCommentLikeCount + subComment._id, 20, async () => {
+                    let likeCount = 0;
+                    likeCount += await RedisService.client.hLen(RedisKeyType.DBQuestionSubCommentLike + subComment._id.toString());
+                    likeCount += await QuestionSubCommentLikeEntity.countDocuments({ subCommentId: subComment._id, type: LikeType.Like });
+                    return likeCount;
+                });
+                let likeType;
+                likeType = await RedisService.client.hExists(RedisKeyType.DBQuestionSubCommentLike + subComment._id.toString(), currentUserId);
+                if (!likeType) {
+                    likeType = await RedisService.client.hExists(RedisKeyType.DBQuestionSubCommentDislike + subComment._id.toString(), currentUserId);
+                    if (!likeType) {
+                        likeType = likedDislikedSubComments.find(y => y.subCommentId === subComment._id.toString());
+                        if (likeType) subComment.likeType = likeType.type;
+                        else subComment.likeType = LikeType.None;
+                    } else {
+                        subComment.likeType = LikeType.Dislike;
+                    }
+                } else {
+                    subComment.likeType = LikeType.Like;
+                }
+            }
+        }
+        return subComments;
     }
 
     public static async likeDislikeQuestion(acceptedLanguages: Array<string>, payload: QuestionLikeDislikeDTO, currentUserId: string): Promise<object> {
@@ -273,6 +350,9 @@ export class QuestionAccess {
     }
 
     public static async commentQuestion(acceptedLanguages: Array<string>, payload: QuestionCommentDTO, currentUserId: string): Promise<Boolean> {
+        if (await RedisService.isDailyCommentLimitExceeded(currentUserId))
+            throw new NotValidError(getMessage("dailyCommentLimitExceeded", acceptedLanguages));
+
         let now = new Date();
         const questionCommentEntity = new QuestionCommentEntity({});
         const questionCommentData: object = {
@@ -281,16 +361,47 @@ export class QuestionAccess {
                 ownerId: currentUserId,
                 questionId: payload.questionId,
                 comment: payload.comment,
-                score: 0,
+                popularity: 0,
                 createdAt: now,
                 updatedAt: now
             },
         }
         await RedisService.client.hSet(RedisKeyType.DBQuestionComment + payload.questionId, currentUserId, stringify(questionCommentData));
+
+        await RedisService.incrementDailyCommentCount(currentUserId);
+        return true;
+    }
+
+    public static async subCommentQuestion(acceptedLanguages: Array<string>, payload: QuestionSubCommentDTO, currentUserId: string): Promise<Boolean> {
+        if (await RedisService.isDailyCommentLimitExceeded(currentUserId))
+            throw new NotValidError(getMessage("dailyCommentLimitExceeded", acceptedLanguages));
+        let now = new Date();
+        const questionSubCommentEntity = new QuestionSubCommentEntity({});
+        const questionSubCommentData: any = {
+            e: {
+                _id: questionSubCommentEntity.id,
+                ownerId: currentUserId,
+                questionId: payload.questionId,
+                commentId: payload.commentId,
+                comment: payload.comment,
+                popularity: 0,
+                createdAt: now,
+                updatedAt: now
+            },
+        }
+        if (payload.replyToId)
+            questionSubCommentData.e.replyToId = payload.replyToId;
+
+        await RedisService.client.hSet(RedisKeyType.DBQuestionSubComment + payload.commentId, currentUserId, stringify(questionSubCommentData));
+
+        await RedisService.incrementDailyCommentCount(currentUserId);
         return true;
     }
 
     public static async commentLikeDislikeQuestion(acceptedLanguages: Array<string>, payload: QuestionCommenLikeDisliketDTO, currentUserId: string): Promise<object> {
+        if (await RedisService.isDailyLikeLimitExceeded(currentUserId))
+            throw new NotValidError(getMessage("dailyLikeLimitExceeded", acceptedLanguages));
+
         if (payload.beforeType == LikeType.Like) {
             let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionCommentLike + payload.questionId, currentUserId);
             //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
@@ -338,6 +449,64 @@ export class QuestionAccess {
         let redisKey = payload.type === LikeType.Like ? RedisKeyType.DBQuestionCommentLike : RedisKeyType.DBQuestionCommentDislike;
         redisKey += payload.commentId;
         await RedisService.client.hSet(redisKey, currentUserId, stringify(questionCommentLikeDislikeData));
+
+        await RedisService.incrementDailyLikeCount(currentUserId);
+        return { beforeType: payload.type };
+    }
+
+    public static async subCommentLikeDislikeQuestion(acceptedLanguages: Array<string>, payload: QuestionSubCommenLikeDisliketDTO, currentUserId: string): Promise<object> {
+        if (await RedisService.isDailyLikeLimitExceeded(currentUserId))
+            throw new NotValidError(getMessage("dailyLikeLimitExceeded", acceptedLanguages));
+        if (payload.beforeType == LikeType.Like) {
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionSubCommentLike + payload.questionId, currentUserId);
+            //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
+            if (!deleted)
+                await QuestionSubCommentLikeEntity.findOneAndUpdate({ subCommentId: payload.subCommentId, ownerId: currentUserId, type: LikeType.Like }, { recordStatus: RecordStatus.Deleted });
+            //TODO: if (!deleted) 
+            //throw error on socket
+        } else if (payload.beforeType == LikeType.Dislike) {
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionSubCommentDislike + payload.questionId, currentUserId);
+            //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
+            if (!deleted)
+                await QuestionSubCommentLikeEntity.findOneAndUpdate({ subCommentId: payload.subCommentId, ownerId: currentUserId, type: LikeType.Dislike }, { recordStatus: RecordStatus.Deleted });
+            //TODO: if (!deleted) 
+            //throw error on socket
+        }
+
+        if (payload.type == payload.beforeType)
+            return { beforeType: LikeType.None };
+
+        let likeDislikeBefore = undefined;
+        if (payload.type == LikeType.Like)
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionSubCommentLike + payload.questionId, currentUserId);
+        else
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionSubCommentDislike + payload.questionId, currentUserId);
+
+        if (!likeDislikeBefore)
+            likeDislikeBefore = await QuestionSubCommentLikeEntity.findOne({ subCommentId: payload.subCommentId, ownerId: currentUserId });
+
+        if (likeDislikeBefore)
+            throw new NotValidError(getMessage("alreadyLikedOrDisliked", acceptedLanguages));
+        //TODO: bu tur hatalari socketten gonder, responseu hemen don.
+
+        const now = new Date();
+        const questionSubCommentLikeEntity = new QuestionSubCommentLikeEntity({});
+        const questionSubCommentLikeDislikeData: object = {
+            e: {
+                _id: questionSubCommentLikeEntity.id,
+                ownerId: currentUserId,
+                questionId: payload.questionId,
+                commentId: payload.commentId,
+                subCommentId: payload.subCommentId,
+                createdAt: now,
+                updatedAt: now
+            },
+        }
+        let redisKey = payload.type === LikeType.Like ? RedisKeyType.DBQuestionSubCommentLike : RedisKeyType.DBQuestionSubCommentDislike;
+        redisKey += payload.subCommentId;
+        await RedisService.client.hSet(redisKey, currentUserId, stringify(questionSubCommentLikeDislikeData));
+
+        await RedisService.incrementDailyLikeCount(currentUserId);
         return { beforeType: payload.type };
     }
 }

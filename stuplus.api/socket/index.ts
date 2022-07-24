@@ -18,7 +18,7 @@ import { DeleteChatForType, GroupChatUserRole, MessageLimitation, NotificationTy
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { Router } from "express";
 import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
-import { validateBlockUser, validateClearPMChat, validateDeleteSinglePM, validateLeaveGroup, validateRemoveFromGroup, validateSendFileMessage, validateUpdateFileMessage } from "../middlewares/validation/chat/validateChatRoute";
+import { validateBlockUser, validateClearPMChat, validateDeleteSinglePM, validateGetGroupMessages, validateGetPrivateMessages, validateLeaveGroup, validateRemoveFromGroup, validateSendFileGM, validateSendFileMessage, validateUpdateFileGM, validateUpdateFileMessage } from "../middlewares/validation/chat/validateChatRoute";
 import { GroupMessageDocument } from "../../stuplus-lib/entities/GroupMessageEntity";
 import { GroupChatUserDocument } from "../../stuplus-lib/entities/GroupChatUserEntity";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
@@ -132,6 +132,9 @@ io.on("connection", async (socket: ISocket) => {
             let responseData: any = { success: true };
 
             if (!data.ci) {
+                if (await RedisService.isDailyNewPMLimitExceeded(socket.data.user._id))
+                    cb({ success: false, message: getMessage("dailyNewPMLimitExceeded", ["tr"]) });
+
                 const chatEntity = await ChatEntity.findOneAndUpdate(
                     {
                         $or: [
@@ -143,6 +146,7 @@ io.on("connection", async (socket: ISocket) => {
                     { upsert: true, new: true });
                 data.ci = chatEntity.id; //may be null, catch it later
                 responseData["ci"] = data.ci;
+                await RedisService.incrementDailyNewPMCount(socket.data.user._id);
             }
             const now = new Date();
             const messageEntity = new MessageEntity({});
@@ -1268,7 +1272,20 @@ router.post("/updateGroupInfo", authorize([Role.User, Role.Admin, Role.ContentCr
     return Ok(res, response);
 });
 
-router.post("/getMessages", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<GetChatMessagesDTO>, res: any) => {
+//PASSED:true
+router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateGetPrivateMessages, async (req: CustomRequest<GetChatMessagesDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+    #swagger.description = 'Ger private chat messages.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/ChatGetPrivateMessagesRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/ChatGetPrivateMessagesResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
         const payload = new GetChatMessagesDTO(req.body);
@@ -1566,6 +1583,7 @@ router.post("/getSearchedPM", authorize([Role.User, Role.Admin, Role.ContentCrea
     return Ok(res, response);
 });
 
+//PASSED:true
 router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("files", [".png", ".jpg", ".jpeg", ".svg", ".gif", ".pdf", ".doc", ".docx", ".txt", ".webm", ".mp4", ".mp3", ".avi", ".rar", ".zip"], "chat/message_files/", 50000000), validateSendFileMessage, async (req: CustomRequest<RedisSendFileMessageDTO>, res: any) => {
     /* #swagger.tags = ['Chat']
        #swagger.description = 'Send file message.' */
@@ -1576,7 +1594,7 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
                      schema: {
                          type: "object",
                          properties: {
-                            message: {
+                            t: {
                                 type: "string",
                                 description: "Message",
                                 example: "Hello"
@@ -1585,12 +1603,21 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
                                 type: "string",
                                 description: "Recipient ID",
                             },
-                             files: {
+                            files: {
                                 type: "string",
-                                format: "binary"
-                             }
+                                format: "binary",
+                                description: "Single file.",
+                            },
+                            ci: {
+                                type: "string",
+                                description: "Chat ID",
+                            },
+                            replyToId: {
+                                type: "string",
+                                description: "Reply to message ID",
+                            }
                          },
-                         required: ["files"]
+                         required: ["files", "to"]
                      }
                  }
              } 
@@ -1604,7 +1631,7 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
 
     const response = new BaseResponse<any>();
     try {
-        if (req.fileValidationErrors?.length) {
+        if (!req.file || req.fileValidationErrors?.length) {
             response.validationErrors = req.fileValidationErrors;
             throw new NotValidError(getMessage("fileError", req.selectedLangs()))
         }
@@ -1615,24 +1642,28 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
         response.data = { ci: null, mi: null };
 
         if (!payload.ci) {
+            if (await RedisService.isDailyNewPMLimitExceeded(res.locals.user._id))
+                throw new NotValidError(getMessage("dailyNewPMLimitExceeded", req.selectedLangs()));
             const chatEntity = await ChatEntity.findOneAndUpdate(
                 { ownerId: res.locals.user._id, participantId: payload.to },
                 { $setOnInsert: { ownerId: res.locals.user._id, participantId: payload.to } },
                 { upsert: true, new: true });
             payload.ci = chatEntity.id; //may be null, catch it later
             response.data["ci"] = payload.ci;
+            await RedisService.incrementDailyNewPMCount(res.locals.user._id);
         }
         const files = [new MessageFiles(req.file.location, req.file.mimetype, req.file.size)];
         const messageEntity = await MessageService.sendPrivateMessage({
             toUserId: payload.to,
             ownerId: res.locals.user._id,
-            text: payload.m,
+            text: payload.t,
             chatId: payload.ci,
             files: files,
+            replyToId: payload.replyToId,
             fromUser: await RedisService.acquireUser(res.locals.user._id, ["_id", "username", "firstName", "lastName", "profilePhotoUrl", "avatarKey"])
         })
 
-        response.data["mi"] = messageEntity.id;
+        response.data["mi"] = messageEntity._id;
 
     } catch (err: any) {
         response.setErrorMessage(err.message);
@@ -1644,6 +1675,7 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
     return Ok(res, response);
 });
 
+//PASSED:true
 router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("files", [".png", ".jpg", ".jpeg", ".svg", ".gif", ".pdf", ".doc", ".docx", ".txt", ".webm", ".mp4", ".mp3", ".avi", ".rar", ".zip"], "chat/message_files/", 5242880), validateUpdateFileMessage, async (req: CustomRequest<RedisUpdateFileMessageDTO>, res: any) => {
     /* #swagger.tags = ['Chat']
        #swagger.description = 'Send file message.' */
@@ -1664,12 +1696,17 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
                                 description: "Chat ID",
                                 example: "62ab8a204166fd1eaebbb3fa"
                             },
-                             files: {
+                            to: {
+                                type: "string",
+                                description: "Recipient ID",
+                                example: "62ab8a204166fd1eaebbb3fa"
+                            },
+                            files: {
                                 type: "string",
                                 format: "binary"
-                             }
+                            }
                          },
-                         required: ["files"]
+                         required: ["files", "mi"]
                      }
                  }
              } 
@@ -1677,13 +1714,13 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
     /* #swagger.responses[200] = {
      "description": "Success",
      "schema": {
-       "$ref": "#/definitions/NullResponse"
+       "$ref": "#/definitions/ChatUpdatePMFileResponse"
      }
    } */
 
     const response = new BaseResponse<any>();
     try {
-        if (req.fileValidationErrors?.length) {
+        if (!req.file || req.fileValidationErrors?.length) {
             response.validationErrors = req.fileValidationErrors;
             throw new NotValidError(getMessage("fileError", req.selectedLangs()))
         }
@@ -1692,7 +1729,8 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
 
         const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size)];
 
-        let message = await RedisService.client.hGet(RedisKeyType.DBPrivateMessage + payload.ci, payload.mi + RedisPMOperationType.InsertMessage).then(x => JSON.parse(x ?? "")?.e);
+        let message = await RedisService.client.hGet(RedisKeyType.DBPrivateMessage + payload.ci, payload.mi + RedisPMOperationType.InsertMessage)
+            .then(x => x ? JSON.parse(x)?.e : null);
         if (!message) {
             message = await MessageEntity.findOne({ _id: payload.mi });
             if (!message)
@@ -1722,9 +1760,6 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
 
         const emitData: any = { mi: payload.mi, ci: payload.ci, files: files, f: null };
 
-        if (!payload.ci)
-            emitData["f"] = await RedisService.acquireUser(res.locals.user._id, ["_id", "username", "firstName", "lastName", "profilePhotoUrl", "avatarKey"]);
-
         io.to(payload.to).emit("cPmSend", emitData);
 
     } catch (err: any) {
@@ -1737,7 +1772,20 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
     return Ok(res, response);
 });
 
-router.post("/getGroupMessages", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<GetGroupChatMessagesDTO>, res: any) => {
+//PASSED:true
+router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateGetGroupMessages, async (req: CustomRequest<GetGroupChatMessagesDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+        #swagger.description = 'Ger group chat messages.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/ChatGetGroupMessagesRequest" }
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/ChatGetGroupMessagesResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
         const payload = new GetGroupChatMessagesDTO(req.body);
@@ -1908,7 +1956,8 @@ router.post("/getGroupUsers", authorize([Role.User, Role.Admin, Role.ContentCrea
     return Ok(res, response);
 });
 
-router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("files", [".png", ".jpg", ".jpeg", ".svg", ".gif", ".pdf", ".doc", ".docx", ".txt", ".webm", ".mp4", ".mp3", ".avi", ".rar", ".zip"], "chat/group_message_files/", 50000000), validateSendFileMessage, async (req: CustomRequest<RedisGroupSendFileMessageDTO>, res: any) => {
+//PASSED:true
+router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("files", [".png", ".jpg", ".jpeg", ".svg", ".gif", ".pdf", ".doc", ".docx", ".txt", ".webm", ".mp4", ".mp3", ".avi", ".rar", ".zip"], "chat/group_message_files/", 50000000), validateSendFileGM, async (req: CustomRequest<RedisGroupSendFileMessageDTO>, res: any) => {
     /* #swagger.tags = ['Chat']
        #swagger.description = 'Send file message.' */
     /*	#swagger.requestBody = {
@@ -1918,21 +1967,25 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
                      schema: {
                          type: "object",
                          properties: {
-                            message: {
+                            t: {
                                 type: "string",
                                 description: "Message",
                                 example: "Hello"
                             },
-                            to: {
+                            gCi: {
                                 type: "string",
                                 description: "Recipient ID",
                             },
-                             files: {
+                            files: {
                                 type: "string",
                                 format: "binary"
-                             }
+                            },
+                            replyToId: {
+                                type: "string",
+                                description: "Reply to message ID",
+                            }
                          },
-                         required: ["files"]
+                         required: ["files", "gCi"]
                      }
                  }
              } 
@@ -1946,7 +1999,7 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
 
     const response = new BaseResponse<any>();
     try {
-        if (req.fileValidationErrors?.length) {
+        if (!req.file || req.fileValidationErrors?.length) {
             response.validationErrors = req.fileValidationErrors;
             throw new NotValidError(getMessage("fileError", req.selectedLangs()))
         }
@@ -1971,10 +2024,11 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
             text: payload.m,
             groupChatId: payload.gCi,
             files: files,
+            replyToId: payload.replyToId,
             fromUser: senderUser
         });
         response.data["gCi"] = payload.gCi;
-        response.data["mi"] = groupMessageEntity.id;
+        response.data["mi"] = groupMessageEntity._id;
 
     } catch (err: any) {
         response.setErrorMessage(err.message);
@@ -1986,7 +2040,8 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
     return Ok(res, response);
 });
 
-router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("files", [".png", ".jpg", ".jpeg", ".svg", ".gif", ".pdf", ".doc", ".docx", ".txt", ".webm", ".mp4", ".mp3", ".avi", ".rar", ".zip"], "chat/message_files/", 5242880), validateUpdateFileMessage, async (req: CustomRequest<RedisGroupUpdateFileMessageDTO>, res: any) => {
+//PASSED:true
+router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("files", [".png", ".jpg", ".jpeg", ".svg", ".gif", ".pdf", ".doc", ".docx", ".txt", ".webm", ".mp4", ".mp3", ".avi", ".rar", ".zip"], "chat/message_files/", 5242880), validateUpdateFileGM, async (req: CustomRequest<RedisGroupUpdateFileMessageDTO>, res: any) => {
     /* #swagger.tags = ['Chat']
        #swagger.description = 'Send file message.' */
     /*	#swagger.requestBody = {
@@ -1999,17 +2054,15 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
                             mi: {
                                 type: "string",
                                 description: "Message ID",
-                                example: "62ab8a204166fd1eaebbb3fa"
                             },
-                            ci: {
+                            gCi: {
                                 type: "string",
-                                description: "Chat ID",
-                                example: "62ab8a204166fd1eaebbb3fa"
+                                description: "Group Chat ID",
                             },
-                             files: {
+                            files: {
                                 type: "string",
                                 format: "binary"
-                             }
+                            }
                          },
                          required: ["files"]
                      }
@@ -2019,7 +2072,7 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
     /* #swagger.responses[200] = {
      "description": "Success",
      "schema": {
-       "$ref": "#/definitions/NullResponse"
+       "$ref": "#/definitions/ChatUpdateGMFileResponse"
      }
    } */
 
@@ -2035,13 +2088,15 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
 
         const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size)];
 
-        let message = await RedisService.client.hGet(RedisKeyType.DBGroupMessage + payload.gCi, payload.mi + RedisGMOperationType.InsertMessage).then(x => JSON.parse(x ?? "")?.e);
+        let message = await RedisService.client.hGet(RedisKeyType.DBGroupMessage + payload.gCi, payload.mi + RedisGMOperationType.InsertMessage)
+            .then(x => x ? JSON.parse(x)?.e : null);
         if (!message) {
             message = await GroupMessageEntity.findOne({ _id: payload.mi });
             if (!message)
                 throw new NotValidError(getMessage("messageNotFound", req.selectedLangs()));
             if (message.ownerId != res.locals.user._id)
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
+
             message.files.push(new MessageFiles(req.file?.location, req.file.mimetype, req.file.size));
             message.markModified("files");
             await message?.save();
@@ -2059,8 +2114,9 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
         }
 
         //TODO: offline durumu
-        response.data = { ci: null, mi: null };
+        response.data = { gCi: null, mi: null };
         response.data["mi"] = payload.mi;
+        response.data["gCi"] = payload.gCi;
 
         const emitData: any = { mi: payload.mi, gCi: payload.gCi, files: files, f: null };
 
