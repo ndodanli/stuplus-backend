@@ -146,6 +146,7 @@ export class SearchAccess {
         let queryLimitReached = true;
         // const nearSchools = await SchoolEntity.find({ cityId: userSchool.cityId }, { _id: 1 }).lean(true);
         let users: User[] = [];
+        await RedisService.refreshFollowingsIfNotExists(rUser._id.toString());
         users = await UserEntity.find({
             schoolId: rUser.schoolId,
             departmentId: rUser.departmentId,

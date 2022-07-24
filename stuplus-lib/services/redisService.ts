@@ -58,8 +58,12 @@ export default class RedisService {
     static async refreshFollowingsIfNotExists(userId: string): Promise<void> {
         if (!await RedisService.client.exists(RedisKeyType.UserFollowings + userId)) {
             const allFollowingIds = await FollowEntity.find({ followerId: userId }, { followingId: 1, _id: 0 }).lean(true);
-            if (allFollowingIds.length > 0)
-                await RedisService.client.sAdd(RedisKeyType.UserFollowings + userId, allFollowingIds.map(x => x.followingId));
+            if (allFollowingIds.length > 0){
+                await RedisService.client.multi()
+                .sAdd(RedisKeyType.UserFollowings + userId, allFollowingIds.map(x => x.followingId))
+                .expire(RedisKeyType.UserFollowings + userId, 60 * 60 * 48)
+                .exec();
+            }
         }
     }
 
