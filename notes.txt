@@ -12,7 +12,7 @@
 -gizlilik ayarlari guncellenirken bildirim ayarlari kapatiyor
 
 
-
+*user groupChatIdleri set'e gecir(currently linked list)
 *daily user statistic => yorum ve begeniler(announcement implementation)
 *vakit kalirsa*
 -s3 sifreleme
