@@ -118,3 +118,13 @@ export function chunk<T>(arr: T[], size: number): T[][] {
     }
     return chunks;
 }
+
+//detect if file is video by its mime type
+export const isVideo = (mimeType: string): Boolean => {
+    return mimeType.includes('video');
+}
+
+//detect if file is image by its mime type
+export const isImage = (mimeType: string): Boolean => {
+    return mimeType.includes('image');
+}

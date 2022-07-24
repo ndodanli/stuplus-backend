@@ -3,10 +3,10 @@ import { LikeType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 import { User } from "./UserEntity";
 import mongoose_fuzzy_searching from "@imranbarbhuiya/mongoose-fuzzy-searching";
+import { ImageFiles } from "./QuestionEntity";
 
 export interface Announcement extends BaseEntity {
   ownerId: string; //user id
-  coverImageUrl: string;
   title: string;
   relatedSchoolIds: Array<string>;
   text: string;
@@ -16,6 +16,7 @@ export interface Announcement extends BaseEntity {
   score: number;
   hashTags: string[];
   titlesch: string;
+  images: ImageFiles[];
   //ignore
   owner?: User | null; // ignore
   relatedSchools: object[] | null; // ignore
@@ -41,9 +42,17 @@ export const AnnouncementSchema: Schema = new Schema({
   toDate: { type: Date, required: false, default: null },
   score: { type: Number, required: false, default: 0 },
   hashTags: { type: Array.of(String), required: false, default: [] },
+  images: {
+    type: Array.of(new Schema({
+      url: { type: String, required: true },
+      mimeType: { type: String, required: true },
+      size: { type: Number, required: true },
+      isCompressed: { type: Boolean, required: true },
+    })), required: false, default: []
+  },
 });
 
-AnnouncementSchema.index({ recordStatus: 1 });
+AnnouncementSchema.index({ recordStatus: 1, createdAt: -1 });
 
 AnnouncementSchema.plugin(mongoose_fuzzy_searching,
   {
@@ -98,6 +107,7 @@ AnnouncementSchema.methods.minify = async function (
     updatedAt: this.updatedAt,
     hashTags: this.hashTags,
     titlesch: this.titlesch,
+    images: this.images,
     //ignore
     owner: null, // ignore
     relatedSchools: null, // ignore

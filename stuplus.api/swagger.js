@@ -60,7 +60,7 @@ const doc = {
                 type: "string",
                 description: "Message describing the error."
             },
-            data:  [
+            data: [
                 {
                     "_id": "62cf05da39b1a28284adf3ae",
                     "ownerId": "628a9e39b483f428a74e75c1",
@@ -763,6 +763,31 @@ const doc = {
             notificationIds: ["62cdf2b616b915025c0627d1", "62cdf2b616b915025c0627cf"]
         },
         //#endregion
+        ChatGetNewChatUsersResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: [
+                {
+                    "_id": "62dc3c62a72364961b13cfb2",
+                    "username": "testNew",
+                    "firstName": "John",
+                    "lastName": "Jones",
+                    "profilePhotoUrl": null,
+                    "avatarKey": "testNew",
+                    "__t": "User"
+                }
+            ],
+        },
         NullResponse: {
             hasError: {
                 type: "boolean",
@@ -780,12 +805,69 @@ const doc = {
                 type: "null"
             }
         },
+        AnnouncementAddRequest: {
+            images: [
+                {
+                    "url": "https://stuplus-bucket.s3.amazonaws.com/public/sdasds/1658614127031-1657324327987-S3eDQ3yqXMw.jpg",
+                    "mimeType": "image/jpeg",
+                    "size": 2250194,
+                    "isCompressed": true
+                },
+            ],
+            $relatedSchoolIds: ["62ab8a204166fd1eaebbb3fa", "62ab8a204166fd1eaebbb3fa"],
+            $title: "string",
+            $text: "string",
+            hashTags: ["string"],
+        },
+        QuestionAddRequest: {
+            images: [
+                {
+                    "url": "https://stuplus-bucket.s3.amazonaws.com/public/sdasds/1658614127031-1657324327987-S3eDQ3yqXMw.jpg",
+                    "mimeType": "image/jpeg",
+                    "size": 2250194,
+                    "isCompressed": true
+                },
+            ],
+            $title: "string",
+            $text: "string",
+            hashTags: ["string"],
+        },
         BasePaginationRequest: {
             lastRecordDate: "2022-07-02T20:12:59.891Z",
             $pageSize: 20,
         },
-        GetAccountUserRequest: {
-
+        BasePaginationSearchTermRequest: {
+            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            $pageSize: 20,
+            searchTerm: "xxx"
+        },
+        GeneralUploadImagesResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: [
+                {
+                    "url": "https://stuplus-bucket.s3.amazonaws.com/public/sdasds/1658614127031-1657324327987-S3eDQ3yqXMw.jpg",
+                    "mimeType": "image/jpeg",
+                    "size": 2250194,
+                    "isCompressed": true
+                },
+                {
+                    "url": "https://stuplus-bucket.s3.amazonaws.com/public/sdasds/1658614127046-1657706021214-5562-Atat%C3%83%C2%83%C3%82%C2%BCrk%20",
+                    "mimeType": "image/jpeg",
+                    "size": 140897,
+                    "isCompressed": true
+                }
+            ],
         },
         GetAccountUserResponse: {
             hasError: {
@@ -1321,9 +1403,6 @@ const doc = {
             $grade: 0,
             $secondaryEducation: false
         },
-        AccountGetUserProfileProfileRequest: {
-            $userId: "userId",
-        },
         AccountGetUserProfileProfileResponse: {
             hasError: {
                 type: "boolean",
@@ -1364,6 +1443,42 @@ const doc = {
                     "status": 4
                 }
             },
+        },
+        AccountGetAccountSuggestionsResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: [
+                {
+                    "_id": "62d59d53f6f9c3b703544540",
+                    "username": "cihat",
+                    "firstName": "Mary",
+                    "lastName": "Jackson",
+                    "profilePhotoUrl": null,
+                    "avatarKey": "*TSc-hCJRyl=",
+                    "__t": "User",
+                    "createdAt": "2022-07-18T17:50:11.113Z"
+                },
+                {
+                    "_id": "62d8eeafa72364961b06fd06",
+                    "username": "jdjrj",
+                    "firstName": "John",
+                    "lastName": "Jones",
+                    "profilePhotoUrl": null,
+                    "avatarKey": "jdjrj",
+                    "__t": "User",
+                    "createdAt": "2022-07-21T06:14:07.071Z"
+                }
+            ],
         },
         AccountFollowUserRequest: {
             $requestedId: "userToFollowId",

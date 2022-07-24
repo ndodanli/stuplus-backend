@@ -203,7 +203,14 @@ export const validateUpdateInterests = [
     check('interestIds')
         .isArray({ min: 0 })
         .withMessage((value: any, { req }: any) => getMessage("mustBeArray", req.selectedLangs()))
-        .bail(),
+        .bail()
+        .custom(async (value, { req }) => {
+            for (let i = 0; i < value.length; i++) {
+                if (!isValidObjectId(value[i])) {
+                    throw new Error(getMessage("incorrectId", req.selectedLangs()));
+                }
+            }
+        }),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())

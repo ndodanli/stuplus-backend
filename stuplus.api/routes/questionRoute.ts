@@ -10,40 +10,18 @@ import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { QuestionAddDTO, QuestionCommenLikeDisliketDTO, QuestionCommentDTO, QuestionLikeDislikeDTO, QuestionGetMultipleDTO, QuestionGetSingleDTO, QuestionGetCommentsDTO } from "../dtos/QuestionDTOs";
 import { QuestionAccess } from "../dataAccess/questionAccess";
+import { MessageFiles } from "../../stuplus-lib/entities/MessageEntity";
+import { ImageFiles } from "../../stuplus-lib/entities/QuestionEntity";
+import axios from "axios";
 const router = Router();
 
-router.post("/add", authorize([Role.ContentCreator, Role.User, Role.Admin]), uploadFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "question/cover_images/", 5242880), validateAddQuestion, async (req: CustomRequest<QuestionAddDTO>, res: any) => {
+router.post("/add", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateAddQuestion, async (req: CustomRequest<QuestionAddDTO>, res: any) => {
     /* #swagger.tags = ['Question']
        #swagger.description = 'Add an question.' */
     /*	#swagger.requestBody = {
-   required: true,
-  "@content": {
-                 "multipart/form-data": {
-                     schema: {
-                         type: "object",
-                         properties: {
-                             coverImage: {
-                                 type: "string",
-                                 format: "binary"
-                             },
-                             title: {
-                                 type: "string",
-                             },
-                             text: {
-                                 type: "string",
-                             },
-                             relatedSchoolIds: {
-                                 type: "array",
-                             },
-                             hashTags: {
-                                 type: "array",
-                            }
-                         },
-                         required: ["title", "text"]
-                     }
-                 }
-             } 
- } */
+    required: true,
+    schema: { $ref: "#/definitions/QuestionAddRequest" }
+    } */
     /* #swagger.responses[200] = {
      "description": "Success",
      "schema": {
@@ -52,14 +30,14 @@ router.post("/add", authorize([Role.ContentCreator, Role.User, Role.Admin]), upl
    } */
     const response = new BaseResponse<object>();
     try {
-        if (req.fileValidationErrors?.length) {
-            response.validationErrors = req.fileValidationErrors;
-            throw new NotValidError(getMessage("fileError", req.selectedLangs()))
+        const payload = new QuestionAddDTO(req.body);
+        for (let i = 0; i < payload.images.length; i++) {
+            const image = payload.images[i];
+            const { headers } = await axios.head(image.url ?? "");
+            if (new URL(image.url ?? "").hostname != "stuplus-bucket.s3.amazonaws.com" || headers["accept-ranges"] != "bytes" || parseInt(headers["content-length"]) > 10485760)
+                throw new NotValidError("Yüklenen görseller değişmiş, bir şeyler yapmaya çalışıyorsanız bırakın, çalışmıyorsanız bizimle iletişime geçin, teşekkürler")
         }
-
-        req.body.coverImageUrl = req.file?.location;
-
-        await QuestionAccess.addQuestion(req.selectedLangs(), new QuestionAddDTO(req.body), res.locals.user._id);
+        await QuestionAccess.addQuestion(req.selectedLangs(), payload, res.locals.user._id);
 
         response.setMessage(getMessage("questionAdded", req.selectedLangs()));
 

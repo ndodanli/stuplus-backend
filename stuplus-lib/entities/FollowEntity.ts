@@ -5,6 +5,9 @@ import { User } from "./UserEntity";
 export interface Follow extends BaseEntity {
   followerId: string;
   followingId: string;
+  followingUsername: string;
+  followingFirstName: string;
+  followingLastName: string;
   //ignore
   followerUser?: User | null;
   followingUser?: User | null;
@@ -17,9 +20,12 @@ export interface FollowDocument extends Follow, Document {
 export const FollowSchema: Schema = new Schema({
   followerId: { type: String, required: true },
   followingId: { type: String, required: true },
+  followingUsername: { type: String, required: true },
+  followingFirstName: { type: String, required: true },
+  followingLastName: { type: String, required: true },
 });
 
-FollowSchema.index({ recordStatus: 1 });
+FollowSchema.index({ recordStatus: 1, createdAt: -1, followerId: 1, followingUsername: 1, followingFirstName: 1, followingLastName: 1 });
 
 FollowSchema.pre("save", function (next) {
   //
@@ -42,6 +48,9 @@ FollowSchema.methods.minify = async function (
     recordDeletionDate: this.recordDeletionDate,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
+    followingUsername: this.followingUsername,
+    followingFirstName: this.followingFirstName,
+    followingLastName: this.followingLastName,
     //ignore
     followerUser: null,
     followingUser: null,

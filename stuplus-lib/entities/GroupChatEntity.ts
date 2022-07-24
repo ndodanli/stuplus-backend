@@ -18,6 +18,7 @@ export interface GroupChat extends BaseEntity {
   departmentId: string;
   grade: number;
   secondaryEducation: boolean;
+  popularity: number;
   //ignore
   lastMessage?: GroupMessage | null; //ignore
   school?: School | null;
@@ -41,9 +42,10 @@ export const GroupChatSchema: Schema = new Schema({
   departmentId: { type: String, required: false, default: null },
   grade: { type: Number, required: false, default: null },
   secondaryEducation: { type: Boolean, required: false, default: null },
+  popularity: { type: Number, required: false, default: 0 },
 });
 
-GroupChatSchema.index({ recordStatus: 1 });
+GroupChatSchema.index({ recordStatus: 1, popularity: -1 });
 
 GroupChatSchema.plugin(mongoose_fuzzy_searching,
   {
@@ -92,6 +94,7 @@ GroupChatSchema.methods.minify = async function (
     departmentId: this.departmentId,
     grade: this.grade,
     secondaryEducation: this.secondaryEducation,
+    popularity: this.popularity,
     //ignore
     lastMessage: null, //ignore
     school: null,

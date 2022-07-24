@@ -11,4 +11,8 @@
 -gizlilik ayarlari profilimi gizle yazisi sadece takip ettiklerim yapilacak
 -gizlilik ayarlari guncellenirken bildirim ayarlari kapatiyor
 
-***mesajlar ile ilgili yerler degistirilecek(hashe donusturuldu, eg getMessages)
+
+
+
+*vakit kalirsa*
+-s3 sifreleme

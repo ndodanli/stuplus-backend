@@ -3,10 +3,10 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { authorize } from "../middlewares/auth";
 import { UserAccess } from "../dataAccess/userAccess";
-import { GroupChatUserRole, Role } from "../../stuplus-lib/enums/enums";
+import { Role } from "../../stuplus-lib/enums/enums";
 import { validateChangeFollowStatus, validateEmailConfirmation, validateFollowUser, validateForgotPassword, validateForgotPasswordCode, validateNotifyReadNotifications, validateReport, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdatePrivacySettings, validateUpdateProfile, validateUpdateSchool } from "../middlewares/validation/account/validateAccountRoute";
 import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO, UpdateUserSchoolDTO, UpdatePrivacySettingsDTO } from "../dtos/UserDTOs";
-import { CustomRequest, CustomResponse } from "../../stuplus-lib/utils/base/baseOrganizers";
+import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import path from "path";
 import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
@@ -15,11 +15,10 @@ import RedisService from "../../stuplus-lib/services/redisService";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { isValidObjectId } from "mongoose";
 import { User } from "../../stuplus-lib/entities/UserEntity";
-import { FollowEntity, GroupChatEntity, GroupChatUserEntity, NotificationEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { FollowEntity, NotificationEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { RedisKeyType, RedisSubKeyType } from "../../stuplus-lib/enums/enums_socket";
 import redisTTL from "../../stuplus-lib/constants/redisTTL";
-import { chunk } from "../../stuplus-lib/utils/general";
-import OneSignalService from "../../stuplus-lib/services/oneSignalService";
+import { SearchAccess } from "../dataAccess/searchAccess";
 
 const router = Router();
 
@@ -32,32 +31,6 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
 "$ref": "#/definitions/GetAccountUserResponse"
 }
 } */
-  const dels = [];
-  console.time("insert");
-  for (let i = 0; i < 10000; i++) {
-    // await RedisService.client.rPush("testSubkeytestSubkey" + i, JSON.stringify({ test: "test" }));
-    // await RedisService.client.hSet("testtest", "testSubkeytestSubkey" + i, JSON.stringify({ test: "test" }));
-    // dels.push("testSubkeytestSubkey" + i)
-  }
-  console.timeEnd("insert");
-
-  // dels.pop();
-  // console.time("del");
-  // const exist = await RedisService.client.hExists("testtest", "testSubkeytestSubkey167512");
-  // if (exist)
-  //   console.log("exists")
-  // const del = await RedisService.client.hDel("testtest", ["testSubkeytestSubkey8600", "dsadsa", "dasdasdas"]);
-  // if (del)
-  //   console.log("del")
-  // const redisMultiResponse = await RedisService.client.multi().hVals("testtestd").hDel("testtest", "testSubkeytestSubkey5888").exec();
-  // const vals = redisMultiResponse[0] as string[];
-  // const redisMessages = vals.map(y => {
-  //   const data = JSON.parse(y);
-  //       return data.e;
-  // })
-  // console.timeEnd("del");
-  // await RedisService.client.hSet("testtest", { testSubkeytestSubkey7675: "test", testSubkeytestSubkey5888: "test2" });
-  // await RedisService.client.hDel("test", ["testSubkey1", "testSubkey3"]);
   const response = new BaseResponse<User>();
   try {
 
@@ -67,16 +40,6 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
 
     if (!response.data)
       throw new NotValidError(getMessage("userNotFound", ["tr"]));
-
-    // await OneSignalService.sendNotificationWithUserIds({
-    //   heading: "test 5",
-    //   content: "test 5",
-    //   userIds: [response.data._id],
-    //   chatId: "testChatId5",
-    //   smallIcon: "https://www.pngkit.com/png/detail/0-4506_facebook-logo-png-transparent-facebook-icon-small-png.png",
-    //   largeIcon: "https://haloarc.co.uk/wp-content/uploads/cost-quality.png"
-    // });
-
 
     response.data.followerCount = await RedisService.acquire(RedisKeyType.User + response.data._id + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
       return await FollowEntity.countDocuments({ followingId: response.data?._id });
@@ -98,10 +61,6 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
 router.get("/getUserProfile/:userId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
           #swagger.description = 'Get user's profile info.' */
-  /*	#swagger.requestBody = {
-required: true,
-schema: { $ref: "#/definitions/AccountGetUserProfileProfileRequest" }
-} */
   /* #swagger.responses[200] = {
 "description": "Success",
 "schema": {
@@ -111,6 +70,29 @@ schema: { $ref: "#/definitions/AccountGetUserProfileProfileRequest" }
   const response = new BaseResponse<object>();
   try {
     response.data = await UserAccess.getUserProfile(req.selectedLangs(), res.locals.user._id, req.params.userId);
+
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response, err);
+  }
+
+  return Ok(res, response);
+});
+
+router.get("/getAccountSuggestions/:userId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<object>, res: any) => {
+  /* #swagger.tags = ['Account']
+          #swagger.description = 'Get account suggestions(limit set to 25 by server) based on user's id.' */
+  /* #swagger.responses[200] = {
+"description": "Success",
+"schema": {
+"$ref": "#/definitions/AccountGetAccountSuggestionsResponse"
+}
+} */
+  const response = new BaseResponse<object>();
+  try {
+    response.data = await SearchAccess.getAccountSuggestions(res.locals.user._id, req.params.userId);
 
   } catch (err: any) {
     response.setErrorMessage(err.message);

@@ -1,22 +1,20 @@
 import path from 'path';
 import { createClient } from 'redis';
 import logger from '../config/logger';
-import { DepartmentEntity, FacultyEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
+import { DepartmentEntity, FacultyEntity, FollowEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
 import { User, UserDocument } from '../entities/UserEntity';
 import { RedisKeyType } from '../enums/enums_socket';
 import NotValidError from '../errors/NotValidError';
 import { getMessage } from '../localization/responseMessages';
 import { Document } from "mongoose";
 import { RedisAcquireEntityFilterOrder } from '../enums/enums';
-import { School } from '../entities/SchoolEntity';
 
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 // const url = process.env.REDIS_URL
-const client = createClient({ url: process.env.REDIS_URL });
-setup()
+let client = createClient({ url: process.env.REDIS_URL });
 
-async function setup() {
+async function initializeRedis() {
     try {
         await client.connect();
         console.log("redis client created");
@@ -54,6 +52,14 @@ export default class RedisService {
             await this.client.hSet(masterKey, subKey, JSON.stringify(result));
             this.client.expire(masterKey, ttl);
             return result;
+        }
+    }
+
+    static async refreshFollowingsIfNotExists(userId: string): Promise<void> {
+        if (!await RedisService.client.exists(RedisKeyType.UserFollowings + userId)) {
+            const allFollowingIds = await FollowEntity.find({ followerId: userId }, { followingId: 1, _id: 0 }).lean(true);
+            if (allFollowingIds.length > 0)
+                await RedisService.client.sAdd(RedisKeyType.UserFollowings + userId, allFollowingIds.map(x => x.followingId));
         }
     }
 
@@ -196,3 +202,6 @@ export default class RedisService {
     }
 }
 
+export {
+    initializeRedis
+}

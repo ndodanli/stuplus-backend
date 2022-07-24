@@ -11,6 +11,8 @@ export interface GroupMessage extends BaseEntity {
   readedAt: Date;
   replyToId?: string; //message id
   files: MessageFiles[];
+  deletedForUserIds: string[];
+  deletedForUserDate?: Date;
   groupChatId: string;
   //ignore
   replyTo?: ReplyToDTO | null;
@@ -35,10 +37,12 @@ export const GroupMessageSchema: Schema = new Schema({
     })), required: false, default: []
   },
   replyToId: { type: String, required: false, default: null },
+  deletedForUserIds: { type: Array.of(String), required: false, default: [] },
+  deletedForUserDate: { type: Date, required: false, default: null },
   groupChatId: { type: String, required: true },
 });
 
-GroupMessageSchema.index({ recordStatus: 1 });
+GroupMessageSchema.index({ recordStatus: 1, createdAt: -1 });
 
 GroupMessageSchema.pre("save", function (next) {
   //
@@ -68,6 +72,8 @@ GroupMessageSchema.methods.minify = async function (
     files: this.files,
     groupChatId: this.groupChatId,
     recordDeletionDate: this.recordDeletionDate,
+    deletedForUserIds: this.deletedForUserIds,
+    deletedForUserDate: this.deletedForUserDate,
   };
   return response;
 };

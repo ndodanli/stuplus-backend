@@ -19,6 +19,7 @@ import path from "path";
 import { config } from "./config/config";
 import interestRoute from "./routes/interestRoute";
 import logger, { setLogger } from "../stuplus-lib/config/logger";
+import { initializeRedis } from "../stuplus-lib/services/redisService";
 
 dotenv.config();
 
@@ -27,7 +28,7 @@ setup();
 setLogger("Stuplus API-SOCKET");
 async function setup() {
   await initializeDatabese();
-  await import("../stuplus-lib/services/redisService");
+  await initializeRedis();
   await import("../cron/index");
 }
 

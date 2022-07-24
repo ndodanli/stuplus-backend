@@ -35,6 +35,7 @@ export interface User extends BaseEntity {
   privacySettings: PrivacySettings;
   lastSeenDate: Date;
   secondaryEducation: boolean;
+  popularity: number;
   playerId: string; //one signal player id
   //ignore
   schoolName: string | null; //ignore
@@ -43,7 +44,8 @@ export interface User extends BaseEntity {
   followerCount: number; //ignore
   followingCount: number; //ignore
   isAdminOfThisGroup: boolean; //ignore
-  unreadNotificationCount: number; //ignore
+  unreadNotificationCount: number; //ignorez
+  suggestedUsers: this[]; //ignore
 }
 
 export class UpdateTimeLimits {
@@ -87,7 +89,6 @@ export class NotificationSettings {
   newLike: boolean = true;
   newMention: boolean = true;
   newGroupMessage: boolean = true;
-
   newGroupMention: boolean = true;
 }
 export interface UserDocument extends User, Document {
@@ -162,10 +163,11 @@ export const UserSchema: Schema = new Schema({
   },
   lastSeenDate: { type: Date, required: false, default: null },
   secondaryEducation: { type: Boolean, required: false, default: false },
+  popularity: { type: Number, required: false, default: 0 },
   playerId: { type: String, required: false, default: null },
 });
 
-UserSchema.index({ recordStatus: 1 });
+UserSchema.index({ recordStatus: 1, schoolId: -1, popularity: -1, lastSeenDate: -1 });
 //create unique index for username and email
 UserSchema.index({ username: 1 }, { unique: true });
 UserSchema.index({ email: 1 }, { unique: true });
@@ -244,6 +246,7 @@ UserSchema.methods.minify = async function (
     lastSeenDate: this.lastSeenDate,
     updateTimeLimits: this.updateTimeLimits,
     secondaryEducation: this.secondaryEducation,
+    popularity: this.popularity,
     playerId: this.playerId,
     //ignore
     schoolName: null, //ignore
@@ -253,6 +256,7 @@ UserSchema.methods.minify = async function (
     followingCount: 0, //ignore
     isAdminOfThisGroup: false, //ignore
     unreadNotificationCount: 0, //ignore
+    suggestedUsers: [], //ignore
   };
   return response;
 };

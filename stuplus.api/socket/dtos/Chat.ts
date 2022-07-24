@@ -163,6 +163,17 @@ export class DeleteSinglePMDTO {
     }
 }
 
+export class DeleteSingleGMDTO {
+    groupChatId: string = "";
+    messageId: string = "";
+    deleteFor: DeleteChatForType = DeleteChatForType.Me;
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
 export class BlockUserDTO {
     userId: string = "";
     constructor(obj: any) {

@@ -6,7 +6,6 @@ import mongoose_fuzzy_searching from "@imranbarbhuiya/mongoose-fuzzy-searching";
 
 export interface Question extends BaseEntity {
   ownerId: string; //user id
-  coverImageUrl: string;
   title: string;
   titlesch: string;
   relatedSchoolIds: Array<string>;
@@ -16,6 +15,7 @@ export interface Question extends BaseEntity {
   toDate: Date | null;
   score: number;
   hashTags: string[];
+  images: ImageFiles[];
   //ignore
   owner?: User | null; // ignore
   relatedSchools: object[] | null; // ignore
@@ -25,13 +25,25 @@ export interface Question extends BaseEntity {
   comments: object[]; // ignore
 }
 
+export class ImageFiles {
+  url: string | null;
+  mimeType: string | null;
+  size: number | null;
+  isCompressed: boolean | null;
+  constructor(url: string, mimeType: string, size: number, isCompressed: boolean = false) {
+    this.url = url;
+    this.mimeType = mimeType;
+    this.size = size;
+    this.isCompressed = isCompressed;
+  }
+}
+
 export interface QuestionDocument extends Question, Document {
   minify(): unknown;
 }
 
 export const QuestionSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
-  coverImageUrl: { type: String, required: false, default: null },
   title: { type: String, required: true },
   titlesch: { type: String, required: true },
   relatedSchoolIds: { type: Array.of(String), required: false, default: [] },
@@ -41,9 +53,17 @@ export const QuestionSchema: Schema = new Schema({
   toDate: { type: Date, required: false, default: null },
   score: { type: Number, required: false, default: 0 },
   hashTags: { type: Array.of(String), required: false, default: [] },
+  images: {
+    type: Array.of(new Schema({
+      url: { type: String, required: true },
+      mimeType: { type: String, required: true },
+      size: { type: Number, required: true },
+      isCompressed: { type: Boolean, required: true },
+    })), required: false, default: []
+  },
 });
 
-QuestionSchema.index({ recordStatus: 1 });
+QuestionSchema.index({ recordStatus: 1, createdAt: -1 });
 
 QuestionSchema.plugin(mongoose_fuzzy_searching,
   {
@@ -85,7 +105,6 @@ QuestionSchema.methods.minify = async function (
     _id: this._id,
     recordStatus: this.recordStatus,
     ownerId: this.ownerId,
-    coverImageUrl: this.coverImageUrl,
     title: this.title,
     titlesch: this.titlesch,
     relatedSchoolIds: this.relatedSchoolIds,
@@ -98,6 +117,7 @@ QuestionSchema.methods.minify = async function (
     updatedAt: this.updatedAt,
     recordDeletionDate: this.recordDeletionDate,
     hashTags: this.hashTags,
+    images: this.images,
     //ignore
     owner: null, // ignore
     relatedSchools: null, // ignore

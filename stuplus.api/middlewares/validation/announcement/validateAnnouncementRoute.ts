@@ -17,7 +17,14 @@ export const validateAddAnnouncement = [
     check('relatedSchoolIds')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(),
+        .bail()
+        .custom(async (value, { req }) => {
+            for (let i = 0; i < value.length; i++) {
+                if (!isValidObjectId(value[i])) {
+                    throw new Error(getMessage("incorrectId", req.selectedLangs()));
+                }
+            }
+        }),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())

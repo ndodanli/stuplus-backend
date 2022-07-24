@@ -1,6 +1,6 @@
 import { MongoosePluginModel } from "@imranbarbhuiya/mongoose-fuzzy-searching";
 import { AcceptsDiscriminator, Model, model, Schema } from "mongoose";
-import { RecordStatus } from "../enums/enums";
+import { RecordStatus, Role } from "../enums/enums";
 import { AnnouncementCommentDocument, AnnouncementCommentSchema } from "./AnnouncementCommentEntity";
 import { AnnouncementCommentLikeDocument, AnnouncementCommentLikeSchema } from "./AnnouncementCommentLikeEntity";
 import { AnnouncementDocument, AnnouncementSchema } from "./AnnouncementEntity";
@@ -747,7 +747,7 @@ function registerHooks(): void {
     next();
   });
   UserSchema.pre("find", function (next) {
-    this.where({ recordStatus: RecordStatus.Active });
+    this.where({ recordStatus: RecordStatus.Active, role: { $ne: Role.Admin } });
     // this.select({ __v: 0 });
     // this.select({ firstName_fuzzy: 0, lastName_fuzzy: 0, username_fuzzy: 0 });
     next();

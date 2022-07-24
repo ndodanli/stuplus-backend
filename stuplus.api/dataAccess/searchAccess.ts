@@ -1,10 +1,12 @@
 import { _LeanDocument } from "mongoose";
 import { Announcement } from "../../stuplus-lib/entities/AnnouncementEntity";
-import { AnnouncementEntity, DepartmentEntity, GroupChatEntity, HashtagEntity, QuestionEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { AnnouncementEntity, DepartmentEntity, GroupChatEntity, HashtagEntity, QuestionEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { GroupChat } from "../../stuplus-lib/entities/GroupChatEntity";
 import { Hashtag } from "../../stuplus-lib/entities/HashtagEntity";
 import { Question } from "../../stuplus-lib/entities/QuestionEntity";
-import { User } from "../../stuplus-lib/entities/UserEntity";
+import { User, UserDocument } from "../../stuplus-lib/entities/UserEntity";
+import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
+import RedisService from "../../stuplus-lib/services/redisService";
 import { searchable, searchableWithSpaces } from "../../stuplus-lib/utils/general";
 import { SearchGroupChatDTO } from "../dtos/SearchDTOs";
 import { SchoolAccess } from "./schoolAccess";
@@ -74,7 +76,7 @@ export class SearchAccess {
         }
         //TODO: add school relation to sort(schoolId)
         const users = await usersQuery
-            .sort({ lastSeenDate: -1 })
+            .sort({ popularity: -1, lastSeenDate: -1 })
             .select({ username: 1, firstName: 1, lastName: 1, profilePhotoUrl: 1, avatarKey: 1 })
             .skip(payload.skip)
             .limit(payload.pageSize)
@@ -99,7 +101,7 @@ export class SearchAccess {
         //TODO: add school relation to sort(schoolId)
 
         const groupChats = await groupChatsQuery
-            .sort({ lastSeenDate: -1 })
+            .sort({ popularity: -1 })
             .select({ title: 1, type: 1, about: 1, coverImageUrl: 1, hashTags: 1, schoolId: 1, departmentId: 1, grade: 1 })
             .skip(payload.skip)
             .limit(payload.pageSize)
@@ -131,21 +133,180 @@ export class SearchAccess {
         return hashTags;
     }
 
-    public static async getAccountSuggestions(relatedUserId: string, relatedUser: User | null, payload: SearchGroupChatDTO): Promise<Hashtag[]> {
-        const rUser = relatedUser ?
+    public static async getAccountSuggestions(currentUserId: string, relatedUserId?: string | null, relatedUser?: User | null): Promise<User[]> {
+        const rUser: User = relatedUser ?
             relatedUser :
-            await UserEntity.find({ _id: relatedUserId }, { schoolId: 1, departmentId: 1, grade: 1, relatedSchoolIds: 1 }).lean(true);
+            await UserEntity.findOne({ _id: relatedUserId }, { schoolId: 1, departmentId: 1, grade: 1 }).lean(true);
 
+        if (!rUser || !rUser.schoolId)
+            return [];
 
-        let hashTagQuery = HashtagEntity.find({ tag: { $regex: searchable(payload.searchTerm), $options: "i" } });
-        //TODO: add school relation to sort(schoolId)
-        const hashTags = await hashTagQuery
-            .sort({ overallPopularity: -1 })
-            .skip(payload.skip)
-            .limit(payload.pageSize)
-            .lean(true) as Hashtag[];
+        const suggestionLimit = 25;
+        const queryLimit = 50;
+        let queryLimitReached = true;
+        // const nearSchools = await SchoolEntity.find({ cityId: userSchool.cityId }, { _id: 1 }).lean(true);
+        let users: User[] = [];
+        users = await UserEntity.find({
+            schoolId: rUser.schoolId,
+            departmentId: rUser.departmentId,
+            grade: rUser.grade,
+        }, {
+            _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+        })
+            .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+            .limit(queryLimit)
+            .lean(true);
+        if (users.length > 0) {
+            let lastUserCreatedAt: Date = users[users.length - 1].createdAt;
+            const userIds = users.map(user => user._id.toString());
+            const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, userIds);
+            //delete users that are already followed
+            if (users.length < queryLimit)
+                queryLimitReached = false;
+            for (let i = 0; i < users.length; i++) {
+                if (redisFollows[i]) {
+                    users.splice(i, 1);
+                    i--;
+                }
+            }
+            if (queryLimitReached)
+                while (users.length < suggestionLimit) {
+                    let secondQueryUsers = await UserEntity.find({
+                        schoolId: rUser.schoolId,
+                        departmentId: rUser.departmentId,
+                        grade: rUser.grade,
+                        createdAt: { $lt: lastUserCreatedAt },
+                    }, {
+                        _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+                    })
+                        .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+                        .limit(queryLimit)
+                        .lean(true);
+                    if (secondQueryUsers.length === 0)
+                        break;
+                    lastUserCreatedAt = secondQueryUsers[secondQueryUsers.length - 1].createdAt;
+                    const secondUserIds = secondQueryUsers.map(user => user._id.toString());
+                    const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, secondUserIds);
+                    //delete users that are already followed
+                    for (let i = 0; i < secondQueryUsers.length; i++) {
+                        if (redisFollows[i]) {
+                            secondQueryUsers.splice(i, 1);
+                            i--;
+                        }
+                    }
+                    users = users.concat(secondQueryUsers);
+                }
+        }
+        const firstFoundedUserIds = users.map(user => user._id);
+        if (users.length < suggestionLimit) {
+            let usersWithSameDepartment = await UserEntity.find({
+                _id: { $nin: firstFoundedUserIds },
+                schoolId: rUser.schoolId,
+                departmentId: rUser.departmentId,
+            }, {
+                _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+            })
+                .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+                .limit(queryLimit)
+                .lean(true);
+            if (usersWithSameDepartment.length > 0) {
+                let lastUserCreatedAt: Date = usersWithSameDepartment[usersWithSameDepartment.length - 1].createdAt;
+                const userIds = usersWithSameDepartment.map(user => user._id.toString());
+                const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, userIds);
+                if (usersWithSameDepartment.length < queryLimit)
+                    queryLimitReached = false;
+                //delete users that are already followed
+                for (let i = 0; i < usersWithSameDepartment.length; i++) {
+                    if (redisFollows[i]) {
+                        usersWithSameDepartment.splice(i, 1);
+                        i--;
+                    }
+                }
+                users = users.concat(usersWithSameDepartment);
+                if (queryLimitReached)
+                    while (users.length < suggestionLimit) {
+                        let secondQueryUsers = await UserEntity.find({
+                            _id: { $nin: firstFoundedUserIds },
+                            schoolId: rUser.schoolId,
+                            departmentId: rUser.departmentId,
+                            createdAt: { $lt: lastUserCreatedAt },
+                        }, {
+                            _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+                        })
+                            .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+                            .limit(queryLimit)
+                            .lean(true);
+                        if (secondQueryUsers.length === 0)
+                            break;
+                        lastUserCreatedAt = secondQueryUsers[secondQueryUsers.length - 1].createdAt;
+                        const secondUserIds = secondQueryUsers.map(user => user._id.toString());
+                        const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, secondUserIds);
+                        //delete users that are already followed
+                        for (let i = 0; i < secondQueryUsers.length; i++) {
+                            if (redisFollows[i]) {
+                                secondQueryUsers.splice(i, 1);
+                                i--;
+                            }
+                        }
+                        users = users.concat(secondQueryUsers);
+                    }
+            }
+        }
+        const secondFoundedUserIds = users.map(user => user._id);
+        if (users.length < suggestionLimit) {
+            let usersWithSameSchool = await UserEntity.find({
+                _id: { $nin: secondFoundedUserIds },
+                schoolId: rUser.schoolId,
+            }, {
+                _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+            })
+                .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+                .limit(queryLimit)
+                .lean(true);
+            if (usersWithSameSchool.length > 0) {
+                let lastUserCreatedAt: Date = usersWithSameSchool[usersWithSameSchool.length - 1].createdAt;
+                const userIds = usersWithSameSchool.map(user => user._id.toString());
+                const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, userIds);
+                if (usersWithSameSchool.length < queryLimit)
+                    queryLimitReached = false;
+                //delete users that are already followed
+                for (let i = 0; i < usersWithSameSchool.length; i++) {
+                    if (redisFollows[i]) {
+                        usersWithSameSchool.splice(i, 1);
+                        i--;
+                    }
+                }
+                users = users.concat(usersWithSameSchool);
+                if (queryLimitReached)
+                    while (users.length < suggestionLimit) {
+                        let secondQueryUsers = await UserEntity.find({
+                            _id: { $nin: secondFoundedUserIds },
+                            schoolId: rUser.schoolId,
+                            createdAt: { $lt: lastUserCreatedAt },
+                        }, {
+                            _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+                        })
+                            .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+                            .limit(queryLimit)
+                            .lean(true);
+                        if (secondQueryUsers.length === 0)
+                            break;
+                        lastUserCreatedAt = secondQueryUsers[secondQueryUsers.length - 1].createdAt;
+                        const secondUserIds = secondQueryUsers.map(user => user._id.toString());
+                        const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, secondUserIds);
+                        //delete users that are already followed
+                        for (let i = 0; i < secondQueryUsers.length; i++) {
+                            if (redisFollows[i]) {
+                                secondQueryUsers.splice(i, 1);
+                                i--;
+                            }
+                        }
+                        users = users.concat(secondQueryUsers);
+                    }
+            }
+        }
 
-        return hashTags;
+        return users;
     }
 
 }

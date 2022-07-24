@@ -25,15 +25,17 @@ import { userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 import { NotificationDocument } from "../../stuplus-lib/entities/NotificationEntity";
 import { GroupAccess } from "./groupAccess";
 import { AddToGroupChatDTO } from "../socket/dtos/Chat";
+import { SearchAccess } from "./searchAccess";
 export class UserAccess {
-    public static async getUserProfile(acceptedLanguages: Array<string>, userId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
+    public static async getUserProfile(acceptedLanguages: Array<string>, currentUserId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
         const response = new UserProfileResponseDTO();
         response.user = await RedisService.acquireUser(targetUserId, ["_id", "firstName", "lastName", "profilePhotoUrl",
             "role", "grade", "schoolId", "departmentId", "isAccEmailConfirmed", "relatedSchoolIds",
             "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings", "lastSeenDate", "blockedUserIds"]);
 
-        if (response.user.blockedUserIds.includes(userId))
+        if (response.user.blockedUserIds.includes(currentUserId))
             throw new NotValidError(getMessage("userBlockedShowProfile", acceptedLanguages));
+
 
         response.user.followerCount = await RedisService.acquire(RedisKeyType.User + targetUserId + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
             return await FollowEntity.countDocuments({ followingId: targetUserId });
@@ -42,10 +44,10 @@ export class UserAccess {
             return await FollowEntity.countDocuments({ followerId: targetUserId });
         });
 
-        let followEntity = await FollowEntity.findOne({ followerId: userId, followingId: targetUserId }, { "_id": 1 });
+        let followEntity = await FollowEntity.findOne({ followerId: currentUserId, followingId: targetUserId }, { "_id": 1 });
 
         if (!followEntity) {
-            let followReqEntity = await FollowRequestEntity.findOne({ ownerId: userId, requestedId: targetUserId }, { "_id": 1 });
+            let followReqEntity = await FollowRequestEntity.findOne({ ownerId: currentUserId, requestedId: targetUserId }, { "_id": 1 });
             if (!followReqEntity) {
                 response.followStatus = response.followStatus = {
                     followId: null,
@@ -133,6 +135,8 @@ export class UserAccess {
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
+        let fnChanged, lnChanged, unChanged;
+
         if (user.username !== payload.username) {
             let userWithSearchedUsername = await UserEntity.exists({ username: payload.username, recordStatus: RecordStatus.Active });
             if (userWithSearchedUsername)
@@ -140,24 +144,30 @@ export class UserAccess {
             if (user.updateTimeLimits.lastUsernameUpdate &&
                 user.updateTimeLimits.lastUsernameUpdate > moment().subtract(7, "days").toDate())
                 throw new NotValidError(`${getMessage("usernameUpdateLimit", acceptedLanguages)} ${moment(user.updateTimeLimits.lastUsernameUpdate).tz("Europe/Istanbul").add(7, "days").format("YYYY-MM-DD HH:mm:ss")}`);
-            else
+            else {
+                unChanged = true;
                 user.updateTimeLimits.lastUsernameUpdate = new Date();
+            }
         }
 
         if (user.firstName !== payload.firstName) {
             if (user.updateTimeLimits.lastFirstNameUpdate &&
                 user.updateTimeLimits.lastFirstNameUpdate > moment().subtract(1, "days").toDate())
-                throw new NotValidError(`${getMessage("firstNameUpdateLimit", acceptedLanguages)} ${moment(user.updateTimeLimits.lastFirstNameUpdate).tz("Europe/Istanbul").add(1, "days").format("YYYY-MM-DD HH:mm:ss")}`);
-            else
+                throw new NotValidError(`${getMessage("firstNameUpdateLimit", acceptedLanguages)} ${moment(user.updateTimeLimits.lastFirstNameUpdate).tz("Europe/Istanbul").add(7, "days").format("YYYY-MM-DD HH:mm:ss")}`);
+            else {
+                fnChanged = true;
                 user.updateTimeLimits.lastFirstNameUpdate = new Date();
+            }
         }
 
         if (user.lastName !== payload.lastName) {
             if (user.updateTimeLimits.lastLastNameUpdate &&
                 user.updateTimeLimits.lastLastNameUpdate > moment().subtract(1, "days").toDate())
-                throw new NotValidError(`${getMessage("lastNameUpdateLimit", acceptedLanguages)} ${moment(user.updateTimeLimits.lastLastNameUpdate).tz("Europe/Istanbul").add(1, "days").format("YYYY-MM-DD HH:mm:ss")}`);
-            else
+                throw new NotValidError(`${getMessage("lastNameUpdateLimit", acceptedLanguages)} ${moment(user.updateTimeLimits.lastLastNameUpdate).tz("Europe/Istanbul").add(7, "days").format("YYYY-MM-DD HH:mm:ss")}`);
+            else {
+                lnChanged = true;
                 user.updateTimeLimits.lastLastNameUpdate = new Date();
+            }
         }
 
         user.username = payload.username;
@@ -180,6 +190,9 @@ export class UserAccess {
                 username: user.username
             }
         });
+
+        if (fnChanged || lnChanged || unChanged)
+            await FollowEntity.updateMany({ followingId: user.id }, { username: user.username, firstName: user.firstName, lastName: user.lastName });
 
         return user;
     }
@@ -554,9 +567,18 @@ export class UserAccess {
         followRequest.status = FollowStatus.Accepted;
         followRequest.recordStatus = RecordStatus.Deleted;
 
-        const followEntity = new FollowEntity({
+        const followingUser = await UserEntity.findOne({ _id: followRequest.requestedId }, {
+            _id: 0, schoolId: 1,
+            username: 1, firstName: 1, lastName: 1
+        }).lean(true);
+
+        //TODO: followingId'ye sahip user var mi kontrol edilmiyor. *maybe
+        const followEntity = await FollowEntity.create({
             followerId: followRequest.ownerId,
-            followingId: followRequest.requestedId
+            followingId: followRequest.requestedId,
+            followingUsername: followingUser?.username,
+            followingFirstName: followingUser?.firstName,
+            followingLastName: followingUser?.lastName,
         });
 
         const notifications = [];
@@ -636,14 +658,25 @@ export class UserAccess {
             if (follow)
                 throw new NotValidError(getMessage("alreadyFollowing", acceptedLanguages));
 
+            const followingUser = await UserEntity.findOne({ _id: payload.requestedId }, {
+                _id: 0, schoolId: 1,
+                username: 1, firstName: 1, lastName: 1
+            }).lean(true);
+
             //TODO: followingId'ye sahip user var mi kontrol edilmiyor. *maybe
             const followEntity = await FollowEntity.create({
                 followerId: userId,
-                followingId: payload.requestedId
+                followingId: payload.requestedId,
+                followingUsername: followingUser?.username,
+                followingFirstName: followingUser?.firstName,
+                followingLastName: followingUser?.lastName,
             });
             followId = followEntity.id;
             response.followStatus = FollowStatus.Accepted;
             response.followId = followId;
+            await RedisService.refreshFollowingsIfNotExists(userId);
+            await RedisService.client.sAdd(RedisKeyType.UserFollowings + userId, payload.requestedId);
+
         } else {
             const followReq = await FollowRequestEntity.exists({ ownerId: userId, requestedId: payload.requestedId, recordStatus: RecordStatus.Active });
             if (followReq)
@@ -668,6 +701,8 @@ export class UserAccess {
         if (!unfollow)
             throw new NotValidError(getMessage("noUserToUnfollow", acceptedLanguages));
 
+        await RedisService.refreshFollowingsIfNotExists(userId);
+        await RedisService.client.sRem(RedisKeyType.UserFollowings + userId, unfollow.followingId);
         return true;
     }
 
@@ -676,6 +711,9 @@ export class UserAccess {
         const unfollow = await FollowEntity.findOneAndUpdate({ _id: payload.followId, followingId: userId }, { recordStatus: RecordStatus.Deleted });
         if (!unfollow)
             throw new NotValidError(getMessage("noUserToRemoveFollow", acceptedLanguages));
+
+        await RedisService.refreshFollowingsIfNotExists(userId);
+        await RedisService.client.sRem(RedisKeyType.UserFollowings + unfollow.followerId, userId);
 
         return true;
     }

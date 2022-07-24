@@ -7,7 +7,8 @@ export interface CustomRequest<T> extends Omit<Request, 'body' | 'query' | 'user
     user: any;
     fileValidationErrors: [];
     selectedLangs: Function;
-    file: SFile
+    file: SFile;
+    files: SFile[];
 }
 export interface CustomResponse<T> extends Omit<Response, 'json' | 'status' | 'send'> {
     send: (data: T) => void;

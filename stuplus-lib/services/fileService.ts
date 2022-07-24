@@ -5,7 +5,7 @@ import multerS3 from "multer-s3"
 import path from "path";
 import { getMessage } from "../localization/responseMessages";
 import { CustomRequest } from "../utils/base/baseOrganizers";
-import { generateRandomNumber } from "../utils/general";
+import { generateRandomNumber, isImage, isVideo } from "../utils/general";
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 AWS.config.update({
@@ -54,9 +54,10 @@ export const uploadFileS3 = {
         }
 
         if (file.originalname.length > 30) {
-          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileNameTooLongError", req.selectedLangs(), [file.originalname]) })
-          callback(null, false)
-          return;
+          file.originalname = file.originalname.substring(0, 30);
+          // req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileNameTooLongError", req.selectedLangs(), [file.originalname]) })
+          // callback(null, false)
+          // return;
         }
 
         const fileSize = parseInt(req.headers['content-length']);
@@ -69,7 +70,7 @@ export const uploadFileS3 = {
       },
     }).single(fileName)
   },
-  array: function (fileName: string, allowedExtensions: string[], fileLimit: number = 20, filePath?: string | null, fileSizeLimit: number = 5242880) {
+  array: function (fileName: string, allowedExtensions: string[], filePath?: string | null, fileSizeLimit: number = 5242880, fileLimit: number = 20,) {
     return multer({
       storage: multerS3({
         s3: s3,
@@ -77,14 +78,18 @@ export const uploadFileS3 = {
         metadata: function (req, file, cb) {
           cb(null, { fieldName: file.fieldname });
         },
-        key: function (req: CustomRequest<object>, file, cb) {
+        key: function (req: any, file, cb) {
           var newFileName = Date.now().toString() + "-" + file.originalname;
           let fullPath = "public/";
           if (filePath)
             fullPath += filePath;
-          else if (req.query.uploadPath)
-            fullPath += req.query.uploadPath + "/";
+          else if (req.body.uploadPath)
+            fullPath += req.body.uploadPath + "/";
           else {
+            // if (!req.fileValidationErrors)
+            //   req.fileValidationErrors = [];
+            // var ext = path.extname(file.originalname);
+            // req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileExtError", req.selectedLangs(), [ext]) })
             cb({ message: "No upload path founded." }, file.fieldname)
             return;
           }
@@ -105,17 +110,32 @@ export const uploadFileS3 = {
           }
         }
 
-        if (file.originalname.length > 50) {
-          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileNameTooLongError", req.selectedLangs(), [file.originalname]) })
-          callback(null, false)
-          return;
+        if (file.originalname.length > 30) {
+          file.originalname = file.originalname.substring(0, 30);
+          // req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileNameTooLongError", req.selectedLangs(), [file.originalname]) })
+          // callback(null, false)
+          // return;
         }
 
         const fileSize = parseInt(req.headers['content-length']);
-        if (fileSize > fileSizeLimit) {
-          req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileSizeError", req.selectedLangs(), ["5 MB"]) })
-          callback(null, false)
-          return;
+        if (isImage(file.mimetype)) {
+          if (fileSize > 10485760) {
+            req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileSizeError", req.selectedLangs(), ["10 MB"]) })
+            callback(null, false)
+            return;
+          }
+        } else if (isVideo(file.mimetype)) {
+          if (fileSize > 104857600) {
+            req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileSizeError", req.selectedLangs(), ["100 MB"]) })
+            callback(null, false)
+            return;
+          }
+        } else {
+          if (fileSize > 10485760) {
+            req.fileValidationErrors.push({ param: file.fieldname, fileName: file.originalname, msg: getMessage("fileSizeError", req.selectedLangs(), ["10 MB"]) })
+            callback(null, false)
+            return;
+          }
         }
         callback(null, true)
       },

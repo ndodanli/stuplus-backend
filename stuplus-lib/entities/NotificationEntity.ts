@@ -27,7 +27,7 @@ export const NotificationSchema: Schema = new Schema({
   type: { type: Number, required: true },
 });
 
-NotificationSchema.index({ recordStatus: 1, userId: 1, readed: 1 });
+NotificationSchema.index({ recordStatus: 1, createdAt: -1, userId: 1, readed: 1 });
 
 NotificationSchema.pre("save", function (next) {
   //

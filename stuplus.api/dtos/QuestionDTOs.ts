@@ -1,9 +1,10 @@
 import { LikeType } from "../../stuplus-lib/enums/enums";
 import { mapToDTO } from "../../stuplus-lib/utils/general";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
+import { ImageFiles } from "../../stuplus-lib/entities/QuestionEntity";
 
 export class QuestionAddDTO {
-    coverImageUrl: string = "";
+    images: ImageFiles[] = [];
     title: string = "";
     relatedSchoolIds: string[] | string = [];
     text: string = "";

@@ -17,6 +17,11 @@ export default class CronService {
             }
             const lockKey = job.customLockKey ? job.customLockKey : job.constructor.name;
             const cronJob = cron.schedule(job.cronExpression, async () => {
+                if (jobLock.isBusy(lockKey)) {
+                    logger.info(`${job.title} is busy.`);
+                    console.info(`[${new Date()}]${job.title} is busy.`);
+                    return;
+                }
                 jobLock.acquire(lockKey, async function (done: any) {
                     try {
                         await job.run();

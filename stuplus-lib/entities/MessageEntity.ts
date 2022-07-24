@@ -66,7 +66,7 @@ export const MessageSchema: Schema = new Schema({
   deletedForUserDate: { type: Date, required: false, default: null },
 });
 
-MessageSchema.index({ recordStatus: 1 });
+MessageSchema.index({ recordStatus: 1, createdAt: -1 });
 
 // MessageSchema.index({ text: "text", description: "text" });
 
