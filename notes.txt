@@ -11,8 +11,7 @@
 -gizlilik ayarlari profilimi gizle yazisi sadece takip ettiklerim yapilacak
 -gizlilik ayarlari guncellenirken bildirim ayarlari kapatiyor
 
-
-*user groupChatIdleri set'e gecir(currently linked list)
+*chat read olaylari degisecek
+*user groupChatIdleri degisecek
 *daily user statistic => yorum ve begeniler(announcement implementation)
-*vakit kalirsa*
--s3 sifreleme
+*vakit kalirsa s3 sifreleme

@@ -2,6 +2,7 @@ import { Document, Schema } from "mongoose";
 import BaseEntity from "./BaseEntity";
 
 export interface GroupMessageRead extends BaseEntity {
+  groupChatId: string;
   messageId: string;
   readedBy: String; //user id
 }
@@ -11,6 +12,7 @@ export interface GroupMessageReadDocument extends GroupMessageRead, Document {
 }
 
 export const GroupMessageReadSchema: Schema = new Schema({
+  groupChatId: { type: String, required: true },
   messageId: { type: String, required: true },
   readedBy: { type: String, required: true }
 });
@@ -38,6 +40,7 @@ GroupMessageReadSchema.methods.minify = async function (
     messageId: this.messageId,
     readedBy: this.readedBy,
     recordDeletionDate: this.recordDeletionDate,
+    groupChatId: this.groupChatId
   };
   return response;
 };

@@ -6,9 +6,8 @@ import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { validateAddAnnouncement, validateCommentAnnouncement, validateCommentLikeDislikeAnnouncement, validateGetAnnouncementsAnnouncement, validateGetCommentsAnnouncement, validateLikeDislikeAnnouncement } from "../middlewares/validation/announcement/validateAnnouncementRoute";
 import { authorize } from "../middlewares/auth";
 import { Role } from "../../stuplus-lib/enums/enums";
-import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
-import { AnnouncementAddDTO, AnnouncementCommenLikeDisliketDTO, AnnouncementCommentDTO, AnnouncementLikeDislikeDTO, AnnouncementGetMultipleDTO, AnnouncementGetSingleDTO, AnnouncementGetCommentsDTO } from "../dtos/AnnouncementDTOs";
+import { AnnouncementAddDTO, AnnouncementCommenLikeDisliketDTO, AnnouncementCommentDTO, AnnouncementLikeDislikeDTO, AnnouncementGetMultipleDTO, AnnouncementGetCommentsDTO } from "../dtos/AnnouncementDTOs";
 import { AnnouncementAccess } from "../dataAccess/announcementAccess";
 import axios from "axios";
 const router = Router();
@@ -50,7 +49,7 @@ router.post("/add", authorize([Role.ContentCreator, Role.Admin]), validateAddAnn
   return Ok(res, response)
 });
 
-router.post("/getAnnouncements", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateGetAnnouncementsAnnouncement, async (req: CustomRequest<AnnouncementGetMultipleDTO>, res: any) => {
+router.post("/getAnnouncements", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateGetAnnouncementsAnnouncement, async (req: CustomRequest<AnnouncementGetMultipleDTO>, res: any) => {
   /* #swagger.tags = ['Announcement']
       #swagger.description = 'Get announcements.' */
   /*	#swagger.requestBody = {
@@ -76,7 +75,7 @@ schema: { $ref: "#/definitions/AnnouncementGetAnnouncementsRequest" }
   return Ok(res, response)
 });
 
-router.get("/getAnnouncement/:id", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getAnnouncement/:id", authorize([Role.ContentCreator, Role.User, Role.Admin]), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Announcement']
       #swagger.description = 'Get announcement by id.' */
   /* #swagger.responses[200] = {
@@ -98,7 +97,7 @@ router.get("/getAnnouncement/:id", authorize([Role.ContentCreator, Role.User, Ro
   return Ok(res, response)
 });
 
-router.post("/likeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementLikeDislikeDTO>, res: any) => {
+router.post("/likeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementLikeDislikeDTO>, res: any) => {
   /* #swagger.tags = ['Announcement']
   #swagger.description = 'Like or dislike an announcement.' */
   /*	#swagger.requestBody = {
@@ -124,7 +123,7 @@ schema: { $ref: "#/definitions/AnnouncementLikeDislikeRequest" }
   return Ok(res, response)
 });
 
-router.post("/getComments", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateGetCommentsAnnouncement, async (req: CustomRequest<AnnouncementGetCommentsDTO>, res: any) => {
+router.post("/getComments", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateGetCommentsAnnouncement, async (req: CustomRequest<AnnouncementGetCommentsDTO>, res: any) => {
   /* #swagger.tags = ['Announcement']
       #swagger.description = 'Get comments of an announcement.' */
   /*	#swagger.requestBody = {
@@ -150,7 +149,7 @@ schema: { $ref: "#/definitions/AnnouncementGetCommentsRequest" }
   return Ok(res, response)
 });
 
-router.post("/comment", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateCommentAnnouncement, async (req: CustomRequest<AnnouncementCommentDTO>, res: any) => {
+router.post("/comment", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentAnnouncement, async (req: CustomRequest<AnnouncementCommentDTO>, res: any) => {
   /* #swagger.tags = ['Announcement']
 #swagger.description = 'Comment to an announcement.' */
   /*	#swagger.requestBody = {
@@ -176,7 +175,7 @@ schema: { $ref: "#/definitions/AnnouncementCommentRequest" }
   return Ok(res, response)
 });
 
-router.post("/commentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateCommentLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementCommenLikeDisliketDTO>, res: any) => {
+router.post("/commentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementCommenLikeDisliketDTO>, res: any) => {
   /* #swagger.tags = ['Announcement']
 #swagger.description = 'Like or dislike a anouncement's comment.' */
   /*	#swagger.requestBody = {

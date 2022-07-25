@@ -12,7 +12,7 @@ import { AddToGroupChatDTO, BlockUserDTO, ClearPMChatHistoryDTO, CreateGroupDTO,
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { groupChatName, userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 import RedisService from "../../stuplus-lib/services/redisService";
-import { searchable, stringify, searchableWithSpaces, chunk } from "../../stuplus-lib/utils/general";
+import { searchable, stringify, searchableWithSpaces, chunk, removeDuplicates } from "../../stuplus-lib/utils/general";
 import { MessageDocument, MessageFiles, ReplyToDTO } from "../../stuplus-lib/entities/MessageEntity";
 import { DeleteChatForType, GroupChatUserRole, MessageLimitation, NotificationType, RecordStatus, RedisMessagesNotFoundType } from "../../stuplus-lib/enums/enums";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
@@ -100,7 +100,7 @@ io.on("connection", async (socket: ISocket) => {
         });
     });
 
-    socket.on("pm-send", async (data: RedisMessageDTO, cb: Function) => {
+    socket.on("pmSend", async (data: RedisMessageDTO, cb: Function) => {
         try {
             //TODO: offline durumu
             if (!data.m || !data.to) {
@@ -188,7 +188,7 @@ io.on("connection", async (socket: ISocket) => {
         }
     });
 
-    socket.on("pm-forwarded", async (data: RedisMessageForwardReadDTO, cb: Function) => {
+    socket.on("pmForwarded", async (data: RedisMessageForwardReadDTO, cb: Function) => {
         try {
             //TODO: offline durumu
             if (!data.mids || !data.mids.length || !data.ci || !data.to) {
@@ -216,7 +216,7 @@ io.on("connection", async (socket: ISocket) => {
         }
     });
 
-    socket.on("pm-readed", async (data: RedisMessageForwardReadDTO, cb: Function) => {
+    socket.on("pmReaded", async (data: RedisMessageForwardReadDTO, cb: Function) => {
         try {
             //TODO: offline durumu
             if (!data.mids || !data.mids.length || !data.ci || !data.to) {
@@ -248,7 +248,7 @@ io.on("connection", async (socket: ISocket) => {
         }
     });
 
-    socket.on("gm-send", async (data: RedisGroupMessageDTO, cb: Function) => {
+    socket.on("gmSend", async (data: RedisGroupMessageDTO, cb: Function) => {
         try {
             //TODO: offline durumu
             if (!data.gCi || !data.m) {
@@ -259,10 +259,10 @@ io.on("connection", async (socket: ISocket) => {
                 const groupChats = await GroupChatUserEntity.find({ userId: socket.data.user._id });
                 return groupChats.map(x => x.groupChatId);
             });
-            if (!userGroupChatIds.includes(data.gCi)) {
-                cb({ success: false, message: "Unauthorized." });
-                return;
-            }
+            // if (!await) {
+            //     cb({ success: false, message: "Unauthorized." });
+            //     return;
+            // }
             const now = new Date();
             const gMessageEntity = new GroupMessageEntity({});
             const chatData: object = {
@@ -302,7 +302,7 @@ io.on("connection", async (socket: ISocket) => {
         }
     });
 
-    socket.on("gm-forwarded", async (data: RedisGroupMessageForwardReadDTO, cb: Function) => {
+    socket.on("gmForwarded", async (data: RedisGroupMessageForwardReadDTO, cb: Function) => {
         try {
             //TODO: offline durumu
             if (!data.mids || !data.mids.length || !data.gCi) {
@@ -344,7 +344,7 @@ io.on("connection", async (socket: ISocket) => {
         }
     });
 
-    socket.on("gm-readed", async (data: RedisGroupMessageForwardReadDTO, cb: Function) => {
+    socket.on("gmReaded", async (data: RedisGroupMessageForwardReadDTO, cb: Function) => {
         try {
             //TODO: offline durumu
             if (!data.mids || !data.mids.length || !data.gCi) {
@@ -359,6 +359,7 @@ io.on("connection", async (socket: ISocket) => {
                 const chatData: object = {
                     e: {
                         _id: gMessageReadEntity.id,
+                        groupChatId: data.gCi,
                         messageId: mi,
                         readedBy: socket.data.user._id,
                         createdAt: now,
@@ -388,7 +389,7 @@ io.on("connection", async (socket: ISocket) => {
         }
     });
 
-    socket.on("watch-users", async (data: WatchUsersDTO, cb: Function) => {
+    socket.on("watchUsers", async (data: WatchUsersDTO, cb: Function) => {
         if (!data.uIds || !data.uIds.length) {
             cb({ success: false, message: "Invalid parameters." });
             return;
@@ -408,7 +409,7 @@ io.on("connection", async (socket: ISocket) => {
         }
     });
 
-    socket.on("unwatch-users", async (data: WatchUsersDTO, cb: Function) => {
+    socket.on("unwatchUsers", async (data: WatchUsersDTO, cb: Function) => {
         if (!data.uIds || !data.uIds.length) {
             cb({ success: false, message: "Invalid parameters." });
             return;
@@ -749,6 +750,8 @@ router.post("/clearPMChatHistory", authorize([Role.User, Role.Admin, Role.Conten
 
 //TODO: pagination(maybe)
 router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+    /* #swagger.tags = ['Chat']
+      #swagger.description = 'Get pm chats.' */
     const response = new BaseResponse<ChatDocument[]>();
     try {
         // const payload = new BaseFilter(req.body);
@@ -778,7 +781,7 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
         const pmIndexesToRemove: number[] = [];
         const redisPMReads: any = [];
         const redisPMs: any = [];
-        const lastMessageUserIds: string[] = [];
+        let lastMessageUserIds: string[] = [];
         const notFoundLastMessageChatIds: string[] = [];
         for (let i = 0; i < userPMChats.length; i++) {
             const userPMChat = userPMChats[i];
@@ -850,9 +853,9 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
                 }
             }
         ]);
-        lastMessageUserIds.push(notFoundLastMessages.map((x: { ownerId: string; }) => x.ownerId));
+        lastMessageUserIds = lastMessageUserIds.concat(notFoundLastMessages.map((x: { ownerId: string; }) => x.ownerId));
 
-        const lastMessageUsers = await UserEntity.find({ _id: { $in: lastMessageUserIds } }, {
+        const lastMessageUsers = await UserEntity.find({ _id: { $in: [...new Set(lastMessageUserIds)] } }, {
             _id: 1, username: 1, firstName: 1, lastName: 1,
             avatarKey: 1, profilePhotoUrl: 1
         }).lean(true);
@@ -900,7 +903,7 @@ router.post("/getNewChatUsers", authorize([Role.User, Role.Admin, Role.ContentCr
     const response = new BaseResponse<any>();
     try {
         const payload = new BaseFilter(req.body);
-        let newChatUsersQuery = FollowEntity.find({ followerId: res.locals.user._id }, { _id: 0, followingId: 1, followingUsername: 1, followingFirstName: 1, followingLastName: 1 });
+        let newChatUsersQuery = FollowEntity.find({ followerId: res.locals.user._id }, { _id: 0, followingId: 1, followingUsername: 1, followingFirstName: 1, followingLastName: 1, createdAt: 1 });
 
         if (payload.lastRecordDate)
             newChatUsersQuery = newChatUsersQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
@@ -921,10 +924,23 @@ router.post("/getNewChatUsers", authorize([Role.User, Role.Admin, Role.ContentCr
 
         const newChatFollowingUserIds = newChatFollowingUsers.map((x: { followingId: string; }) => x.followingId);
 
-        const newChatUsers = await UserEntity.find({ _id: { $in: newChatFollowingUserIds } }, {
+        let newChatUsers = await UserEntity.find({ _id: { $in: newChatFollowingUserIds } }, {
             _id: 1, username: 1, firstName: 1, lastName: 1, profilePhotoUrl: 1, avatarKey: 1
         }).lean(true);
 
+        for (let i = 0; i < newChatUsers.length; i++) {
+            const createdAt = newChatFollowingUsers.find((x: { followingId: string; }) => x.followingId === newChatUsers[i]._id.toString())?.createdAt;
+            if (createdAt)
+                newChatUsers[i].createdAt = createdAt;
+
+        }
+        newChatUsers = newChatUsers.sort((a: any, b: any) => {
+            a = new Date(a.createdAt ?? 0);
+            b = new Date(b.createdAt ?? 0);
+            if (a < b) return 1;
+            if (a > b) return -1;
+            return 0;
+        });
         response.data = newChatUsers;
 
     }
@@ -939,17 +955,18 @@ router.post("/getNewChatUsers", authorize([Role.User, Role.Admin, Role.ContentCr
 });
 
 //TODO: pagination(maybe)
-router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+    /* #swagger.tags = ['Chat']
+       #swagger.description = 'Get gm chats.' */
     const response = new BaseResponse<GroupChatDocument[]>();
     try {
-        const payload = new BaseFilter(req.body);
         const userGroupChatUserEntities = await GroupChatUserEntity.find({
             userId: res.locals.user._id
-        }, { "groupChatId": 1 });
+        }).lean(true);
         const userGroupChatsIds = userGroupChatUserEntities.map(ugc => ugc.groupChatId);
         let userGroupChatsQuery = GroupChatEntity.find({
             _id: { $in: userGroupChatsIds }
-        });
+        }, { hashTags_fuzzy: 0, titlesch_fuzzy: 0, __v: 0 });
 
         // if (payload.lastRecordDate)
         //     userGroupChatsQuery = userGroupChatsQuery.where({ updatedAt: { $lt: payload.lastRecordDate } });
@@ -959,7 +976,7 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
 
         const redisGMReads: any = [];
         const redisGMs: any = [];
-        const lastMessageUserIds: string[] = [];
+        let lastMessageUserIds: string[] = [];
         const notFoundLastMessageChatIds: string[] = [];
         for (let i = 0; i < userGroupChats.length; i++) {
             const userGroupChat = userGroupChats[i];
@@ -986,8 +1003,7 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
             }
             userGroupChat.unreadMessageCount = await GroupMessageReadEntity.countDocuments({
                 groupChatId: userGroupChat._id,
-                readed: false,
-                ownerId: { $ne: res.locals.user._id }
+                readedBy: { $ne: res.locals.user._id }
             });
 
             userGroupChat.unreadMessageCount += redisGMs.filter((x: { ownerId: any; readed: any; }) => !x.readed && x.ownerId != res.locals.user._id).length;
@@ -1007,7 +1023,7 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
             { $sort: { createdAt: -1 } },
             {
                 $group: {
-                    _id: "$chatId",
+                    _id: "$groupChatId",
                     ownerId: { $first: "$ownerId" },
                     text: { $first: "$text" },
                     // forwarded: { $first: "$forwarded" },
@@ -1019,9 +1035,9 @@ router.get("/getGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreat
                 }
             }
         ]);
-        lastMessageUserIds.push(notFoundLastMessages.map((x: { ownerId: string; }) => x.ownerId));
+        lastMessageUserIds = lastMessageUserIds.concat(notFoundLastMessages.map((x: { ownerId: string; }) => x.ownerId));
 
-        const lastMessageUsers = await UserEntity.find({ _id: { $in: lastMessageUserIds } }, {
+        const lastMessageUsers = await UserEntity.find({ _id: { $in: [...new Set(lastMessageUserIds)] } }, {
             _id: 1, username: 1, firstName: 1, lastName: 1,
             avatarKey: 1, profilePhotoUrl: 1
         }).lean(true);

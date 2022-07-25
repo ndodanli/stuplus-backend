@@ -72,10 +72,12 @@ export const RedisKeyType = {
    DailyCommentLimit: "l25:commentCount:",
    DailyNewPMLimit: "l26:newPMCount:",
    DailyFollowLimit: "l27:followCount:",
+   GroupChat: "28:"
 }
 export const RedisSubKeyType = {
    FollowerCount: "0",
    FollowingCount: "1",
+   GroupChatUsers: "2",
 }
 export const SocketRoomTypes = {
    WatchRoom: "w",

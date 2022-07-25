@@ -128,3 +128,8 @@ export const isVideo = (mimeType: string): Boolean => {
 export const isImage = (mimeType: string): Boolean => {
     return mimeType.includes('image');
 }
+
+//remove duplicated strings from an array
+export const removeDuplicates = (arr: string[]): string[] => {
+    return arr.filter((item, index) => arr.indexOf(item) === index);
+}

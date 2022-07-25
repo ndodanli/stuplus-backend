@@ -2806,7 +2806,10 @@
     },
     "/chat/getPMChats": {
       "get": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get pm chats.",
         "parameters": [],
         "responses": {},
         "security": [
@@ -2862,9 +2865,12 @@
         }
       }
     },
-    "/chat/getGroupChats": {
+    "/chat/getGMChats": {
       "get": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get gm chats.",
         "parameters": [],
         "responses": {},
         "security": [

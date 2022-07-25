@@ -1,9 +1,9 @@
 import path from 'path';
 import { createClient } from 'redis';
 import logger from '../config/logger';
-import { DepartmentEntity, FacultyEntity, FollowEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
+import { DepartmentEntity, FacultyEntity, FollowEntity, GroupChatUserEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
 import { User, UserDocument } from '../entities/UserEntity';
-import { RedisKeyType } from '../enums/enums_socket';
+import { RedisKeyType, RedisSubKeyType } from '../enums/enums_socket';
 import NotValidError from '../errors/NotValidError';
 import { getMessage } from '../localization/responseMessages';
 import { Document } from "mongoose";
@@ -206,6 +206,30 @@ export default class RedisService {
         return documentList as unknown as T;
     }
 
+    // static async isUserInGroupChat(userId: string, groupChatId: string): Promise<boolean> {
+    //     if (!await this.client.exists(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId)) {
+    //         const totalGroupChatUserCount = await GroupChatUserEntity.countDocuments({ groupChatId: groupChatId });
+    //         const chunkSize = 5000;
+    //         const chunkCount = Math.ceil(totalGroupChatUserCount / chunkSize);
+    //         let lastOneCount = 0;
+    //         for (let i = 0; i < chunkCount; i++) {
+    //             const groupChatUserChunk = await GroupChatUserEntity.find({ groupChatId: groupChatId }, {},).sort({ createdAt: -1 }).skip(i * chunkSize).limit(chunkSize).lean(true);
+    //             if (i === chunkCount - 1)
+    //                 lastOneCount = groupChatUserChunk.length;
+    //             await this.client.sAdd(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId, groupChatUserChunk.map(x => x.userId));
+    //         }
+    //         const totalGroupChatUserCountAfter = await GroupChatUserEntity.countDocuments({ groupChatId: groupChatId });
+    //         if (totalGroupChatUserCountAfter !== totalGroupChatUserCount) {
+    //             const leftOverUsers = await GroupChatUserEntity.find({ groupChatId: groupChatId }, {},).sort({ createdAt: -1 }).skip(((chunkCount - 1) * chunkSize) + lastOneCount).lean(true);
+    //             await this.client.sAdd(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId, leftOverUsers.map(x => x.userId));
+    //         }
+    //         // await this.client.multi()
+    //         //     .sAdd(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId, groupChatUsers.map(x => x.userId))
+    //         //     .expire(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId, 60 * 60 * 24 * 7)
+    //         //     .exec();
+    //     }
+
+    // }
     static async isDailyLikeLimitExceeded(userId: string): Promise<boolean> {
         return await this.client.get(RedisKeyType.DailyLikeLimit + userId).then(x => parseInt(x ?? "0")) >= userLimits.MAX_LIKE_PER_DAY;
     }
