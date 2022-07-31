@@ -25,7 +25,7 @@ export const FollowSchema: Schema = new Schema({
   followingLastName: { type: String, required: true },
 });
 
-FollowSchema.index({ recordStatus: 1, createdAt: -1, followerId: 1, followingUsername: 1, followingFirstName: 1, followingLastName: 1 });
+FollowSchema.index({ recordStatus: -1, createdAt: -1, followerId: -1, followingId: -1, followingUsername: -1, followingFirstName: -1, followingLastName: -1 });
 
 FollowSchema.pre("save", function (next) {
   //

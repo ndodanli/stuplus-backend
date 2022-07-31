@@ -63,7 +63,7 @@ export const QuestionSchema: Schema = new Schema({
   },
 });
 
-QuestionSchema.index({ recordStatus: 1, createdAt: -1 });
+QuestionSchema.index({ recordStatus: -1, createdAt: -1 });
 
 QuestionSchema.plugin(mongoose_fuzzy_searching,
   {

@@ -18,7 +18,7 @@ export const AnnouncementLikeSchema: Schema = new Schema({
   type: { type: Number, required: true }
 });
 
-AnnouncementLikeSchema.index({ recordStatus: 1, announcementId: 1, type: 1 });
+AnnouncementLikeSchema.index({ recordStatus: -1, announcementId: 1, type: 1 });
 
 // Just to prove that hooks are still functioning as expected
 AnnouncementLikeSchema.pre("save", function (next) {

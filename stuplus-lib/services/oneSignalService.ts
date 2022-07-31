@@ -54,7 +54,7 @@ export default class OneSignalService {
     }
 
     public static async sendNotificationWithUserIds({ heading, userIds, content, chatId, smallIcon, largeIcon, data = null, throwError = false }:
-        { heading: string; userIds: string[]; content: string; chatId: string; smallIcon: string, largeIcon: string; data?: any | null; throwError?: boolean; }) {
+        { heading: string; userIds: string[]; content: string; chatId?: string; smallIcon?: string, largeIcon?: string; data?: any | null; throwError?: boolean; }) {
         return new Promise(async (resolve, reject) => {
             const notification = new OneSignal.Notification();
             try {
@@ -64,13 +64,14 @@ export default class OneSignalService {
                     notification.include_external_user_ids = userIdChunks[i];
                     notification.android_group = chatId;
                     notification.android_group_message = "You have new messages";
-                    notification.adm_group = chatId;
-                    notification.small_icon = smallIcon;
-                    notification.adm_small_icon = smallIcon;
-                    notification.huawei_small_icon = smallIcon;
-                    notification.large_icon = largeIcon;
-                    notification.adm_large_icon = largeIcon;
-                    notification.huawei_large_icon = largeIcon;
+                    if (chatId)
+                        notification.adm_group = chatId;
+                    // notification.small_icon = smallIcon;
+                    // notification.adm_small_icon = smallIcon;
+                    // notification.huawei_small_icon = smallIcon;
+                    // notification.large_icon = largeIcon;
+                    // notification.adm_large_icon = largeIcon;
+                    // notification.huawei_large_icon = largeIcon;
                     notification.headings = {
                         en: heading
                     };

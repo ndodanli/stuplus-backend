@@ -18,7 +18,7 @@ export const QuestionLikeSchema: Schema = new Schema({
   type: { type: Number, required: true }
 });
 
-QuestionLikeSchema.index({ recordStatus: 1, questionId: 1, type: 1 });
+QuestionLikeSchema.index({ recordStatus: -1, questionId: 1, type: 1 });
 
 // Just to prove that hooks are still functioning as expected
 QuestionLikeSchema.pre("save", function (next) {

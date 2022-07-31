@@ -32,6 +32,15 @@ export enum RedisGMOperationType {
 export const RedisPrefixKeyType = {
    DBOperations: "d"
 }
+export const RedisSubKeyType = {
+   FollowerCount: "0",
+   FollowingCount: "1",
+   GroupChatIds: "2:",
+   DailyLikeCount: "3:",
+   DailyCommentCount: "4:",
+   DailyNewPMCount: "5:",
+   DailyFollowCount: "6:",
+}
 export const RedisKeyType = {
    DBPrivateMessage: "d0:",
    DBGroupMessage: "d1:",
@@ -64,21 +73,18 @@ export const RedisKeyType = {
    UserPlayerIds: "28:",
    UserFollowings: "29:",
    DBQuestionSubComment: "d30:",
-   DBQuestionSubCommentLike: "d20:",
-   DBQuestionSubCommentDislike: "d21:",
-   QuestionSubCommentCount: "22:",
-   QuestionSubCommentLikeCount: "23:",
-   DailyLikeLimit: "l24:likeCount:",
-   DailyCommentLimit: "l25:commentCount:",
-   DailyNewPMLimit: "l26:newPMCount:",
-   DailyFollowLimit: "l27:followCount:",
-   GroupChat: "28:"
+   DBQuestionSubCommentLike: "d31:",
+   DBQuestionSubCommentDislike: "d32:",
+   QuestionSubCommentCount: "33:",
+   QuestionSubCommentLikeCount: "34:",
+   DailyLikeLimit: "l35:" + RedisSubKeyType.DailyLikeCount,
+   DailyCommentLimit: "l36:" + RedisSubKeyType.DailyCommentCount,
+   DailyNewPMLimit: "l37:" + RedisSubKeyType.DailyNewPMCount,
+   DailyFollowLimit: "l38:" + RedisSubKeyType.DailyFollowCount,
+   GroupChat: "39:",
+   AllGroupChats: "40:agc",
 }
-export const RedisSubKeyType = {
-   FollowerCount: "0",
-   FollowingCount: "1",
-   GroupChatUsers: "2",
-}
+
 export const SocketRoomTypes = {
    WatchRoom: "w",
 }

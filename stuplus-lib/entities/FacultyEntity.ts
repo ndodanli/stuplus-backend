@@ -17,7 +17,7 @@ export const FacultySchema: Schema = new Schema({
   coverImageUrl: { type: String, required: false, default: null },
 });
 
-FacultySchema.index({ recordStatus: 1 });
+FacultySchema.index({ recordStatus: -1 });
 
 // Just to prove that hooks are still functioning as expected
 FacultySchema.pre("save", function (next) {

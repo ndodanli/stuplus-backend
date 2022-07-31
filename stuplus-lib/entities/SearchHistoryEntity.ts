@@ -19,7 +19,7 @@ export const SearchHistorySchema: Schema = new Schema({
   foundedCount: { type: Number, required: true },
 });
 
-SearchHistorySchema.index({ recordStatus: 1 });
+SearchHistorySchema.index({ recordStatus: -1 });
 
 // Just to prove that hooks are still functioning as expected
 SearchHistorySchema.pre("save", function (next) {

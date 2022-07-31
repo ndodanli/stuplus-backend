@@ -12,6 +12,7 @@ export interface QuestionSubComment extends BaseEntity {
   popularity: number;
   //ignore
   owner?: User | null; // ignore
+  replyTo?: User | null; // ignore
   ownerSchool?: School | null; //ignore
   likeCount: number; // ignore
   likeType: LikeType; // ignore
@@ -30,7 +31,7 @@ export const QuestionSubCommentSchema: Schema = new Schema({
   popularity: { type: Number, required: false, default: 0 },
 });
 
-QuestionSubCommentSchema.index({ recordStatus: 1, questionId: -1, commentId: -1, popularity: -1, createdAt: -1 });
+QuestionSubCommentSchema.index({ recordStatus: -1, questionId: -1, commentId: -1, popularity: -1, createdAt: 1 });
 
 // Just to prove that hooks are still functioning as expected
 QuestionSubCommentSchema.pre("save", function (next) {

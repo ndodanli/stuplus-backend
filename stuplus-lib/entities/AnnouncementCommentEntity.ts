@@ -28,7 +28,7 @@ export const AnnouncementCommentSchema: Schema = new Schema({
   score: { type: Number, required: false, default: 0 },
 });
 
-AnnouncementCommentSchema.index({ recordStatus: 1, createdAt: -1 });
+AnnouncementCommentSchema.index({ recordStatus: -1, createdAt: -1 });
 
 // Just to prove that hooks are still functioning as expected
 AnnouncementCommentSchema.pre("save", function (next) {

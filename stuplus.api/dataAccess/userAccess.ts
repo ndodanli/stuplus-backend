@@ -44,10 +44,10 @@ export class UserAccess {
             return await FollowEntity.countDocuments({ followerId: targetUserId });
         });
 
-        let followEntity = await FollowEntity.findOne({ followerId: currentUserId, followingId: targetUserId }, { "_id": 1 });
+        let followEntity = await FollowEntity.exists({ followerId: currentUserId, followingId: targetUserId, recordStatus: RecordStatus.Active });
 
         if (!followEntity) {
-            let followReqEntity = await FollowRequestEntity.findOne({ ownerId: currentUserId, requestedId: targetUserId }, { "_id": 1 });
+            let followReqEntity = await FollowRequestEntity.exists({ ownerId: currentUserId, requestedId: targetUserId, recordStatus: RecordStatus.Active });
             if (!followReqEntity) {
                 response.followStatus = response.followStatus = {
                     followId: null,
@@ -55,14 +55,14 @@ export class UserAccess {
                 }
             } else {
                 response.followStatus = {
-                    followId: followReqEntity.id,
+                    followId: followReqEntity._id?.toString(),
                     status: FollowStatus.Pending
                 }
             }
         }
         else {
             response.followStatus = {
-                followId: followEntity.id,
+                followId: followEntity._id?.toString(),
                 status: FollowStatus.Accepted
             }
         }
@@ -646,7 +646,7 @@ export class UserAccess {
     }
 
     public static async followUser(acceptedLanguages: Array<string>, userId: string, payload: UserFollowUserRequestDTO): Promise<object> {
-        if(await RedisService.isDailyFollowLimitExceeded(userId))
+        if (await RedisService.isDailyFollowLimitExceeded(userId))
             throw new NotValidError(getMessage("dailyFollowLimitExceeded", acceptedLanguages));
         let followId: string;
         const response: { followId: string, followStatus: FollowStatus } = { followId: "", followStatus: FollowStatus.None };

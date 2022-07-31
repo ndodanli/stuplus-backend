@@ -1,5 +1,5 @@
 import { QuestionCommentEntity, QuestionCommentLikeEntity, QuestionEntity, QuestionLikeEntity, QuestionSubCommentEntity, QuestionSubCommentLikeEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
-import { QuestionDocument } from "../../stuplus-lib/entities/QuestionEntity";
+import { Question, QuestionDocument } from "../../stuplus-lib/entities/QuestionEntity";
 import { QuestionAddDTO, QuestionCommenLikeDisliketDTO, QuestionCommentDTO, QuestionLikeDislikeDTO, QuestionGetMultipleDTO, QuestionGetCommentsDTO, QuestionSubCommentDTO, QuestionSubCommenLikeDisliketDTO, QuestionGetSubCommentsDTO } from "../dtos/QuestionDTOs";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
@@ -12,7 +12,7 @@ import sanitizeHtml from 'sanitize-html';
 import { QuestionSubCommentDocument } from "../../stuplus-lib/entities/QuestionSubCommentEntity";
 
 export class QuestionAccess {
-    public static async addQuestion(acceptedLanguages: Array<string>, payload: QuestionAddDTO, currentUserId: string): Promise<Boolean> {
+    public static async addQuestion(acceptedLanguages: Array<string>, payload: QuestionAddDTO, currentUserId: string): Promise<Question> {
         if (typeof payload.relatedSchoolIds === "string")
             payload.relatedSchoolIds = payload.relatedSchoolIds.split(",");
 
@@ -28,13 +28,13 @@ export class QuestionAccess {
             await Promise.all(redisOps);
         }
 
-        await QuestionEntity.create(new QuestionEntity({
+        const question = await QuestionEntity.create(new QuestionEntity({
             ...payload,
             ownerId: currentUserId,
             titlesch: searchableWithSpaces(payload.title),
         }));
 
-        return true;
+        return question;
     }
 
     public static async getQuestions(acceptedLanguages: Array<string>, payload: QuestionGetMultipleDTO, currentUserId: string): Promise<QuestionDocument[] | null> {
@@ -73,7 +73,7 @@ export class QuestionAccess {
                 question.commentCount = await RedisService.acquire<number>(RedisKeyType.QuestionCommentCount + question._id.toString(), 10, async () => {
                     let commentCount = 0;
                     commentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionComment + question._id.toString());
-                    commentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionSubComment + question._id.toString());
+                    // commentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionSubComment + question._id.toString());
                     commentCount += await QuestionCommentEntity.countDocuments({ questionId: question._id });
                     commentCount += await QuestionSubCommentEntity.countDocuments({ questionId: question._id });
                     return commentCount;
@@ -205,20 +205,21 @@ export class QuestionAccess {
                 if (redisSubComments.length > 0)
                     newSubCommentsQuery = newSubCommentsQuery.where({ createdAt: { $lt: redisSubComments[0].createdAt } });
 
-                newSubComments = await newSubCommentsQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);
+                newSubComments = await newSubCommentsQuery.sort({ createdAt: 1 }).limit(payload.take).lean(true);
             }
-
-            for (let i = redisSubComments.length - 1; i >= 0; i--)
-                subComments.push(redisSubComments[i]);
 
             for (let i = 0; i < newSubComments.length; i++)
                 subComments.push(newSubComments[i]);
+
+            for (let i = 0; i < redisSubComments.length; i++)
+                subComments.push(redisSubComments[i]);
+
 
         } else {
             subComments = await QuestionSubCommentEntity.find({
                 commentId: payload.commentId,
                 createdAt: { $lt: payload.lastRecordDate }
-            }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+            }).sort({ createdAt: 1 }).limit(payload.take).lean(true);
         }
 
         if (subComments.length) {
@@ -323,6 +324,7 @@ export class QuestionAccess {
         question.commentCount = await RedisService.acquire<number>(RedisKeyType.QuestionCommentCount + question._id.toString(), 10, async () => {
             let commentCount = 0;
             commentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionComment + question._id.toString());
+            // commentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionSubComment + question._id.toString());
             commentCount += await QuestionCommentEntity.countDocuments({ questionId: question._id });
             return commentCount;
         });
@@ -349,7 +351,7 @@ export class QuestionAccess {
         return question;
     }
 
-    public static async commentQuestion(acceptedLanguages: Array<string>, payload: QuestionCommentDTO, currentUserId: string): Promise<Boolean> {
+    public static async commentQuestion(acceptedLanguages: Array<string>, payload: QuestionCommentDTO, currentUserId: string): Promise<object> {
         if (await RedisService.isDailyCommentLimitExceeded(currentUserId))
             throw new NotValidError(getMessage("dailyCommentLimitExceeded", acceptedLanguages));
 
@@ -366,13 +368,13 @@ export class QuestionAccess {
                 updatedAt: now
             },
         }
-        await RedisService.client.hSet(RedisKeyType.DBQuestionComment + payload.questionId, currentUserId, stringify(questionCommentData));
+        await RedisService.client.hSet(RedisKeyType.DBQuestionComment + payload.questionId, questionCommentEntity.id, stringify(questionCommentData));
 
         await RedisService.incrementDailyCommentCount(currentUserId);
-        return true;
+        return { _id: questionCommentEntity.id.toString() };
     }
 
-    public static async subCommentQuestion(acceptedLanguages: Array<string>, payload: QuestionSubCommentDTO, currentUserId: string): Promise<Boolean> {
+    public static async subCommentQuestion(acceptedLanguages: Array<string>, payload: QuestionSubCommentDTO, currentUserId: string): Promise<object> {
         if (await RedisService.isDailyCommentLimitExceeded(currentUserId))
             throw new NotValidError(getMessage("dailyCommentLimitExceeded", acceptedLanguages));
         let now = new Date();
@@ -392,10 +394,10 @@ export class QuestionAccess {
         if (payload.replyToId)
             questionSubCommentData.e.replyToId = payload.replyToId;
 
-        await RedisService.client.hSet(RedisKeyType.DBQuestionSubComment + payload.commentId, currentUserId, stringify(questionSubCommentData));
+        await RedisService.client.hSet(RedisKeyType.DBQuestionSubComment + payload.commentId, questionSubCommentEntity.id, stringify(questionSubCommentData));
 
         await RedisService.incrementDailyCommentCount(currentUserId);
-        return true;
+        return { _id: questionSubCommentEntity.id.toString() };
     }
 
     public static async commentLikeDislikeQuestion(acceptedLanguages: Array<string>, payload: QuestionCommenLikeDisliketDTO, currentUserId: string): Promise<object> {
@@ -403,14 +405,14 @@ export class QuestionAccess {
             throw new NotValidError(getMessage("dailyLikeLimitExceeded", acceptedLanguages));
 
         if (payload.beforeType == LikeType.Like) {
-            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionCommentLike + payload.questionId, currentUserId);
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionCommentLike + payload.commentId, currentUserId);
             //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
             if (!deleted)
                 await QuestionCommentLikeEntity.findOneAndUpdate({ commentId: payload.commentId, ownerId: currentUserId, type: LikeType.Like }, { recordStatus: RecordStatus.Deleted });
             //TODO: if (!deleted) 
             //throw error on socket
         } else if (payload.beforeType == LikeType.Dislike) {
-            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionCommentDislike + payload.questionId, currentUserId);
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionCommentDislike + payload.commentId, currentUserId);
             //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
             if (!deleted)
                 await QuestionCommentLikeEntity.findOneAndUpdate({ commentId: payload.commentId, ownerId: currentUserId, type: LikeType.Dislike }, { recordStatus: RecordStatus.Deleted });
@@ -423,9 +425,9 @@ export class QuestionAccess {
 
         let likeDislikeBefore = undefined;
         if (payload.type == LikeType.Like)
-            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionCommentLike + payload.questionId, currentUserId);
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionCommentLike + payload.commentId, currentUserId);
         else
-            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionCommentDislike + payload.questionId, currentUserId);
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionCommentDislike + payload.commentId, currentUserId);
 
         if (!likeDislikeBefore)
             likeDislikeBefore = await QuestionCommentLikeEntity.findOne({ commentId: payload.commentId, ownerId: currentUserId });
@@ -458,14 +460,14 @@ export class QuestionAccess {
         if (await RedisService.isDailyLikeLimitExceeded(currentUserId))
             throw new NotValidError(getMessage("dailyLikeLimitExceeded", acceptedLanguages));
         if (payload.beforeType == LikeType.Like) {
-            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionSubCommentLike + payload.questionId, currentUserId);
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionSubCommentLike + payload.subCommentId, currentUserId);
             //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
             if (!deleted)
                 await QuestionSubCommentLikeEntity.findOneAndUpdate({ subCommentId: payload.subCommentId, ownerId: currentUserId, type: LikeType.Like }, { recordStatus: RecordStatus.Deleted });
             //TODO: if (!deleted) 
             //throw error on socket
         } else if (payload.beforeType == LikeType.Dislike) {
-            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionSubCommentDislike + payload.questionId, currentUserId);
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionSubCommentDislike + payload.subCommentId, currentUserId);
             //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
             if (!deleted)
                 await QuestionSubCommentLikeEntity.findOneAndUpdate({ subCommentId: payload.subCommentId, ownerId: currentUserId, type: LikeType.Dislike }, { recordStatus: RecordStatus.Deleted });
@@ -478,9 +480,9 @@ export class QuestionAccess {
 
         let likeDislikeBefore = undefined;
         if (payload.type == LikeType.Like)
-            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionSubCommentLike + payload.questionId, currentUserId);
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionSubCommentLike + payload.subCommentId, currentUserId);
         else
-            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionSubCommentDislike + payload.questionId, currentUserId);
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionSubCommentDislike + payload.subCommentId, currentUserId);
 
         if (!likeDislikeBefore)
             likeDislikeBefore = await QuestionSubCommentLikeEntity.findOne({ subCommentId: payload.subCommentId, ownerId: currentUserId });

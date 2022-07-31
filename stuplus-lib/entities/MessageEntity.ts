@@ -15,7 +15,7 @@ export interface Message extends BaseEntity {
   deletedForUserDate?: Date;
   chatId: string;
   //ignore
-  from?: User | null; //ignore
+  owner?: User | null; //ignore
   replyTo?: ReplyToDTO | null; //ignore
 }
 
@@ -66,7 +66,7 @@ export const MessageSchema: Schema = new Schema({
   deletedForUserDate: { type: Date, required: false, default: null },
 });
 
-MessageSchema.index({ recordStatus: 1, createdAt: -1 });
+MessageSchema.index({ recordStatus: -1, createdAt: -1 });
 
 // MessageSchema.index({ text: "text", description: "text" });
 

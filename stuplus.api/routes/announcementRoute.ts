@@ -28,14 +28,15 @@ router.post("/add", authorize([Role.ContentCreator, Role.Admin]), validateAddAnn
   const response = new BaseResponse<object>();
   try {
     const payload = new AnnouncementAddDTO(req.body);
-
-    for (let i = 0; i < payload.images.length; i++) {
-      const image = payload.images[i];
-      const { headers } = await axios.head(image.url ?? "");
-      if (new URL(image.url ?? "").hostname != "stuplus-bucket.s3.amazonaws.com" || headers["accept-ranges"] != "bytes" || parseInt(headers["content-length"]) > 10485760)
-        throw new NotValidError("Yüklenen görseller değişmiş, bir şeyler yapmaya çalışıyorsanız bırakın, çalışmıyorsanız bizimle iletişime geçin, teşekkürler")
+    if (payload.images) {
+      for (let i = 0; i < payload.images.length; i++) {
+        const image = payload.images[i];
+        const { headers } = await axios.head(image.url ?? "");
+        if (!new URL(image.url ?? "").hostname.includes("stuplus-bucket.s3") || headers["accept-ranges"] != "bytes" || parseInt(headers["content-length"]) > 10485760)
+          throw new NotValidError("Yüklenen görseller değişmiş, bir şeyler yapmaya çalışıyorsanız bırakın, çalışmıyorsanız bizimle iletişime geçin, teşekkürler")
+      }
     }
-    await AnnouncementAccess.addAnnouncement(req.selectedLangs(), payload, res.locals.user._id);
+    response.data = await AnnouncementAccess.addAnnouncement(req.selectedLangs(), payload, res.locals.user._id);
 
     response.setMessage(getMessage("announcementAdded", req.selectedLangs()));
 

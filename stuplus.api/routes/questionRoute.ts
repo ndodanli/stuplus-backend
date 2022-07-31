@@ -28,13 +28,15 @@ router.post("/add", authorize([Role.ContentCreator, Role.User, Role.Admin]), val
   const response = new BaseResponse<object>();
   try {
     const payload = new QuestionAddDTO(req.body);
-    for (let i = 0; i < payload.images.length; i++) {
-      const image = payload.images[i];
-      const { headers } = await axios.head(image.url ?? "");
-      if (new URL(image.url ?? "").hostname != "stuplus-bucket.s3.amazonaws.com" || headers["accept-ranges"] != "bytes" || parseInt(headers["content-length"]) > 10485760)
-        throw new NotValidError("Yüklenen görseller değişmiş, bir şeyler yapmaya çalışıyorsanız bırakın, çalışmıyorsanız bizimle iletişime geçin, teşekkürler")
+    if (payload.images) {
+      for (let i = 0; i < payload.images.length; i++) {
+        const image = payload.images[i];
+        const { headers } = await axios.head(image.url ?? "");
+        if (!new URL(image.url ?? "").hostname.includes("stuplus-bucket.s3") || headers["accept-ranges"] != "bytes" || parseInt(headers["content-length"]) > 10485760)
+          throw new NotValidError("Yüklenen görseller değişmiş, bir şeyler yapmaya çalışıyorsanız bırakın, çalışmıyorsanız bizimle iletişime geçin, teşekkürler")
+      }
     }
-    await QuestionAccess.addQuestion(req.selectedLangs(), payload, res.locals.user._id);
+    response.data = await QuestionAccess.addQuestion(req.selectedLangs(), payload, res.locals.user._id);
 
     response.setMessage(getMessage("questionAdded", req.selectedLangs()));
 
@@ -163,7 +165,7 @@ schema: { $ref: "#/definitions/QuestionCommentRequest" }
  } */
   const response = new BaseResponse<object>();
   try {
-    await QuestionAccess.commentQuestion(req.selectedLangs(), new QuestionCommentDTO(req.body), res.locals.user._id);
+    response.data = await QuestionAccess.commentQuestion(req.selectedLangs(), new QuestionCommentDTO(req.body), res.locals.user._id);
   } catch (err: any) {
     response.setErrorMessage(err.message)
 
@@ -241,7 +243,7 @@ schema: { $ref: "#/definitions/QuestionSubCommentRequest" }
  } */
   const response = new BaseResponse<object>();
   try {
-    await QuestionAccess.subCommentQuestion(req.selectedLangs(), new QuestionSubCommentDTO(req.body), res.locals.user._id);
+    response.data = await QuestionAccess.subCommentQuestion(req.selectedLangs(), new QuestionSubCommentDTO(req.body), res.locals.user._id);
   } catch (err: any) {
     response.setErrorMessage(err.message)
 

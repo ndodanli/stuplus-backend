@@ -20,7 +20,7 @@ export const AnnouncementCommentLikeSchema: Schema = new Schema({
   type: { type: Number, required: true }
 });
 
-AnnouncementCommentLikeSchema.index({ recordStatus: 1, commentId: 1, type: 1 });
+AnnouncementCommentLikeSchema.index({ recordStatus: -1, commentId: 1, type: 1 });
 
 
 // Just to prove that hooks are still functioning as expected

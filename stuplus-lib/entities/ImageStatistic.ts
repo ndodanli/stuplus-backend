@@ -23,7 +23,7 @@ export const ImageStatisticSchema: Schema = new Schema({
   totalView: { type: String, required: true },
 });
 
-// ImageStatisticSchema.index({ recordStatus: 1 });
+// ImageStatisticSchema.index({ recordStatus: -1 });
 
 // Just to prove that hooks are still functioning as expected
 ImageStatisticSchema.pre("save", function (next) {

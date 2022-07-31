@@ -16,7 +16,7 @@ export const DistrictSchema: Schema = new Schema({
   cityId: { type: String, required: true },
 });
 
-DistrictSchema.index({ recordStatus: 1 });
+DistrictSchema.index({ recordStatus: -1 });
 
 DistrictSchema.pre("save", function (next) {
   //

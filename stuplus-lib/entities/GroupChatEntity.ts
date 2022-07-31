@@ -45,7 +45,7 @@ export const GroupChatSchema: Schema = new Schema({
   popularity: { type: Number, required: false, default: 0 },
 });
 
-GroupChatSchema.index({ recordStatus: 1, popularity: -1 });
+GroupChatSchema.index({ recordStatus: -1, popularity: -1 });
 
 GroupChatSchema.plugin(mongoose_fuzzy_searching,
   {

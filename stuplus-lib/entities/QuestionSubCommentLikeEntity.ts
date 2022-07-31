@@ -22,7 +22,7 @@ export const QuestionSubCommentLikeSchema: Schema = new Schema({
   type: { type: Number, required: true }
 });
 
-QuestionSubCommentLikeSchema.index({ recordStatus: 1, subCommentId: 1, type: 1 });
+QuestionSubCommentLikeSchema.index({ recordStatus: -1, subCommentId: 1, type: 1 });
 
 // Just to prove that hooks are still functioning as expected
 QuestionSubCommentLikeSchema.pre("save", function (next) {

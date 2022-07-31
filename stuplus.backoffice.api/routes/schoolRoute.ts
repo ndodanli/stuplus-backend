@@ -57,7 +57,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
   try {
     const school = new AddUpdateSchoolDTO(req.body);
     if (school._id) {
-      const schoolToUpdate = await SchoolEntity.findOne({_id:school._id});
+      const schoolToUpdate = await SchoolEntity.findOne({ _id: school._id });
       if (!schoolToUpdate) {
         response.setErrorMessage("School not found");
         throw new NotValidError("School not found", 404);
@@ -73,7 +73,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
     else {
       const newSchool = new SchoolEntity(school);
       //#region Create groups
-      const groupGuard = await RedisService.acquireUser("62ab8a204166fd1eaebbb3fa")
+      const groupGuard = await RedisService.acquireGroupGuard();
 
       const schoolHashtags = searchables(newSchool.title);
       let redisOps: Promise<any>[] = [];

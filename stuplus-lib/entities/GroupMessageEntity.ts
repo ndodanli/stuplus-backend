@@ -1,6 +1,7 @@
 import { Document, Schema } from "mongoose";
 import BaseEntity from "./BaseEntity";
 import { MessageFiles, ReplyToDTO } from "./MessageEntity";
+import { User } from "./UserEntity";
 
 export interface GroupMessage extends BaseEntity {
   ownerId: string; //user id
@@ -15,7 +16,17 @@ export interface GroupMessage extends BaseEntity {
   deletedForUserDate?: Date;
   groupChatId: string;
   //ignore
+  lastMessageOwner?: LastMessageOwnerDTO | null; //ignore
   replyTo?: ReplyToDTO | null;
+}
+
+export class LastMessageOwnerDTO {
+  _id?: string | null;
+  username?: string | null;
+  avatarKey?: string | null;
+  profilePhotoUrl?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
 }
 
 export interface GroupMessageDocument extends GroupMessage, Document {
@@ -42,7 +53,7 @@ export const GroupMessageSchema: Schema = new Schema({
   groupChatId: { type: String, required: true },
 });
 
-GroupMessageSchema.index({ recordStatus: 1, createdAt: -1 });
+GroupMessageSchema.index({ recordStatus: -1, createdAt: -1 });
 
 GroupMessageSchema.pre("save", function (next) {
   //

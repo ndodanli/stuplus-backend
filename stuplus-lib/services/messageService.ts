@@ -17,9 +17,9 @@ export default class MessageService {
                 const chatData: any = {
                     e: {
                         _id: gMessageEntity.id,
-                        ownerId: ownerId,
+                        ownerId: ownerId.toString(),
                         text: text,
-                        groupChatId: groupChatId,
+                        groupChatId: groupChatId.toString(),
                         createdAt: now,
                         updatedAt: now,
                     },
@@ -31,7 +31,7 @@ export default class MessageService {
                         uN: fromUser.username, //username
                         fN: fromUser.firstName, //first name
                         lN: fromUser.lastName, //last name
-                        uId: fromUser._id.toString(), //user id
+                        uId: chatData.e.ownerId, //user id
                         ppUrl: fromUser.profilePhotoUrl, //profile picture url
                         avKey: fromUser.avatarKey, //avatar key
                     }
@@ -45,7 +45,15 @@ export default class MessageService {
                 }
 
                 await RedisService.client.hSet(RedisKeyType.DBGroupMessage + chatData.e.groupChatId, gMessageEntity.id + RedisGMOperationType.InsertMessage, stringify(chatData));
-
+                chatData.e["owner"] = {
+                    _id: chatData.e.ownerId,
+                    username: fromUser.username,
+                    avatarKey: fromUser.avatarKey,
+                    profilePhotoUrl: fromUser.profilePhotoUrl,
+                    firstName: fromUser.firstName,
+                    lastName: fromUser.lastName
+                }
+                await RedisService.client.hSet(RedisKeyType.AllGroupChats, chatData.e.groupChatId + ":lm", stringify(chatData.e));
                 io.in(groupChatName(chatData.e.groupChatId)).emit("cGmSend", emitData);
                 resolve(chatData.e);
             } catch (error: any) {
@@ -63,6 +71,7 @@ export default class MessageService {
                         Text: text,
                         GroupChatId: groupChatId,
                     }));
+                reject(error);
             }
         });
     }

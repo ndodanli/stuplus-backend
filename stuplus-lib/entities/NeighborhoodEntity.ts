@@ -18,7 +18,7 @@ export const NeighborhoodSchema: Schema = new Schema({
   NeighborhoodId: { type: String, required: true },
 });
 
-NeighborhoodSchema.index({ recordStatus: 1 });
+NeighborhoodSchema.index({ recordStatus: -1 });
 
 NeighborhoodSchema.pre("save", function (next) {
   //

@@ -87,7 +87,7 @@ export class GroupAccess {
             }
         }
 
-        const groupGuard = await RedisService.acquireUser("62ab8a204166fd1eaebbb3fa");
+        const groupGuard = await RedisService.acquireGroupGuard();
         const notifications = [];
         for (let i = 0; i < socketUserDatas.length; i++) {
             const userData = socketUserDatas[i];

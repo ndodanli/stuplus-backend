@@ -21,7 +21,7 @@ export const DailyUserStatisticSchema: Schema = new Schema({
   followCount: { type: Number, required: false, default: 0 },
 });
 
-// DailyUserStatisticSchema.index({ recordStatus: 1 });
+// DailyUserStatisticSchema.index({ recordStatus: -1 });
 
 // Just to prove that hooks are still functioning as expected
 DailyUserStatisticSchema.pre("save", function (next) {

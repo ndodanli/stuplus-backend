@@ -1780,7 +1780,7 @@ const doc = {
                     },
                     "likeCount": 22,
                     "likeType": 2,
-                    "subCommentCount" : 42
+                    "subCommentCount": 42
                 },
                 {
                     "_id": "62b6f0b662245f6dc443a9ae",
@@ -1802,7 +1802,7 @@ const doc = {
                     },
                     "likeCount": 22,
                     "likeType": 2,
-                    "subCommentCount" : 12
+                    "subCommentCount": 12
                 },
             ]
         },
@@ -1970,7 +1970,8 @@ const doc = {
         QuestionSubCommentRequest: {
             $questionId: "questionId",
             $commentId: "commentId.",
-            $comment: "some comment."
+            $comment: "some comment.",
+            replyToId: "replyToId"
         },
         QuestionCommentLikeDislikeRequest: {
             $commentId: "commentId",

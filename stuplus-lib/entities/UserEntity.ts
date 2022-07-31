@@ -167,7 +167,7 @@ export const UserSchema: Schema = new Schema({
   playerId: { type: String, required: false, default: null },
 });
 
-UserSchema.index({ recordStatus: 1, schoolId: -1, popularity: -1, lastSeenDate: -1 });
+UserSchema.index({ recordStatus: -1, schoolId: -1, popularity: -1, lastSeenDate: -1 });
 //create unique index for username and email
 UserSchema.index({ username: 1 }, { unique: true });
 UserSchema.index({ email: 1 }, { unique: true });

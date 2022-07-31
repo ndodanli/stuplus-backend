@@ -1,7 +1,7 @@
 import AsyncLock from "async-lock";
 import { RedisFileMessageUpdateDTO, RedisMessageReceiptUpdateDTO } from "../../stuplus.api/socket/dtos/RedisChat";
 import { config } from "../../stuplus-lib/config/config";
-import { AnnouncementCommentEntity, AnnouncementCommentLikeEntity, AnnouncementLikeEntity, GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, HashtagEntity, MessageEntity, QuestionCommentEntity, QuestionCommentLikeEntity, QuestionLikeEntity, SearchHistoryEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { AnnouncementCommentEntity, AnnouncementCommentLikeEntity, AnnouncementLikeEntity, GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, HashtagEntity, MessageEntity, QuestionCommentEntity, QuestionCommentLikeEntity, QuestionLikeEntity, QuestionSubCommentEntity, QuestionSubCommentLikeEntity, SearchHistoryEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { LikeType } from "../../stuplus-lib/enums/enums";
 import { RedisGMOperationType, RedisKeyType, RedisPMOperationType } from "../../stuplus-lib/enums/enums_socket";
 import RedisService from "../../stuplus-lib/services/redisService";
@@ -32,7 +32,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
         let currentKeySize = 0;
         try {
             do {
-                const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { MATCH: "d*", COUNT: 100 });
+                const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { MATCH: "d*", COUNT: 200 });
                 currentKeySize += keys.length;
                 RedisDatabaseJob.currentCursor = cursor;
                 const operations = [];
@@ -98,6 +98,21 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                             func: handleQuestionCommentDislikeOperations,
                             arg1: currentKey,
                         });
+                    } else if (currentKey.startsWith(RedisKeyType.DBQuestionSubComment)) {
+                        operations.push({
+                            func: handleQuestionSubCommentOperations,
+                            arg1: currentKey,
+                        });
+                    } else if (currentKey.startsWith(RedisKeyType.DBQuestionSubCommentLike)) {
+                        operations.push({
+                            func: handleQuestionSubCommentLikeOperations,
+                            arg1: currentKey,
+                        });
+                    } else if (currentKey.startsWith(RedisKeyType.DBQuestionSubCommentDislike)) {
+                        operations.push({
+                            func: handleQuestionSubCommentDislikeOperations,
+                            arg1: currentKey,
+                        });
                     } else if (currentKey.startsWith(RedisKeyType.DBSearchHistory)) {
                         operations.push({
                             func: handleSearchHistoryOperations,
@@ -111,14 +126,14 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     }
                 }
                 if (operations.length > 0) {
-                    const operationChunks = chunk(operations, 3);
+                    const operationChunks = chunk(operations, 10);
                     for (let i = 0; i < operationChunks.length; i++) {
                         const result = await Promise.allSettled(operationChunks[i].map(async (operation) => {
-                            operation.func(operation.arg1).catch(err => err)
+                            await operation.func(operation.arg1);
                         }))
-
                     }
                 }
+                console.log("PROGRESSING, currentKeySize: " + currentKeySize + ", totalKeySize: " + totalKeySize);
             } while (RedisDatabaseJob.currentCursor != 0 && currentKeySize < totalKeySize);
             console.log("RedisDatabaseJob Cron job finished");
         } catch (error) {
@@ -156,6 +171,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleHashtagOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleHashtagOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -178,9 +194,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (searchHistoryBatches.length > 0) {
                         for (let i = 0; i < searchHistoryBatches.length; i++) {
                             if (searchHistoryBatches[i].length > 0) {
-                                console.time("Searched History insertSH Bulk operation time. order: " + i);
+                                // console.time("Searched History insertSH Bulk operation time. order: " + i);
                                 await SearchHistoryEntity.insertMany(searchHistoryBatches[i]);
-                                console.timeEnd("Searched History insertSH Bulk operation time. order: " + i);
+                                // console.timeEnd("Searched History insertSH Bulk operation time. order: " + i);
                             }
                         }
                     }
@@ -189,6 +205,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleSearchHistoryOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleSearchHistoryOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -234,9 +251,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (privateMessageBatches.length > 0) {
                         for (let i = 0; i < privateMessageBatches.length; i++) {
                             if (privateMessageBatches[i].length > 0) {
-                                console.time("PM insertMessage Bulk operation time. order: " + i);
+                                // console.time("PM insertMessage Bulk operation time. order: " + i);
                                 await MessageEntity.insertMany(privateMessageBatches[i]);
-                                console.timeEnd("PM insertMessage Bulk operation time. order: " + i);
+                                // console.timeEnd("PM insertMessage Bulk operation time. order: " + i);
                             }
                         }
                     }
@@ -244,7 +261,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (forwardedBatches.length > 0) {
                         for (let i = 0; i < forwardedBatches.length; i++) {
                             if (forwardedBatches[i].length > 0) {
-                                console.time("PM updateForwarded Bulk operation time. order: " + i);
+                                // console.time("PM updateForwarded Bulk operation time. order: " + i);
                                 const bulkForwardUpdateOp = forwardedBatches[i].map(obj => {
                                     return {
                                         updateOne: {
@@ -259,7 +276,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                     }
                                 })
                                 await MessageEntity.bulkWrite(bulkForwardUpdateOp);
-                                console.timeEnd("PM updateForwarded Bulk operation time. order: " + i);
+                                // console.timeEnd("PM updateForwarded Bulk operation time. order: " + i);
                             }
                         }
                     }
@@ -267,7 +284,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (readedBatches.length > 0) {
                         for (let i = 0; i < readedBatches.length; i++) {
                             if (readedBatches[i].length > 0) {
-                                console.time("PM updateReaded Bulk operation time. order: " + i);
+                                // console.time("PM updateReaded Bulk operation time. order: " + i);
                                 const bulkForwardUpdateOp = readedBatches[i].map(obj => {
                                     return {
                                         updateOne: {
@@ -282,7 +299,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                     }
                                 })
                                 await MessageEntity.bulkWrite(bulkForwardUpdateOp);
-                                console.timeEnd("PM updateReaded Bulk operation time. order: " + i);
+                                // console.timeEnd("PM updateReaded Bulk operation time. order: " + i);
 
                             }
                         }
@@ -291,7 +308,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (updateSendFileBatches.length > 0) {
                         for (let i = 0; i < updateSendFileBatches.length; i++) {
                             if (updateSendFileBatches[i].length > 0) {
-                                console.time("PM updateSendFile Bulk operation time. order: " + i);
+                                // console.time("PM updateSendFile Bulk operation time. order: " + i);
                                 const bulkForwardUpdateOp = updateSendFileBatches[i].map(obj => {
                                     return {
                                         updateOne: {
@@ -308,7 +325,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                     }
                                 });
                                 await MessageEntity.bulkWrite(bulkForwardUpdateOp);
-                                console.timeEnd("PM updateSendFile Bulk operation time. order: " + i);
+                                // console.timeEnd("PM updateSendFile Bulk operation time. order: " + i);
 
                             }
                         }
@@ -320,6 +337,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handlePMOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handlePMOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -365,9 +383,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (groupMessageBatches.length > 0) {
                         for (let i = 0; i < groupMessageBatches.length; i++) {
                             if (groupMessageBatches[i].length > 0) {
-                                console.time("GM insertMessage Bulk operation time. order: " + i);
+                                // console.time("GM insertMessage Bulk operation time. order: " + i);
                                 await GroupMessageEntity.insertMany(groupMessageBatches[i]);
-                                console.timeEnd("GM insertMessage Bulk operation time. order: " + i);
+                                // console.timeEnd("GM insertMessage Bulk operation time. order: " + i);
                             }
                         }
                     }
@@ -375,9 +393,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (forwardedBatches.length > 0) {
                         for (let i = 0; i < forwardedBatches.length; i++) {
                             if (forwardedBatches[i].length > 0) {
-                                console.time("GM insertForwarded Bulk operation time. order: " + i);
+                                // console.time("GM insertForwarded Bulk operation time. order: " + i);
                                 await GroupMessageForwardEntity.insertMany(forwardedBatches[i]);
-                                console.timeEnd("GM insertForwarded Bulk operation time. order: " + i);
+                                // console.timeEnd("GM insertForwarded Bulk operation time. order: " + i);
                             }
                         }
                     }
@@ -385,9 +403,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (readedBatches.length > 0) {
                         for (let i = 0; i < readedBatches.length; i++) {
                             if (readedBatches[i].length > 0) {
-                                console.time("GM insertReaded Bulk operation time. order: " + i);
+                                // console.time("GM insertReaded Bulk operation time. order: " + i);
                                 await GroupMessageReadEntity.insertMany(readedBatches[i]);
-                                console.timeEnd("GM insertReaded Bulk operation time. order: " + i);
+                                // console.timeEnd("GM insertReaded Bulk operation time. order: " + i);
                             }
                         }
                     }
@@ -395,7 +413,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (updateSendFileBatches.length > 0) {
                         for (let i = 0; i < updateSendFileBatches.length; i++) {
                             if (updateSendFileBatches[i].length > 0) {
-                                console.time("GM updateSendFile Bulk operation time. order: " + i);
+                                // console.time("GM updateSendFile Bulk operation time. order: " + i);
                                 const bulkForwardUpdateOp = updateSendFileBatches[i].map(obj => {
                                     return {
                                         updateOne: {
@@ -412,7 +430,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                     }
                                 });
                                 await GroupMessageEntity.bulkWrite(bulkForwardUpdateOp);
-                                console.timeEnd("GM updateSendFile Bulk operation time. order: " + i);
+                                // console.timeEnd("GM updateSendFile Bulk operation time. order: " + i);
                             }
                         }
                     }
@@ -421,6 +439,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleGroupMessageOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleGroupMessageOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -445,9 +464,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (announcementLikeBatches.length > 0) {
                         for (let i = 0; i < announcementLikeBatches.length; i++) {
                             if (announcementLikeBatches[i].length > 0) {
-                                console.time("Announcement Like insertBulk operation time. order: " + i);
+                                // console.time("Announcement Like insertBulk operation time. order: " + i);
                                 await AnnouncementLikeEntity.insertMany(announcementLikeBatches[i]);
-                                console.timeEnd("Announcement Like insertBulk operation time. order: " + i);
+                                // console.timeEnd("Announcement Like insertBulk operation time. order: " + i);
                             }
                         }
                     }
@@ -456,6 +475,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleAnnouncementLikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleAnnouncementLikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -480,9 +500,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (announcementDislikeBatches.length > 0) {
                         for (let i = 0; i < announcementDislikeBatches.length; i++) {
                             if (announcementDislikeBatches[i].length > 0) {
-                                console.time("Announcement Dislike insertBulk operation time. order: " + i);
+                                // console.time("Announcement Dislike insertBulk operation time. order: " + i);
                                 await AnnouncementLikeEntity.insertMany(announcementDislikeBatches[i]);
-                                console.timeEnd("Announcement Dislike insertBulk operation time. order: " + i);
+                                // console.timeEnd("Announcement Dislike insertBulk operation time. order: " + i);
                             }
                         }
                     }
@@ -491,6 +511,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleAnnouncementDislikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleAnnouncementDislikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -508,16 +529,16 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             announcementCommentBatches[iterator].push(query.e);
-                            keysToDelete.push(query.e.ownerId);
+                            keysToDelete.push(query.e._id);
                         }
                         iterator++;
                     }
                     if (announcementCommentBatches.length > 0) {
                         for (let i = 0; i < announcementCommentBatches.length; i++) {
                             if (announcementCommentBatches[i].length > 0) {
-                                console.time("Announcement Comment insertBulk operation time. order: " + i);
+                                // console.time("Announcement Comment insertBulk operation time. order: " + i);
                                 await AnnouncementCommentEntity.insertMany(announcementCommentBatches[i]);
-                                console.timeEnd("Announcement Comment insertBulk operation time. order: " + i);
+                                // console.timeEnd("Announcement Comment insertBulk operation time. order: " + i);
                             }
                         }
                     }
@@ -526,6 +547,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleAnnouncementCommentOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleAnnouncementCommentOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -550,9 +572,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (announcementCommentLikeBatches.length > 0) {
                         for (let i = 0; i < announcementCommentLikeBatches.length; i++) {
                             if (announcementCommentLikeBatches[i].length > 0) {
-                                console.time("Announcement Comment Like insertBulk operation time. order: " + i);
+                                // console.time("Announcement Comment Like insertBulk operation time. order: " + i);
                                 await AnnouncementCommentLikeEntity.insertMany(announcementCommentLikeBatches[i]);
-                                console.timeEnd("Announcement Comment Like insertBulk operation time. order: " + i);
+                                // console.timeEnd("Announcement Comment Like insertBulk operation time. order: " + i);
                             }
                         }
                     }
@@ -561,6 +583,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleAnnouncementCommentLikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleAnnouncementCommentLikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -585,9 +608,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (announcementCommentDislikeBatches.length > 0) {
                         for (let i = 0; i < announcementCommentDislikeBatches.length; i++) {
                             if (announcementCommentDislikeBatches[i].length > 0) {
-                                console.time("Announcement Comment Dislike insertBulk operation time. order: " + i);
+                                // console.time("Announcement Comment Dislike insertBulk operation time. order: " + i);
                                 await AnnouncementCommentLikeEntity.insertMany(announcementCommentDislikeBatches[i]);
-                                console.timeEnd("Announcement Comment Dislike insertBulk operation time. order: " + i);
+                                // console.timeEnd("Announcement Comment Dislike insertBulk operation time. order: " + i);
                             }
                         }
                     }
@@ -596,6 +619,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleAnnouncementCommentDislikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleAnnouncementCommentDislikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -620,9 +644,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (questionLikeBatches.length > 0) {
                         for (let i = 0; i < questionLikeBatches.length; i++) {
                             if (questionLikeBatches[i].length > 0) {
-                                console.time("Question Like insertBulk operation time. order: " + i);
+                                // console.time("Question Like insertBulk operation time. order: " + i);
                                 await QuestionLikeEntity.insertMany(questionLikeBatches[i]);
-                                console.timeEnd("Question Like insertBulk operation time. order: " + i);
+                                // console.timeEnd("Question Like insertBulk operation time. order: " + i);
                             }
                         }
                     }
@@ -631,6 +655,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleQuestionLikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleQuestionLikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -655,9 +680,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (questionDislikeBatches.length > 0) {
                         for (let i = 0; i < questionDislikeBatches.length; i++) {
                             if (questionDislikeBatches[i].length > 0) {
-                                console.time("Question Dislike insertBulk operation time. order: " + i);
+                                // console.time("Question Dislike insertBulk operation time. order: " + i);
                                 await QuestionLikeEntity.insertMany(questionDislikeBatches[i]);
-                                console.timeEnd("Question Dislike insertBulk operation time. order: " + i);
+                                // console.timeEnd("Question Dislike insertBulk operation time. order: " + i);
                             }
                         }
                     }
@@ -666,6 +691,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleQuestionDislikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleQuestionDislikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -683,16 +709,16 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             questionCommentBatches[iterator].push(query.e);
-                            keysToDelete.push(query.e.ownerId);
+                            keysToDelete.push(query.e._id);
                         }
                         iterator++;
                     }
                     if (questionCommentBatches.length > 0) {
                         for (let i = 0; i < questionCommentBatches.length; i++) {
                             if (questionCommentBatches[i].length > 0) {
-                                console.time("Question Comment insertBulk operation time. order: " + i);
+                                // console.time("Question Comment insertBulk operation time. order: " + i);
                                 await QuestionCommentEntity.insertMany(questionCommentBatches[i]);
-                                console.timeEnd("Question Comment insertBulk operation time. order: " + i);
+                                // console.timeEnd("Question Comment insertBulk operation time. order: " + i);
                             }
                         }
                     }
@@ -701,6 +727,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleQuestionCommentOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleQuestionCommentOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -725,9 +752,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (questionCommentLikeBatches.length > 0) {
                         for (let i = 0; i < questionCommentLikeBatches.length; i++) {
                             if (questionCommentLikeBatches[i].length > 0) {
-                                console.time("Question Comment Like insertBulk operation time. order: " + i);
+                                // console.time("Question Comment Like insertBulk operation time. order: " + i);
                                 await QuestionCommentLikeEntity.insertMany(questionCommentLikeBatches[i]);
-                                console.timeEnd("Question Comment Like insertBulk operation time. order: " + i);
+                                // console.timeEnd("Question Comment Like insertBulk operation time. order: " + i);
                             }
                         }
                     }
@@ -736,6 +763,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleQuestionCommentLikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleQuestionCommentLikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }
@@ -760,9 +788,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     if (questionCommentDislikeBatches.length > 0) {
                         for (let i = 0; i < questionCommentDislikeBatches.length; i++) {
                             if (questionCommentDislikeBatches[i].length > 0) {
-                                console.time("Question Comment Dislike insertBulk operation time. order: " + i);
+                                // console.time("Question Comment Dislike insertBulk operation time. order: " + i);
                                 await QuestionCommentLikeEntity.insertMany(questionCommentDislikeBatches[i]);
-                                console.timeEnd("Question Comment Dislike insertBulk operation time. order: " + i);
+                                // console.timeEnd("Question Comment Dislike insertBulk operation time. order: " + i);
                             }
                         }
                     }
@@ -771,6 +799,115 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 } catch (err: any) {
                     logger.error({ err: err }, `handleQuestionCommentDislikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
                     console.error({ err: err }, `[${new Date()}]handleQuestionCommentDislikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
+                }
+            });
+        }
+        async function handleQuestionSubCommentOperations(currentKey: string) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const data = await RedisService.client.hVals(currentKey);
+                    const keysToDelete = new Array<string>();
+                    const questionSubCommentBatches: Array<Array<object>> = [];
+                    const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_COMMENT_BATCH_SIZE;
+                    let iterator = 0;
+                    for (let i = 0; i < data.length; i += batchSize) {
+                        const currentBatch = data.slice(i, i + batchSize);
+                        questionSubCommentBatches[iterator] = new Array<object>();
+                        for (let j = 0; j < currentBatch.length; j++) {
+                            const query: any = currentBatch[j].toJSONObject();
+                            questionSubCommentBatches[iterator].push(query.e);
+                            keysToDelete.push(query.e._id);
+                        }
+                        iterator++;
+                    }
+                    if (questionSubCommentBatches.length > 0) {
+                        for (let i = 0; i < questionSubCommentBatches.length; i++) {
+                            if (questionSubCommentBatches[i].length > 0) {
+                                // console.time("Question SubComment insertBulk operation time. order: " + i);
+                                await QuestionSubCommentEntity.insertMany(questionSubCommentBatches[i]);
+                                // console.timeEnd("Question SubComment insertBulk operation time. order: " + i);
+                            }
+                        }
+                    }
+                    await RedisService.client.hDel(currentKey, keysToDelete);
+                    resolve(true);
+                } catch (err: any) {
+                    logger.error({ err: err }, `handleQuestionSubCommentOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    console.error({ err: err }, `[${new Date()}]handleQuestionSubCommentOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
+                }
+            });
+        }
+        async function handleQuestionSubCommentLikeOperations(currentKey: string) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const data = await RedisService.client.hVals(currentKey);
+                    const keysToDelete = new Array<string>();
+                    const questionSubCommentLikeBatches: Array<Array<object>> = [];
+                    const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_COMMENT_LD_BATCH_SIZE;
+                    let iterator = 0;
+                    for (let i = 0; i < data.length; i += batchSize) {
+                        const currentBatch = data.slice(i, i + batchSize);
+                        questionSubCommentLikeBatches[iterator] = new Array<object>();
+                        for (let j = 0; j < currentBatch.length; j++) {
+                            const query: any = currentBatch[j].toJSONObject();
+                            questionSubCommentLikeBatches[iterator].push({ ...query.e, type: LikeType.Like });
+                            keysToDelete.push(query.e.ownerId);
+                        }
+                        iterator++;
+                    }
+                    if (questionSubCommentLikeBatches.length > 0) {
+                        for (let i = 0; i < questionSubCommentLikeBatches.length; i++) {
+                            if (questionSubCommentLikeBatches[i].length > 0) {
+                                // console.time("Question SubComment Like insertBulk operation time. order: " + i);
+                                await QuestionSubCommentLikeEntity.insertMany(questionSubCommentLikeBatches[i]);
+                                // console.timeEnd("Question SubComment Like insertBulk operation time. order: " + i);
+                            }
+                        }
+                    }
+                    await RedisService.client.hDel(currentKey, keysToDelete);
+                    resolve(true);
+                } catch (err: any) {
+                    logger.error({ err: err }, `handleQuestionSubCommentLikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    console.error({ err: err }, `[${new Date()}]handleQuestionSubCommentLikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
+                }
+            });
+        }
+        async function handleQuestionSubCommentDislikeOperations(currentKey: string) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const data = await RedisService.client.hVals(currentKey);
+                    const keysToDelete = new Array<string>();
+                    const questionSubCommentDislikeBatches: Array<Array<object>> = [];
+                    const batchSize = config.BATCH_SIZES.ANNOUNCEMENT_COMMENT_LD_BATCH_SIZE;
+                    let iterator = 0;
+                    for (let i = 0; i < data.length; i += batchSize) {
+                        const currentBatch = data.slice(i, i + batchSize);
+                        questionSubCommentDislikeBatches[iterator] = new Array<object>();
+                        for (let j = 0; j < currentBatch.length; j++) {
+                            const query: any = currentBatch[j].toJSONObject();
+                            questionSubCommentDislikeBatches[iterator].push({ ...query.e, type: LikeType.Dislike });
+                            keysToDelete.push(query.e.ownerId);
+                        }
+                        iterator++;
+                    }
+                    if (questionSubCommentDislikeBatches.length > 0) {
+                        for (let i = 0; i < questionSubCommentDislikeBatches.length; i++) {
+                            if (questionSubCommentDislikeBatches[i].length > 0) {
+                                // console.time("Question SubComment Dislike insertBulk operation time. order: " + i);
+                                await QuestionCommentLikeEntity.insertMany(questionSubCommentDislikeBatches[i]);
+                                // console.timeEnd("Question SubComment Dislike insertBulk operation time. order: " + i);
+                            }
+                        }
+                    }
+                    await RedisService.client.hDel(currentKey, keysToDelete);
+                    resolve(true);
+                } catch (err: any) {
+                    logger.error({ err: err }, `handleQuestionSubCommentDislikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    console.error({ err: err }, `[${new Date()}]handleQuestionSubCommentDislikeOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));
+                    reject(err);
                 }
             });
         }

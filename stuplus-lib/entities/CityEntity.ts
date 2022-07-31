@@ -12,7 +12,7 @@ export const CitySchema: Schema = new Schema({
   title: { type: String, required: true },
 });
 
-CitySchema.index({ recordStatus: 1 });
+CitySchema.index({ recordStatus: -1 });
 
 CitySchema.pre("save", function (next) {
   //

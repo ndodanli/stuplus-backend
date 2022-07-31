@@ -1,5 +1,5 @@
 import { AnnouncementCommentEntity, AnnouncementCommentLikeEntity, AnnouncementEntity, AnnouncementLikeEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
-import { AnnouncementDocument } from "../../stuplus-lib/entities/AnnouncementEntity";
+import { Announcement, AnnouncementDocument } from "../../stuplus-lib/entities/AnnouncementEntity";
 import { AnnouncementAddDTO, AnnouncementCommenLikeDisliketDTO, AnnouncementCommentDTO, AnnouncementLikeDislikeDTO, AnnouncementGetMultipleDTO, AnnouncementGetCommentsDTO } from "../dtos/AnnouncementDTOs";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
@@ -11,7 +11,7 @@ import { AnnouncementCommentDocument } from "../../stuplus-lib/entities/Announce
 import sanitizeHtml from 'sanitize-html';
 
 export class AnnouncementAccess {
-    public static async addAnnouncement(acceptedLanguages: Array<string>, payload: AnnouncementAddDTO, currentUserId: string): Promise<Boolean> {
+    public static async addAnnouncement(acceptedLanguages: Array<string>, payload: AnnouncementAddDTO, currentUserId: string): Promise<Announcement> {
         const user = await UserEntity.findOne({ _id: currentUserId }, ["relatedSchoolIds"], { lean: true });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
@@ -34,13 +34,13 @@ export class AnnouncementAccess {
 
         payload.text = sanitizeHtml(payload.text);
 
-        await AnnouncementEntity.create(new AnnouncementEntity({
+        const announcement = await AnnouncementEntity.create(new AnnouncementEntity({
             ...payload,
             titlesch: searchableWithSpaces(payload.title),
             ownerId: user._id.toString(),
         }));
 
-        return true;
+        return announcement;
     }
 
     public static async getAnnouncements(acceptedLanguages: Array<string>, payload: AnnouncementGetMultipleDTO, currentUserId: string): Promise<AnnouncementDocument[] | null> {
@@ -295,7 +295,7 @@ export class AnnouncementAccess {
     public static async commentAnnouncement(acceptedLanguages: Array<string>, payload: AnnouncementCommentDTO, currentUserId: string): Promise<Boolean> {
         let now = new Date();
         const announcementCommentEntity = new AnnouncementCommentEntity({});
-        const announcementCommentData: object = {
+        const announcementCommentData: any = {
             e: {
                 _id: announcementCommentEntity.id,
                 ownerId: currentUserId,
@@ -306,21 +306,21 @@ export class AnnouncementAccess {
                 updatedAt: now
             },
         }
-        await RedisService.client.hSet(RedisKeyType.DBAnnouncementComment + payload.announcementId, currentUserId, stringify(announcementCommentData));
+        await RedisService.client.hSet(RedisKeyType.DBAnnouncementComment + payload.announcementId, announcementCommentData.id, stringify(announcementCommentData));
 
         return true;
     }
 
     public static async commentLikeDislikeAnnouncement(acceptedLanguages: Array<string>, payload: AnnouncementCommenLikeDisliketDTO, currentUserId: string): Promise<object> {
         if (payload.beforeType == LikeType.Like) {
-            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBAnnouncementCommentLike + payload.announcementId, currentUserId);
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBAnnouncementCommentLike + payload.commentId, currentUserId);
             //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
             if (!deleted)
                 await AnnouncementCommentLikeEntity.findOneAndUpdate({ commentId: payload.commentId, ownerId: currentUserId, type: LikeType.Like }, { recordStatus: RecordStatus.Deleted });
             //TODO: if (!deleted) 
             //throw error on socket
         } else if (payload.beforeType == LikeType.Dislike) {
-            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBAnnouncementCommentDislike + payload.announcementId, currentUserId);
+            let deleted: number = await RedisService.client.hDel(RedisKeyType.DBAnnouncementCommentDislike + payload.commentId, currentUserId);
             //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
             if (!deleted)
                 await AnnouncementCommentLikeEntity.findOneAndUpdate({ commentId: payload.commentId, ownerId: currentUserId, type: LikeType.Dislike }, { recordStatus: RecordStatus.Deleted });
@@ -334,9 +334,9 @@ export class AnnouncementAccess {
 
         let likeDislikeBefore = undefined;
         if (payload.type == LikeType.Like)
-            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBAnnouncementCommentLike + payload.announcementId, currentUserId);
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBAnnouncementCommentLike + payload.commentId, currentUserId);
         else
-            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBAnnouncementCommentDislike + payload.announcementId, currentUserId);
+            likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBAnnouncementCommentDislike + payload.commentId, currentUserId);
 
         if (!likeDislikeBefore)
             likeDislikeBefore = await AnnouncementCommentLikeEntity.findOne({ commentId: payload.commentId, ownerId: currentUserId });

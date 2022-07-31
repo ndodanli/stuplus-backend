@@ -15,7 +15,7 @@ import RedisService from "../../stuplus-lib/services/redisService";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { isValidObjectId } from "mongoose";
 import { User } from "../../stuplus-lib/entities/UserEntity";
-import { FollowEntity, GroupChatEntity, GroupChatUserEntity, MessageEntity, NotificationEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { FollowEntity, GroupChatEntity, GroupChatUserEntity, GroupMessageReadEntity, MessageEntity, NotificationEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { RedisKeyType, RedisSubKeyType } from "../../stuplus-lib/enums/enums_socket";
 import redisTTL from "../../stuplus-lib/constants/redisTTL";
 import { SearchAccess } from "../dataAccess/searchAccess";
@@ -67,6 +67,25 @@ router.get("/getUserProfile/:userId", authorize([Role.User, Role.Admin, Role.Con
 "$ref": "#/definitions/AccountGetUserProfileProfileResponse"
 }
 } */
+  // let op = RedisService.client.multi();
+  // let clt = RedisService.client;
+  // let opA = [];
+  // // console.time("t1")
+  // for (let i = 375000; i < 375050; i++) {
+  //   opA.push(clt.hGet("bensubensubensudaffkferkofre21312213", "dsdasfwfwefwefwefwefwefwefwe" + i))
+  //   // await clt.hGet("bensubensubensudaffkferkofre21312213", "dsdasfwfwefwefwefwefwefwefwe" + i);
+  //   // op.hGet("bensubensubensudaffkferkofre21312213", "dsdasfwfwefwefwefwefwefwefwe" + i);
+  //   if (i == 375015)
+  //     opA.push(clt.hGet("bensubensubensudaffkferkofre21312213", "dsdasfwfwefwefwefwefwefwefwe" + "137657567"));
+  // }
+  // opA.push(clt.hGet("bensubensubensudaffkferkofre21312213", "dsdasfwfwefwefwefwefwefwefwe" + "137657567"));
+  // // console.timeEnd("t1")
+  // console.time("test");
+  // // let a = await op.exec();
+  // let a = await Promise.all(opA);
+  // // let a = await clt;
+  // console.timeEnd("test");
+
   const response = new BaseResponse<object>();
   try {
     response.data = await UserAccess.getUserProfile(req.selectedLangs(), res.locals.user._id, req.params.userId);

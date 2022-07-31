@@ -26,7 +26,7 @@ export const SchoolSchema: Schema = new Schema({
   neighborhoodId: { type: String, required: false, default: null },
 });
 
-SchoolSchema.index({ recordStatus: 1 });
+SchoolSchema.index({ recordStatus: -1 });
 
 // Just to prove that hooks are still functioning as expected
 SchoolSchema.pre("save", function (next) {

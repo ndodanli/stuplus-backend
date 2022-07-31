@@ -3147,7 +3147,7 @@
         "tags": [
           "Chat"
         ],
-        "description": "Ger group chat messages.",
+        "description": "Get group chat messages.",
         "parameters": [],
         "responses": {
           "200": {
@@ -8221,6 +8221,10 @@
           "comment": {
             "type": "string",
             "example": "some comment."
+          },
+          "replyToId": {
+            "type": "string",
+            "example": "replyToId"
           }
         },
         "required": [

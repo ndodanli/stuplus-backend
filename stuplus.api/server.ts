@@ -13,7 +13,7 @@ import announcementRoute from "./routes/announcementRoute";
 import questionRoute from "./routes/questionRoute";
 import searchRoute from "./routes/searchRoute";
 import generalRoute from "./routes/generalRoute";
-import chatRoute from "./socket/index";
+import chatRoute, { initializeSocket } from "./socket/index";
 import swaggerRoute from "./routes/swaggerRoute";
 import path from "path";
 import { config } from "./config/config";
@@ -24,13 +24,6 @@ import { initializeRedis } from "../stuplus-lib/services/redisService";
 dotenv.config();
 
 const app = express();
-setup();
-setLogger("Stuplus API-SOCKET");
-async function setup() {
-  await initializeDatabese();
-  await initializeRedis();
-  await import("../cron/index");
-}
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -67,14 +60,21 @@ app.use("/chat", chatRoute);
 
 app.use("/doc", swaggerRoute);
 
-const httpServer = app.listen((process.env.PORT || config.PORT), () => {
-  logger.info("API-SOCKET Server started at http://localhost:" + (process.env.PORT || config.PORT));
-  console.log("API-SOCKET Server started at http://localhost:" + (process.env.PORT || config.PORT));
-  import("./socket/index");
-});
+setup();
+setLogger("Stuplus API-SOCKET");
+async function setup() {
+  await initializeDatabese();
+  await initializeRedis();
+  await initializeSocket();
+  await import("../cron/index");
+  app.listen((process.env.PORT), () => {
+    logger.info("API-SOCKET Server started at http://localhost:" + (process.env.PORT));
+    console.log("API-SOCKET Server started at http://localhost:" + (process.env.PORT));
+    import("./socket/index");
+  });
+}
 
 export {
-  httpServer,
   app,
 }
 
