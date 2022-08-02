@@ -20,7 +20,7 @@ export interface GroupChat extends BaseEntity {
   secondaryEducation: boolean;
   popularity: number;
   //ignore
-  lastMessage?: GroupMessage | null; //ignore
+  lastMessage?: any | null; //ignore
   school?: School | null;
   department?: Department | null;
 }

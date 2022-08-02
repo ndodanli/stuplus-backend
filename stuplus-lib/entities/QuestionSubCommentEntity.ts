@@ -10,6 +10,7 @@ export interface QuestionSubComment extends BaseEntity {
   commentId: string;
   comment: string;
   popularity: number;
+  replyToId: string;
   //ignore
   owner?: User | null; // ignore
   replyTo?: User | null; // ignore
@@ -29,6 +30,7 @@ export const QuestionSubCommentSchema: Schema = new Schema({
   commentId: { type: String, required: true },
   comment: { type: String, required: true },
   popularity: { type: Number, required: false, default: 0 },
+  replyToId: { type: String, required: false, default: null },
 });
 
 QuestionSubCommentSchema.index({ recordStatus: -1, questionId: -1, commentId: -1, popularity: -1, createdAt: 1 });
@@ -58,6 +60,7 @@ QuestionSubCommentSchema.methods.minify = async function (
     updatedAt: this.updatedAt,
     recordDeletionDate: this.recordDeletionDate,
     commentId: this.commentId,
+    replyToId: this.replyToId,
     //ignore
     likeType: LikeType.None, // ignore
     likeCount: 0, // ignore

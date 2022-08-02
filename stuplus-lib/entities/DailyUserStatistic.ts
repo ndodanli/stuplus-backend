@@ -4,7 +4,7 @@ import BaseEntity from "./BaseEntity";
 export interface DailyUserStatistic extends BaseEntity {
   ownerId: string; // userId
   likeCount: number;
-  newPMCount: number;
+  pmCount: number;
   commentCount: number;
   followCount: number;
 }
@@ -16,7 +16,7 @@ export interface DailyUserStatisticDocument extends DailyUserStatistic, Document
 export const DailyUserStatisticSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
   likeCount: { type: Number, required: false, default: 0 },
-  newPMCount: { type: Number, required: false, default: 0 },
+  pmCount: { type: Number, required: false, default: 0 },
   commentCount: { type: Number, required: false, default: 0 },
   followCount: { type: Number, required: false, default: 0 },
 });
@@ -45,7 +45,7 @@ DailyUserStatisticSchema.methods.minify = async function (
     updatedAt: this.updatedAt,
     ownerId: this.ownerId,
     likeCount: this.likeCount,
-    newPMCount: this.newPMCount,
+    pmCount: this.pmCount,
     commentCount: this.commentCount,
     followCount: this.followCount,
   };

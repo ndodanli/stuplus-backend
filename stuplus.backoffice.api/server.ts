@@ -25,18 +25,11 @@ import path from "path";
 import { config } from "./config/config";
 import customExtensions from "../stuplus-lib/extensions/extensions";
 import { setLogger } from "../stuplus-lib/config/logger";
+import { initializeRedis } from "../stuplus-lib/services/redisService";
 
 dotenv.config({ path: ".env" });
 
 const app = express();
-
-setup();
-
-async function setup() {
-    setLogger("Stuplus Backoffice API");
-    await initializeDatabese();
-
-}
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -76,13 +69,22 @@ app.use("/questionCommentLike", questionCommentLikeRoute);
 app.use("/user", userRoute);
 app.use("/general", generalRoute);
 
-const httpServer = app.listen((process.env.PORT || config.PORT), () => {
-    logger.info("Backoffice Server started at http://localhost:" + (process.env.PORT || config.PORT));
-    console.log("Backoffice Server started at http://localhost:" + (process.env.PORT || config.PORT));
-});
+
+setup();
+
+async function setup() {
+    setLogger("Stuplus Backoffice API");
+    await initializeDatabese();
+    await initializeRedis();
+    const httpServer = app.listen((process.env.PORT || config.PORT), () => {
+        logger.info("Backoffice Server started at http://localhost:" + (process.env.PORT || config.PORT));
+        console.log("Backoffice Server started at http://localhost:" + (process.env.PORT || config.PORT));
+    });
+
+
+}
 
 export {
-    httpServer,
     app,
 }
 

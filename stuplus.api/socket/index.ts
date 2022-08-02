@@ -971,7 +971,6 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
        #swagger.description = 'Get gm chats.' */
     const response = new BaseResponse<GroupChat[]>();
     try {
-
         const userGroupChatsIds = await RedisService.acquireUserGroupChatIds(res.locals.user._id);
         if (userGroupChatsIds.length == 0)
             return Ok(res, response);
@@ -982,12 +981,76 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
             getGMChatsOps.push(RedisService.client.hGet(RedisKeyType.AllGroupChats, userGroupChatsIds[i] + ":lm"));
         }
         const redisGroupChats = await Promise.all(getGMChatsOps);
-        const userGroupChats: GroupChat[] = redisGroupChats.filter(x => x).map((x: any, i: number) => {
-            const groupChat = JSON.parse(x);
-            groupChat.lastMessage = JSON.parse(redisGroupChats[i + 1] ?? "{}");
-            return groupChat;
-        });
+        const userGroupChats: GroupChat[] = [];
+        const missingGroupChatIds = [];
+        const missingGroupChatLMIds = [];
+        let indexCounter = 0;
+        for (let i = 0; i < redisGroupChats.length; i += 2) {
+            let groupChat: any = null;
+            if (!redisGroupChats[i]) {
+                missingGroupChatIds.push(userGroupChatsIds[indexCounter]);
+            } else {
+                groupChat = JSON.parse(redisGroupChats[i] ?? "{}");
+            }
+            if (groupChat) {
+                if (!redisGroupChats[i + 1]) {
+                    missingGroupChatLMIds.push(userGroupChatsIds[indexCounter]);
+                } else {
+                    groupChat.lastMessage = JSON.parse(redisGroupChats[i + 1] ?? "{}");
+                }
+                userGroupChats.push(groupChat);
+            }
+            indexCounter++;
+        }
+        if (missingGroupChatIds.length > 0) {
+            const groupChatsFromDb = await GroupChatEntity.find({ _id: { $in: missingGroupChatIds } }, { _id: 1, title: 1 }).lean(true);
+            for (let i = 0; i < groupChatsFromDb.length; i++) {
+                userGroupChats.push(groupChatsFromDb[i]);
+                missingGroupChatLMIds.push(groupChatsFromDb[i]._id.toString());
+                await RedisService.addGroupChat(groupChatsFromDb[i]);
+            }
+        }
+        if (missingGroupChatLMIds.length > 0) {
+            const notFoundLastMessages: any = await GroupMessageEntity.aggregate([
+                { $match: { groupChatId: { $in: missingGroupChatLMIds }, recordStatus: RecordStatus.Active } },
+                { $sort: { createdAt: -1 } },
+                {
+                    $group: {
+                        _id: "$groupChatId",
+                        ownerId: { $first: "$ownerId" },
+                        text: { $first: "$text" },
+                        files: { $first: "$files" },
+                    }
+                }
+            ]);
 
+            const notFoundUserIds = [];
+            for (let i = 0; i < notFoundLastMessages.length; i++) {
+                const groupChat = userGroupChats.find((x: GroupChat) => x._id.toString() === notFoundLastMessages[i]._id.toString());
+                if (groupChat) {
+                    groupChat.lastMessage = {
+                        ownerId: notFoundLastMessages[i].ownerId,
+                        text: notFoundLastMessages[i].text,
+                        files: notFoundLastMessages[i].files,
+                    };
+                    notFoundUserIds.push(notFoundLastMessages[i].ownerId);
+                }
+            }
+            const notFoundUsers = await UserEntity.find({ _id: { $in: notFoundUserIds } }, { _id: 1, username: 1 }).lean(true);
+            for (let i = 0; i < notFoundLastMessages.length; i++) {
+                const groupChat = userGroupChats.find((x: GroupChat) => x._id.toString() === notFoundLastMessages[i]._id.toString());
+                if (groupChat) {
+                    //deep copy object
+                    const notFoundUser = JSON.parse(JSON.stringify(notFoundUsers.find((x: any) => x._id.toString() === groupChat.lastMessage.ownerId.toString())));
+                    groupChat.lastMessage.owner = notFoundUser;
+                    delete groupChat.lastMessage.ownerId;
+                    delete groupChat.lastMessage.owner._id;
+                    delete groupChat.lastMessage.owner.__t;
+                    await RedisService.addGroupChatLastMessage(groupChat.lastMessage, groupChat._id.toString());
+                }
+            }
+        }
+        console.time("dbGMReads");
         const dbGMReads: any = await GroupMessageReadEntity.aggregate([
             { $match: { readedBy: res.locals.user._id, recordStatus: RecordStatus.Active } },
             { $sort: { createdAt: -1 } },
@@ -999,9 +1062,22 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
                 }
             }
         ]);
+        console.timeEnd("dbGMReads");
 
-        const redisGMReads: any = [];
+        const redisGMReads: any = []; redisGroupChats
         const redisGMs: any = [];
+        const unreadMessageCountQueries: any = [];
+        const groupMessageCountAggregate: any = [
+            {
+                "$facet": {
+                }
+            },
+            {
+                "$project": {
+                }
+            }
+        ];
+        let unreadMessageCounts = [];
         for (let i = 0; i < userGroupChats.length; i++) {
             const userGroupChat = userGroupChats[i];
             const redisGMAll = await RedisService.client.hVals(RedisKeyType.DBGroupMessage + userGroupChat._id.toString());
@@ -1020,23 +1096,49 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
 
             const lastReadedMessageCreatedAt = dbGMReads.find((x: { groupChatId: string; }) => x.groupChatId === userGroupChat._id.toString())?.createdAt;
             if (lastReadedMessageCreatedAt) {
-                userGroupChat.unreadMessageCount += await GroupMessageEntity
+                groupMessageCountAggregate[0].$facet[i.toString()] = [
+                    { "$match": { groupChatId: { $eq: userGroupChat._id }, createdAt: { $gt: lastReadedMessageCreatedAt } } },
+                    { "$count": i.toString() },
+                ]
+                groupMessageCountAggregate[1].$project[i.toString()] =
+                    { "$arrayElemAt": ["$" + i + "." + i, 0] };
+                unreadMessageCountQueries.push(GroupMessageEntity
                     .find({
                         groupChatId: userGroupChat._id,
                         createdAt: { $gt: lastReadedMessageCreatedAt }
-                    }).limit(100).count();
+                    }).limit(100).count());
+            } else {
+                groupMessageCountAggregate[0].$facet[i.toString()] = [
+                    { "$match": { groupChatId: { $eq: userGroupChat._id } } },
+                    { "$count": i.toString() },
+                ]
+                groupMessageCountAggregate[1].$project[i.toString()] =
+                    { "$arrayElemAt": ["$" + i + "." + i, 0] };
+                unreadMessageCountQueries.push(GroupMessageEntity
+                    .find({
+                        groupChatId: userGroupChat._id
+                    }).limit(100).count())
             }
         }
-
+        console.time("test")
+        let test = await GroupMessageEntity.aggregate(groupMessageCountAggregate);
+        console.timeEnd("test")
+        console.time("unreadMessageCounts");
+        if (unreadMessageCountQueries.length > 0) {
+            unreadMessageCounts = await Promise.all(unreadMessageCountQueries);
+        }
+        console.timeEnd("unreadMessageCounts");
+        for (let i = 0; i < userGroupChats.length; i++) {
+            userGroupChats[i].unreadMessageCount += unreadMessageCounts[i];
+        }
         response.data = userGroupChats.sort((a: any, b: any) => {
             a = new Date(a.lastMessage?.createdAt ?? 0);
             b = new Date(b.lastMessage?.createdAt ?? 0);
             if (a < b) return 1;
             if (a > b) return -1;
             return 0;
-        });;
-    }
-    catch (err: any) {
+        });
+    } catch (err: any) {
         response.setErrorMessage(err.message);
 
         if (err.status != 200)

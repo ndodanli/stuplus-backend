@@ -218,7 +218,7 @@ export class QuestionAccess {
         } else {
             subComments = await QuestionSubCommentEntity.find({
                 commentId: payload.commentId,
-                createdAt: { $lt: payload.lastRecordDate }
+                createdAt: { $gt: payload.lastRecordDate }
             }).sort({ createdAt: 1 }).limit(payload.take).lean(true);
         }
 
@@ -256,6 +256,8 @@ export class QuestionAccess {
     }
 
     public static async likeDislikeQuestion(acceptedLanguages: Array<string>, payload: QuestionLikeDislikeDTO, currentUserId: string): Promise<object> {
+        if (await RedisService.isDailyLikeLimitExceeded(currentUserId))
+            throw new NotValidError(getMessage("dailyLikeLimitExceeded", acceptedLanguages));
         if (payload.beforeType == LikeType.Like) {
             let deleted: number = await RedisService.client.hDel(RedisKeyType.DBQuestionLike + payload.questionId, currentUserId);
             //TODO: silene kadar 0.5 saniye araliklarla dene(maksimum 5 kere)
@@ -278,8 +280,10 @@ export class QuestionAccess {
         let likeDislikeBefore = undefined;
         if (payload.type == LikeType.Like)
             likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionLike + payload.questionId, currentUserId);
-        else
+        else if (payload.type == LikeType.Dislike)
             likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionDislike + payload.questionId, currentUserId);
+        else
+            throw new NotValidError(getMessage("likeDislikeTypeNotValid", acceptedLanguages));
 
         if (!likeDislikeBefore)
             likeDislikeBefore = await QuestionLikeEntity.findOne({ questionId: payload.questionId, ownerId: currentUserId });
@@ -371,7 +375,7 @@ export class QuestionAccess {
         await RedisService.client.hSet(RedisKeyType.DBQuestionComment + payload.questionId, questionCommentEntity.id, stringify(questionCommentData));
 
         await RedisService.incrementDailyCommentCount(currentUserId);
-        return { _id: questionCommentEntity.id.toString() };
+        return { _id: questionCommentEntity.id };
     }
 
     public static async subCommentQuestion(acceptedLanguages: Array<string>, payload: QuestionSubCommentDTO, currentUserId: string): Promise<object> {
@@ -481,8 +485,10 @@ export class QuestionAccess {
         let likeDislikeBefore = undefined;
         if (payload.type == LikeType.Like)
             likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionSubCommentLike + payload.subCommentId, currentUserId);
-        else
+        else if (payload.type == LikeType.Dislike)
             likeDislikeBefore = await RedisService.client.hExists(RedisKeyType.DBQuestionSubCommentDislike + payload.subCommentId, currentUserId);
+        else
+            throw new NotValidError(getMessage("likeDislikeTypeNotValid", acceptedLanguages));
 
         if (!likeDislikeBefore)
             likeDislikeBefore = await QuestionSubCommentLikeEntity.findOne({ subCommentId: payload.subCommentId, ownerId: currentUserId });

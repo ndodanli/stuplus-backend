@@ -16,7 +16,7 @@ export interface GroupMessage extends BaseEntity {
   deletedForUserDate?: Date;
   groupChatId: string;
   //ignore
-  lastMessageOwner?: LastMessageOwnerDTO | null; //ignore
+  owner?: LastMessageOwnerDTO | null; //ignore
   replyTo?: ReplyToDTO | null;
 }
 
@@ -53,7 +53,7 @@ export const GroupMessageSchema: Schema = new Schema({
   groupChatId: { type: String, required: true },
 });
 
-GroupMessageSchema.index({ recordStatus: -1, createdAt: -1 });
+GroupMessageSchema.index({ recordStatus: -1, groupChatId: -1, createdAt: -1 });
 
 GroupMessageSchema.pre("save", function (next) {
   //
@@ -85,6 +85,9 @@ GroupMessageSchema.methods.minify = async function (
     recordDeletionDate: this.recordDeletionDate,
     deletedForUserIds: this.deletedForUserIds,
     deletedForUserDate: this.deletedForUserDate,
+    //ignore
+    owner: null,
+    replyTo: null
   };
   return response;
 };

@@ -120,6 +120,7 @@ const systemLangs: Record<string, Function> = {
             dailyLikeLimitExceeded: "Bugünlük bu kadar beğenme yeter, yarın tekrar dene",
             dailyNewPMLimitExceeded: "Bugünlük bu kadar yeni mesaj yeter, yarın tekrar dene",
             dailyFollowLimitExceeded: "Bugünlük bu kadar takip yeter, yarın tekrar dene",
+            likeDislikeTypeNotValid: "Beğenme veya beğenmeme için tip geçerli değil.",
         }
     },
     "en": function (args: string[] = []) {
