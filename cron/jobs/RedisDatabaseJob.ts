@@ -31,110 +31,114 @@ export default class RedisDatabaseJob implements IBaseCronJob {
         const totalKeySize = await RedisService.client.dbSize();
         let currentKeySize = 0;
         try {
+            console.time("scan")
             do {
                 const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { MATCH: "d*", COUNT: 200 });
-                currentKeySize += keys.length;
                 RedisDatabaseJob.currentCursor = cursor;
-                const operations = [];
-                for (let i = 0; i < keys.length; i++) {
-                    const currentKey = keys[i];
-                    if (currentKey.startsWith(RedisKeyType.DBPrivateMessage)) {
-                        operations.push({
-                            func: handlePMOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBGroupMessage)) {
-                        operations.push({
-                            func: handleGroupMessageOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementLike)) {
-                        operations.push({
-                            func: handleAnnouncementLikeOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementDislike)) {
-                        operations.push({
-                            func: handleAnnouncementDislikeOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementComment)) {
-                        operations.push({
-                            func: handleAnnouncementCommentOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementCommentLike)) {
-                        operations.push({
-                            func: handleAnnouncementCommentLikeOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementCommentDislike)) {
-                        operations.push({
-                            func: handleAnnouncementCommentDislikeOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBQuestionLike)) {
-                        operations.push({
-                            func: handleQuestionLikeOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBQuestionDislike)) {
-                        operations.push({
-                            func: handleQuestionDislikeOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBQuestionComment)) {
-                        operations.push({
-                            func: handleQuestionCommentOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBQuestionCommentLike)) {
-                        operations.push({
-                            func: handleQuestionCommentLikeOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBQuestionCommentDislike)) {
-                        operations.push({
-                            func: handleQuestionCommentDislikeOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBQuestionSubComment)) {
-                        operations.push({
-                            func: handleQuestionSubCommentOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBQuestionSubCommentLike)) {
-                        operations.push({
-                            func: handleQuestionSubCommentLikeOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBQuestionSubCommentDislike)) {
-                        operations.push({
-                            func: handleQuestionSubCommentDislikeOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBSearchHistory)) {
-                        operations.push({
-                            func: handleSearchHistoryOperations,
-                            arg1: currentKey,
-                        });
-                    } else if (currentKey.startsWith(RedisKeyType.DBHashtagEntity)) {
-                        operations.push({
-                            func: handleHashtagOperations,
-                            arg1: currentKey,
-                        });
+                if (keys.length > 0) {
+                    currentKeySize += keys.length;
+                    const operations = [];
+                    for (let i = 0; i < keys.length; i++) {
+                        const currentKey = keys[i];
+                        if (currentKey.startsWith(RedisKeyType.DBPrivateMessage)) {
+                            operations.push({
+                                func: handlePMOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBGroupMessage)) {
+                            operations.push({
+                                func: handleGroupMessageOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementLike)) {
+                            operations.push({
+                                func: handleAnnouncementLikeOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementDislike)) {
+                            operations.push({
+                                func: handleAnnouncementDislikeOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementComment)) {
+                            operations.push({
+                                func: handleAnnouncementCommentOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementCommentLike)) {
+                            operations.push({
+                                func: handleAnnouncementCommentLikeOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBAnnouncementCommentDislike)) {
+                            operations.push({
+                                func: handleAnnouncementCommentDislikeOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBQuestionLike)) {
+                            operations.push({
+                                func: handleQuestionLikeOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBQuestionDislike)) {
+                            operations.push({
+                                func: handleQuestionDislikeOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBQuestionComment)) {
+                            operations.push({
+                                func: handleQuestionCommentOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBQuestionCommentLike)) {
+                            operations.push({
+                                func: handleQuestionCommentLikeOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBQuestionCommentDislike)) {
+                            operations.push({
+                                func: handleQuestionCommentDislikeOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBQuestionSubComment)) {
+                            operations.push({
+                                func: handleQuestionSubCommentOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBQuestionSubCommentLike)) {
+                            operations.push({
+                                func: handleQuestionSubCommentLikeOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBQuestionSubCommentDislike)) {
+                            operations.push({
+                                func: handleQuestionSubCommentDislikeOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBSearchHistory)) {
+                            operations.push({
+                                func: handleSearchHistoryOperations,
+                                arg1: currentKey,
+                            });
+                        } else if (currentKey.startsWith(RedisKeyType.DBHashtagEntity)) {
+                            operations.push({
+                                func: handleHashtagOperations,
+                                arg1: currentKey,
+                            });
+                        }
+                    }
+                    if (operations.length > 0) {
+                        const operationChunks = chunk(operations, 10);
+                        for (let i = 0; i < operationChunks.length; i++) {
+                            const result = await Promise.allSettled(operationChunks[i].map(async (operation) => {
+                                await operation.func(operation.arg1);
+                            }))
+                        }
                     }
                 }
-                if (operations.length > 0) {
-                    const operationChunks = chunk(operations, 10);
-                    for (let i = 0; i < operationChunks.length; i++) {
-                        const result = await Promise.allSettled(operationChunks[i].map(async (operation) => {
-                            await operation.func(operation.arg1);
-                        }))
-                    }
-                }
-                console.log("PROGRESSING, currentKeySize: " + currentKeySize + ", totalKeySize: " + totalKeySize);
             } while (RedisDatabaseJob.currentCursor != 0 && currentKeySize < totalKeySize);
+            console.timeEnd("scan")
+
             console.log("RedisDatabaseJob Cron job finished");
         } catch (error) {
             console.log("RedisDatabaseJob Cron job error", error);

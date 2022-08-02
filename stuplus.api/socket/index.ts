@@ -77,10 +77,7 @@ io.on("connection", async (socket: ISocket) => {
     // const groupChats = await GroupChatUserEntity.find({ userId: decodedJwtUser["_id"] }, {
     //     "_id": 0, "groupChatId": 1
     // }, { lean: true });
-    const groupChatIds = await RedisService.acquire<string[]>(RedisKeyType.User + socket.data.user._id + ":groupChats", 60 * 60 * 8, async () => {
-        const groupChats = await GroupChatUserEntity.find({ userId: socket.data.user._id });
-        return groupChats.map(x => x.groupChatId);
-    });
+    const groupChatIds = await RedisService.acquireUserGroupChatIds(socket.data.user._id)
     for (let i = 0; i < groupChatIds.length; i++) {
         socket.join(groupChatName(groupChatIds[i]));
     }
@@ -188,6 +185,46 @@ io.on("connection", async (socket: ISocket) => {
             }
 
             cb(responseData);
+            // let ops = [];
+            // console.time("pmSend");
+
+            // for (let i = 0; i < 1000; i++) {
+            //     for (let j = 0; j < 1; j++) {
+            //         ops.push(RedisService.client.hIncrBy("test212f23f23f23f23f" + i, "dsafwef23g234g34g34g34g43", 1));
+            //     }
+            // }
+            // await Promise.all(ops);
+            // console.timeEnd("pmSend");
+
+            // await Promise.all(ops);
+            // ops = [];
+            // for (let i = 20000; i < 40000; i++) {
+            //     for (let j = 0; j < 30; j++) {
+            //         ops.push(RedisService.client.hSet("test212f23f23f23f23f" + i, "dsafwef23g234g34g34g34g43", 1));
+            //     }
+            // }
+            // await Promise.all(ops);
+            // ops = [];
+            // for (let i = 40000; i < 60000; i++) {
+            //     for (let j = 0; j < 30; j++) {
+            //         ops.push(RedisService.client.hSet("test212f23f23f23f23f" + i, "dsafwef23g234g34g34g34g43", 1));
+            //     }
+            // }
+            // await Promise.all(ops);
+            // ops = [];
+            // for (let i = 60000; i < 80000; i++) {
+            //     for (let j = 0; j < 30; j++) {
+            //         ops.push(RedisService.client.hSet("test212f23f23f23f23f" + i, "dsafwef23g234g34g34g34g43", 1));
+            //     }
+            // }
+            // await Promise.all(ops);
+            // ops = [];
+            // for (let i = 80000; i < 100000; i++) {
+            //     for (let j = 0; j < 30; j++) {
+            //         ops.push(RedisService.client.hSet("test212f23f23f23f23f" + i, "dsafwef23g234g34g34g34g43", 1));
+            //     }
+            // }
+            // await Promise.all(ops);
         } catch (error: any) {
             cb({ success: false, message: error?.message });
         }
@@ -1096,40 +1133,24 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
 
             const lastReadedMessageCreatedAt = dbGMReads.find((x: { groupChatId: string; }) => x.groupChatId === userGroupChat._id.toString())?.createdAt;
             if (lastReadedMessageCreatedAt) {
-                groupMessageCountAggregate[0].$facet[i.toString()] = [
-                    { "$match": { groupChatId: { $eq: userGroupChat._id }, createdAt: { $gt: lastReadedMessageCreatedAt } } },
-                    { "$count": i.toString() },
-                ]
-                groupMessageCountAggregate[1].$project[i.toString()] =
-                    { "$arrayElemAt": ["$" + i + "." + i, 0] };
                 unreadMessageCountQueries.push(GroupMessageEntity
                     .find({
                         groupChatId: userGroupChat._id,
                         createdAt: { $gt: lastReadedMessageCreatedAt }
                     }).limit(100).count());
             } else {
-                groupMessageCountAggregate[0].$facet[i.toString()] = [
-                    { "$match": { groupChatId: { $eq: userGroupChat._id } } },
-                    { "$count": i.toString() },
-                ]
-                groupMessageCountAggregate[1].$project[i.toString()] =
-                    { "$arrayElemAt": ["$" + i + "." + i, 0] };
                 unreadMessageCountQueries.push(GroupMessageEntity
                     .find({
                         groupChatId: userGroupChat._id
                     }).limit(100).count())
             }
         }
-        console.time("test")
-        let test = await GroupMessageEntity.aggregate(groupMessageCountAggregate);
-        console.timeEnd("test")
-        console.time("unreadMessageCounts");
+
         if (unreadMessageCountQueries.length > 0) {
             unreadMessageCounts = await Promise.all(unreadMessageCountQueries);
-        }
-        console.timeEnd("unreadMessageCounts");
-        for (let i = 0; i < userGroupChats.length; i++) {
-            userGroupChats[i].unreadMessageCount += unreadMessageCounts[i];
+            for (let i = 0; i < userGroupChats.length; i++) {
+                userGroupChats[i].unreadMessageCount += unreadMessageCounts[i];
+            }
         }
         response.data = userGroupChats.sort((a: any, b: any) => {
             a = new Date(a.lastMessage?.createdAt ?? 0);

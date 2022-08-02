@@ -2,12 +2,12 @@ $(document).ready(async function () {
     const baseUrl = "http://localhost:25010";
     axios.defaults.baseURL = baseUrl;
     axios.defaults.headers.common["Authorization"] = "Bearer " +
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFkOGY3MDZjYzQyZjNlNTRlM2QxZTgiLCJyb2xlIjoxLCJpYXQiOjE2NTY3NzQ4MTksImV4cCI6MTY1OTM2NjgxOX0.626-M9EG24tHS-UFY_fHUN2litqgc7Tpqa4uNqHIVQA";
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFiOGEyMDQxNjZmZDFlYWViYmIzZmEiLCJyb2xlIjowLCJpYXQiOjE2NTczNjc5NjIsImV4cCI6MTY4ODQ3MTk2Mn0.U3N6QR4fakNtpLHwEhkKpG3-Cf997Pwkb7Q4fsCbu1w";
     const msgerForm = get(".msger-inputarea");
     const msgerInput = get(".msger-input");
     const msgerChat = get(".msger-chat");
     const { data } = await axios.get("/account/user");
-    const { data: messageData } = await axios.post("/chat/getMessages", {
+    const { data: messageData } = await axios.post("/chat/getPMs", {
         chatId: "62c96f8cea5d4faa1448e904",
         pageSize: 20
     });
@@ -57,14 +57,14 @@ $(document).ready(async function () {
 
     msgerForm.addEventListener("submit", event => {
         event.preventDefault();
-
+        console.log("submit")
         const msgText = msgerInput.value;
         if (!msgText) return;
         // msgerInput.value = "";
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
-        socket.emit("pm-send", {
+        socket.emit("pmSend", {
             to: USER_TO,
             m: msgText,
             // ci: "dasds"
