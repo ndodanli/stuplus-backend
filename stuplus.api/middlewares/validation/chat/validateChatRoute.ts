@@ -96,7 +96,7 @@ export const validateUpdateGroupInfo = [
 
 export const validateCreateGroup = [
     check('userIds')
-        .isArray({ min: 0 })
+        .isArray({ min: 0, max: 1000 })
         .withMessage((value: any, { req }: any) => getMessage("mustBeArray", req.selectedLangs()))
         .bail()
         .custom(async (value, { req }) => {
@@ -333,6 +333,33 @@ export const validateGetPrivateMessages = [
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
+export const validateAddToGroup = [
+    check('userIds')
+        .isArray({ min: 0, max: 1000 })
+        .withMessage((value: any, { req }: any) => getMessage("mustBeArray", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            for (let i = 0; i < value.length; i++) {
+                if (!isValidObjectId(value[i])) {
+                    throw new Error(getMessage("incorrectId", req.selectedLangs()));
+                }
+            }
+        }),
+    check('groupChatId')
         .custom(async (value, { req }) => {
             if (!isValidObjectId(value)) {
                 throw new Error(getMessage("incorrectId", req.selectedLangs()));

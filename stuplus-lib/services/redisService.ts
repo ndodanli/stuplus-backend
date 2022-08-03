@@ -10,6 +10,7 @@ import { Document } from "mongoose";
 import { RecordStatus, RedisAcquireEntityFilterOrder } from '../enums/enums';
 import userLimits from '../constants/userLimits';
 import { GroupChat } from '../entities/GroupChatEntity';
+import { chunk } from '../utils/general';
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 // const url = process.env.REDIS_URL
@@ -131,15 +132,6 @@ export default class RedisService {
         }, ["_id", "username", "firstName", "lastName", "avatarKey", "profilePhotoUrl"]);
     }
 
-    static async delGroupChatIdsFromUser(userId: string): Promise<void> {
-        await this.client.del(RedisKeyType.User + userId + ":groupChats");
-    }
-
-    static async delMultipleGCIdsFromUsers(userIds: string[]): Promise<void> {
-        const keys = userIds.map(userId => RedisKeyType.User + userId + ":groupChats");
-        await this.client.del(keys);
-    }
-
     static async updateUser(user: UserDocument): Promise<void> {
         if (user instanceof UserEntity)
             user = user.toObject();
@@ -253,18 +245,35 @@ export default class RedisService {
     // }
 
     static async acquireUserGroupChatIds(userId: string): Promise<string[]> {
-        const ids = await this.client.sMembers(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userId);
+        let ids = await this.client.sMembers(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userId);
         if (ids.length === 0) {
             const groupChatUsers = await GroupChatUserEntity.find({ userId: userId }, {},).lean(true);
             if (groupChatUsers.length > 0) {
-                const groupChatIds = groupChatUsers.map(x => x.groupChatId);
+                ids = groupChatUsers.map(x => x.groupChatId);
                 await Promise.all([
-                    this.client.sAdd(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userId, groupChatIds),
+                    this.client.sAdd(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userId, ids),
                     this.client.expire(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userId, 60 * 60 * 24)
                 ]);
             }
         }
+        //delete first 30 item from array
         return ids;
+    }
+
+    static async addToUserGroupChatIds(userId: string, groupChatId: string): Promise<void> {
+        await this.client.sAdd(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userId, groupChatId);
+    }
+
+    static async delGroupChatIdsFromUsers(userIds: string[], groupChatIds: string[]): Promise<void> {
+        let remOps = [];
+        const userIdChunks = chunk(userIds, 500);
+        for (let i = 0; i < userIdChunks.length; i++) {
+            for (let j = 0; j < userIdChunks[i].length; j++) {
+                remOps.push(this.client.sRem(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userIdChunks[i][j], groupChatIds));
+            }
+            await Promise.all(remOps);
+            remOps = [];
+        }
     }
 
     static async setGroupChats(): Promise<void> {
@@ -366,10 +375,13 @@ export default class RedisService {
     }
 
     static async addGroupChat(groupChat: GroupChat): Promise<void> {
-        this.client.hSet(RedisKeyType.AllGroupChats, groupChat._id.toString(), JSON.stringify(groupChat));
+        const groupChatId = groupChat._id.toString();
+        this.client.hSet(RedisKeyType.AllGroupChats, groupChatId, JSON.stringify(
+            { _id: groupChatId, title: groupChat.title, coverImageUrl: groupChat.coverImageUrl }
+        ));
     }
 
-    static async addGroupChatLastMessage(groupChatLM: any, groupChatId: string): Promise<void> {
+    static async updateGroupChatLastMessage(groupChatLM: any, groupChatId: string): Promise<void> {
         this.client.hSet(RedisKeyType.AllGroupChats, groupChatId + ":lm", JSON.stringify(groupChatLM))
     }
 

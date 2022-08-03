@@ -23,7 +23,6 @@ export const HashtagSchema: Schema = new Schema({
 
 HashtagSchema.index({ recordStatus: -1, tag: 1, overallPopularity: -1 });
 
-// Just to prove that hooks are still functioning as expected
 HashtagSchema.pre("save", function (next) {
   //
   next()

@@ -1,5 +1,5 @@
 import { Document, Schema } from "mongoose";
-import { FollowLimitation, Gender, MessageLimitation, RecordStatus } from "../enums/enums";
+import { FollowLimitation, Gender, MessageLimitation, RecordStatus, UserProfileStatus } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 import mongoose_fuzzy_searching from "@imranbarbhuiya/mongoose-fuzzy-searching";
 
@@ -33,10 +33,11 @@ export interface User extends BaseEntity {
   avatarKey: string;
   about: string;
   privacySettings: PrivacySettings;
-  lastSeenDate: Date;
+  lastSeenDate: Date | null;
   secondaryEducation: boolean;
   popularity: number;
-  playerId: string; //one signal player id
+  playerId: string; //one signal player id,
+  statistics: UserStatistics;
   //ignore
   schoolName: string | null; //ignore
   facultyName: string | null; //ignore
@@ -48,6 +49,13 @@ export interface User extends BaseEntity {
   suggestedUsers: this[]; //ignore
 }
 
+export class UserStatistics {
+  groupCount: Number;
+  constructor() {
+    this.groupCount = 0;
+  }
+}
+
 export class UpdateTimeLimits {
   lastUsernameUpdate?: Date | null;
   lastFirstNameUpdate?: Date | null;
@@ -56,6 +64,7 @@ export class UpdateTimeLimits {
 export class PrivacySettings {
   followLimitation: FollowLimitation = FollowLimitation.None;
   messageLimitation: MessageLimitation = MessageLimitation.None;
+  profileStatus: UserProfileStatus = UserProfileStatus.Public;
 }
 export class ExternalLogin {
   providerId: string | null;
@@ -156,11 +165,21 @@ export const UserSchema: Schema = new Schema({
     type: new Schema({
       followLimitation: { type: Number, required: false, default: 0 },
       messageLimitation: { type: Number, required: false, default: 0 },
+      profileStatus: { type: Number, required: false, default: 0 },
     },
       { _id: false }),
     required: false,
-    default: { followLimitation: FollowLimitation.None }
+    default: { followLimitation: FollowLimitation.None, messageLimitation: MessageLimitation.None, profileStatus: UserProfileStatus.Public }
   },
+  statistics: {
+    type: new Schema({
+      groupCount: { type: Number, required: false, default: 0 },
+    },
+      { _id: false }),
+    required: false,
+    default: { groupCount: 0 }
+  },
+
   lastSeenDate: { type: Date, required: false, default: null },
   secondaryEducation: { type: Boolean, required: false, default: false },
   popularity: { type: Number, required: false, default: 0 },
@@ -193,7 +212,6 @@ UserSchema.plugin(mongoose_fuzzy_searching,
     ]
   });
 
-// Just to prove that hooks are still functioning as expected
 UserSchema.pre("save", function (next) {
   //
   next()
@@ -248,6 +266,8 @@ UserSchema.methods.minify = async function (
     secondaryEducation: this.secondaryEducation,
     popularity: this.popularity,
     playerId: this.playerId,
+    profileStatus: this.profileStatus,
+    statistics: this.statistics,
     //ignore
     schoolName: null, //ignore
     facultyName: null, //ignore

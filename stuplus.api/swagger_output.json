@@ -1243,11 +1243,11 @@
       }
     },
     "/account/notifyReadNotifications": {
-      "post": {
+      "get": {
         "tags": [
           "Account"
         ],
-        "description": "Notify readed notifications by sending their ids.",
+        "description": "Notify readed notifications.",
         "parameters": [],
         "responses": {
           "200": {
@@ -1270,22 +1270,7 @@
           {
             "bearerAuth": []
           }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AccountNotifyReadNotificationsRequest"
-              }
-            },
-            "application/xml": {
-              "schema": {
-                "$ref": "#/components/schemas/AccountNotifyReadNotificationsRequest"
-              }
-            }
-          }
-        }
+        ]
       }
     },
     "/login/": {
@@ -1878,6 +1863,144 @@
             "application/xml": {
               "schema": {
                 "$ref": "#/components/schemas/AnnouncementCommentLikeDislikeRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/announcement/getSubComments": {
+      "post": {
+        "tags": [
+          "Announcement"
+        ],
+        "description": "Get sub comments of a comment.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementGetSubCommentsResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementGetSubCommentsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementGetSubCommentsRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementGetSubCommentsRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/announcement/subComment": {
+      "post": {
+        "tags": [
+          "Announcement"
+        ],
+        "description": "Comment to a comment.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementSubCommentRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementSubCommentRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/announcement/subCommentLikeDislike": {
+      "post": {
+        "tags": [
+          "Announcement"
+        ],
+        "description": "Like or dislike a announcement",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementSubCommentLikeDislikeRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementSubCommentLikeDislikeRequest"
               }
             }
           }
@@ -5287,12 +5410,30 @@
                 }
               }
             }
+          },
+          "profileStatus": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Public": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Private": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
           }
         },
-        "required": [
-          "followLimitation",
-          "messageLimitation"
-        ],
         "xml": {
           "name": "AccountUpdatePrivacySettingsRequest"
         }
@@ -6575,6 +6716,138 @@
         ],
         "xml": {
           "name": "AnnouncementCommentLikeDislikeRequest"
+        }
+      },
+      "AnnouncementSubCommentRequest": {
+        "type": "object",
+        "properties": {
+          "announcementId": {
+            "type": "string",
+            "example": "announcementId"
+          },
+          "commentId": {
+            "type": "string",
+            "example": "commentId."
+          },
+          "comment": {
+            "type": "string",
+            "example": "some comment."
+          },
+          "replyToId": {
+            "type": "string",
+            "example": "replyToId"
+          }
+        },
+        "required": [
+          "announcementId",
+          "commentId",
+          "comment"
+        ],
+        "xml": {
+          "name": "AnnouncementSubCommentRequest"
+        }
+      },
+      "AnnouncementGetSubCommentsRequest": {
+        "type": "object",
+        "properties": {
+          "lastRecordDate": {
+            "type": "string",
+            "example": "2022-07-02T20:12:59.891Z"
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          },
+          "commentId": {
+            "type": "string",
+            "example": "commentId"
+          }
+        },
+        "required": [
+          "pageSize",
+          "commentId"
+        ],
+        "xml": {
+          "name": "AnnouncementGetSubCommentsRequest"
+        }
+      },
+      "AnnouncementSubCommentLikeDislikeRequest": {
+        "type": "object",
+        "properties": {
+          "subCommentId": {
+            "type": "string",
+            "example": "subCommentId"
+          },
+          "commentId": {
+            "type": "string",
+            "example": "commentId"
+          },
+          "announcementId": {
+            "type": "string",
+            "example": "announcementId"
+          },
+          "type": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          },
+          "beforeType": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "description": {
+                "type": "string",
+                "example": "Type of the previous like/dislike."
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Dislike": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Like": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "None": {
+                    "type": "number",
+                    "example": 2
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "subCommentId",
+          "commentId",
+          "announcementId",
+          "type",
+          "beforeType"
+        ],
+        "xml": {
+          "name": "AnnouncementSubCommentLikeDislikeRequest"
         }
       },
       "InterestGetAllInterestsResponse": {

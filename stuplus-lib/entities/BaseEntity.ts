@@ -34,6 +34,8 @@ import { UserDocument, UserSchema } from "./UserEntity";
 import { QuestionSubCommentDocument, QuestionSubCommentSchema } from "./QuestionSubCommentEntity";
 import { QuestionSubCommentLikeDocument, QuestionSubCommentLikeSchema } from "./QuestionSubCommentLikeEntity";
 import { DailyUserStatisticDocument, DailyUserStatisticSchema } from "./DailyUserStatistic";
+import { AnnouncementSubCommentLikeDocument, AnnouncementSubCommentLikeSchema } from "./AnnouncementSubCommentLikeEntity";
+import { AnnouncementSubCommentDocument, AnnouncementSubCommentSchema } from "./AnnouncementSubCommentEntity";
 
 export default interface BaseEntity {
   [key: string]: any;
@@ -47,7 +49,8 @@ const collections = ["User", "School", "Faculty", "Department", "Interest", "Ann
   "AnnouncementComment", "GroupChat", "GroupChatUser", "GroupMessage", "GroupMessageForward", "GroupMessageRead",
   "Message", "Chat", "AnnouncementCommentLike", "Follow", "FollowRequest", "Question", "QuestionLike", "QuestionComment",
   "QuestionCommentLike", "Report", "Notification", "ImageStatistic", "SearchHistory", "Hashtag", "City", "District",
-  "Neighborhood", "QuestionSubComment", "QuestionSubCommentLike", "DailyUserStatistic"];
+  "Neighborhood", "QuestionSubComment", "QuestionSubCommentLike", "AnnouncementSubComment", "AnnouncementSubCommentLike",
+  "DailyUserStatistic"];
 
 const baseSpreadator: Record<string, AcceptsDiscriminator> = {};
 
@@ -73,6 +76,16 @@ export const QuestionSubCommentEntity = baseSpreadator["QuestionSubComment"].dis
   QuestionSubCommentDocument,
   Model<QuestionSubCommentDocument>
 >("QuestionSubComment", QuestionSubCommentSchema);
+
+export const AnnouncementSubCommentLikeEntity = baseSpreadator["AnnouncementSubCommentLike"].discriminator<
+  AnnouncementSubCommentLikeDocument,
+  Model<AnnouncementSubCommentLikeDocument>
+>("AnnouncementSubCommentLike", AnnouncementSubCommentLikeSchema);
+
+export const AnnouncementSubCommentEntity = baseSpreadator["AnnouncementSubComment"].discriminator<
+  AnnouncementSubCommentDocument,
+  Model<AnnouncementSubCommentDocument>
+>("AnnouncementSubComment", AnnouncementSubCommentSchema);
 
 export const CityEntity = baseSpreadator["City"].discriminator<
   CityDocument,
@@ -281,6 +294,46 @@ function registerHooks(): void {
     next();
   });
   QuestionSubCommentSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  AnnouncementSubCommentLikeSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  AnnouncementSubCommentLikeSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  AnnouncementSubCommentLikeSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  AnnouncementSubCommentLikeSchema.pre("countDocuments", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  AnnouncementSubCommentSchema.pre("find", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  AnnouncementSubCommentSchema.pre("findOne", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  })
+  AnnouncementSubCommentSchema.pre("findOneAndUpdate", function (next) {
+    this.where({ recordStatus: RecordStatus.Active });
+    // this.select({ __v: 0 });
+    next();
+  });
+  AnnouncementSubCommentSchema.pre("countDocuments", function (next) {
     this.where({ recordStatus: RecordStatus.Active });
     // this.select({ __v: 0 });
     next();

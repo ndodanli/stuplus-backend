@@ -934,18 +934,25 @@ const doc = {
             }
         },
         AccountUpdatePrivacySettingsRequest: {
-            $followLimitation: {
+            followLimitation: {
                 type: "enum",
                 values: {
                     None: 0,
                     ByRequest: 1
                 }
             },
-            $messageLimitation: {
+            messageLimitation: {
                 type: "enum",
                 values: {
                     None: 0,
                     OnlyWhoUserFollows: 1
+                }
+            },
+            profileStatus: {
+                type: "enum",
+                values: {
+                    Public: 0,
+                    Private: 1
                 }
             },
         },
@@ -1327,6 +1334,38 @@ const doc = {
             $comment: "some comment."
         },
         AnnouncementCommentLikeDislikeRequest: {
+            $commentId: "commentId",
+            $announcementId: "announcementId",
+            $type: {
+                type: "enum",
+                values: {
+                    Dislike: 0,
+                    Like: 1
+                }
+            },
+            $beforeType: {
+                type: "enum",
+                description: "Type of the previous like/dislike.",
+                values: {
+                    Dislike: 0,
+                    Like: 1,
+                    None: 2
+                }
+            }
+        },
+        AnnouncementSubCommentRequest: {
+            $announcementId: "announcementId",
+            $commentId: "commentId.",
+            $comment: "some comment.",
+            replyToId: "replyToId"
+        },
+        AnnouncementGetSubCommentsRequest: {
+            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            $pageSize: 20,
+            $commentId: "commentId",
+        },
+        AnnouncementSubCommentLikeDislikeRequest: {
+            $subCommentId: "subCommentId",
             $commentId: "commentId",
             $announcementId: "announcementId",
             $type: {

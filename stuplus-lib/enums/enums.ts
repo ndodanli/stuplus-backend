@@ -99,3 +99,8 @@ export enum SearchedEntityType {
    Question = 3,
    Announcement = 4,
 }
+
+export enum UserProfileStatus {
+   Public = 0,
+   Private = 1
+}

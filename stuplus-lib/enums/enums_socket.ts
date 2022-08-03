@@ -33,8 +33,8 @@ export const RedisPrefixKeyType = {
    DBOperations: "d"
 }
 export const RedisSubKeyType = {
-   FollowerCount: "0",
-   FollowingCount: "1",
+   FollowerCount: "0:",
+   FollowingCount: "1:",
    GroupChatIds: "2:",
    DailyLikeCount: "3:",
    DailyCommentCount: "4:",
@@ -83,6 +83,11 @@ export const RedisKeyType = {
    DailyFollowLimit: "l38:followCount:",
    GroupChat: "39:",
    AllGroupChats: "40:agc",
+   DBAnnouncementSubComment: "d41:",
+   DBAnnouncementSubCommentLike: "d42:",
+   DBAnnouncementSubCommentDislike: "d43:",
+   AnnouncementSubCommentCount: "44:",
+   AnnouncementSubCommentLikeCount: "45:",
 }
 
 export const SocketRoomTypes = {

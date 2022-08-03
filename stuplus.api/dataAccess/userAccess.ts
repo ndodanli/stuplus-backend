@@ -36,11 +36,24 @@ export class UserAccess {
         if (response.user.blockedUserIds.includes(currentUserId))
             throw new NotValidError(getMessage("userBlockedShowProfile", acceptedLanguages));
 
+        if (response.user.privacySettings.followLimitation == FollowLimitation.ByRequest) {
+            if (!await FollowEntity.exists({
+                followerId: currentUserId,
+                followingId: targetUserId,
+                recordStatus: RecordStatus.Active
+            })) {
+                response.user.interestIds = [];
+                response.user.about = "";
+                response.user.lastSeenDate = null;
+            }
+        }
 
-        response.user.followerCount = await RedisService.acquire(RedisKeyType.User + targetUserId + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
+        response.user.blockedUserIds = [];
+
+        response.user.followerCount = await RedisService.acquire(RedisKeyType.User + RedisSubKeyType.FollowerCount + targetUserId, redisTTL.SECONDS_10, async () => {
             return await FollowEntity.countDocuments({ followingId: targetUserId });
         });
-        response.user.followingCount = await RedisService.acquire(RedisKeyType.User + targetUserId + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
+        response.user.followingCount = await RedisService.acquire(RedisKeyType.User + RedisSubKeyType.FollowingCount + targetUserId, redisTTL.SECONDS_10, async () => {
             return await FollowEntity.countDocuments({ followerId: targetUserId });
         });
 
@@ -120,8 +133,13 @@ export class UserAccess {
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
 
-        user.privacySettings.followLimitation = payload.followLimitation;
-        user.privacySettings.messageLimitation = payload.messageLimitation;
+        if (payload.followLimitation)
+            user.privacySettings.followLimitation = payload.followLimitation;
+        if (payload.messageLimitation)
+            user.privacySettings.messageLimitation = payload.messageLimitation;
+        if (payload.profileStatus)
+            user.privacySettings.profileStatus = payload.profileStatus;
+
         user.markModified("privacySettings");
 
         await user.save();
@@ -786,7 +804,7 @@ export class UserAccess {
 
     public static async getFollowers(acceptedLanguages: Array<string>, userId: string, payload: BaseFilter): Promise<FollowDocument[]> {
 
-        let followersQuery = FollowEntity.find({ followingId: userId }, { "followingId": 0 })
+        let followersQuery = FollowEntity.find({ followingId: userId }, { followingId: 0, followingUsername: 0, followingFirstName: 0, followingLastName: 0 })
 
         if (payload.lastRecordDate)
             followersQuery = followersQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
@@ -809,7 +827,7 @@ export class UserAccess {
 
     public static async getFollowing(acceptedLanguages: Array<string>, userId: string, payload: BaseFilter): Promise<FollowDocument[]> {
 
-        let followingQuery = FollowEntity.find({ followerId: userId })
+        let followingQuery = FollowEntity.find({ followerId: userId }, { followerId: 0, followerUsername: 0, followerFirstName: 0, followerLastName: 0 })
 
         if (payload.lastRecordDate)
             followingQuery = followingQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
@@ -869,8 +887,8 @@ export class UserAccess {
         return true;
     }
 
-    public static async notifyReadNotifications(acceptedLanguages: Array<string>, userId: string, payload: NotificationsReadedDTO): Promise<boolean> {
-        const notificationsReaded = await NotificationEntity.updateMany({ _id: { $in: payload.notificationIds }, ownerId: userId }, { readed: true });
+    public static async notifyReadNotifications(acceptedLanguages: Array<string>, userId: string): Promise<boolean> {
+        const notificationsReaded = await NotificationEntity.updateMany({ ownerId: userId }, { readed: true });
 
         if (!notificationsReaded)
             throw new NotValidError(getMessage("unknownError", acceptedLanguages));

@@ -19,7 +19,6 @@ export const FacultySchema: Schema = new Schema({
 
 FacultySchema.index({ recordStatus: -1 });
 
-// Just to prove that hooks are still functioning as expected
 FacultySchema.pre("save", function (next) {
   //
   next()

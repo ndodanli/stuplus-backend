@@ -99,7 +99,7 @@ const systemLangs: Record<string, Function> = {
             leaveGroupSuccess: "Başarıyla gruptan ayrıldın, tebrikler.",
             groupCreatedSuccess: "grubunu başarıyla oluşturdum, güzel güzel konuşalım, anlaşalım.",
             groupUpdatedSuccess: "Grubu başarıyla güncelledim.",
-            groupCreatedGuardSuccess: "grubunu başarıyla oluşturdum, güzel güzel konuşalım, anlaşalım. Ayrıca beni gruba eklemene gerek yok, grubu ben kuruyorum zaten.",
+            groupCreatedGuardSuccess: "grubunu başarıyla oluşturdum, güzel güzel konuşalım, anlaşalım. Ayrıca beni gruba eklemenize gerek yok, grubu ben kuruyorum zaten şapşikler :).",
             groupUsersAddedSuccess: "Kullanıcıları başarıyla ekledim.",
             groupUsersAddedGuardSuccess: "Kullanıcıları başarıyla ekledim. Beni gruba eklemene gerek yok, ben zaten her yerdeyim...",
             usernameAlreadyExists: "Bu kullanıcı adı zaten var, başka bir şey seçsen?.",
@@ -121,6 +121,8 @@ const systemLangs: Record<string, Function> = {
             dailyNewPMLimitExceeded: "Bugünlük bu kadar yeni mesaj yeter, yarın tekrar dene",
             dailyFollowLimitExceeded: "Bugünlük bu kadar takip yeter, yarın tekrar dene",
             likeDislikeTypeNotValid: "Beğenme veya beğenmeme için tip geçerli değil.",
+            userGroupLimitReached: "Daha fazla gruba katılmana izin veremeyiz maalesef, senin için tüm grupların gerekli olduğunu ve bu limitin sana yetmediğini düşünüyorsan bize geri bildirimde bulunabilirsin, fikirlerin bizim için önemli.",
+            groupCreatedSomeUsersReachedLimit: "Bazı kullanıcıları kendi grup limitlerini aştıkları için gruba alamadık maalesef, haberin olsun.",
         }
     },
     "en": function (args: string[] = []) {

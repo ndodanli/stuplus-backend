@@ -1,5 +1,6 @@
 import { response } from "express";
 import { _LeanDocument } from "mongoose";
+import userLimits from "../../stuplus-lib/constants/userLimits";
 import { GroupChatEntity, GroupChatUserEntity, UserEntity, GroupMessageEntity, NotificationEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { User } from "../../stuplus-lib/entities/UserEntity";
 import { RecordStatus, NotificationType, GroupChatUserRole } from "../../stuplus-lib/enums/enums";
@@ -21,7 +22,8 @@ export class GroupAccess {
         const groupChat = await GroupChatEntity.findOne({ _id: payload.groupChatId }, {
             hashTags: 0,
             hashTags_fuzzy: 0,
-            title_fuzzy: 0,
+            titlesch: 0,
+            titlesch_fuzzy: 0,
         }).lean(true);
 
         if (!groupChat)
@@ -35,17 +37,29 @@ export class GroupAccess {
         if (findGuardInPayloadUsers != -1)
             payload.userIds.splice(findGuardInPayloadUsers, 1);
 
+        let anyUserReachedLimit = false;
+        const filteredUserIds = await UserEntity.find({ _id: { $in: payload.userIds }, "statistics.groupCount": { $lt: userLimits.TOTAL_GROUPS_PER_USER } }, { _id: 1 }).lean(true);
+        if (payload.userIds.length != filteredUserIds.length)
+            anyUserReachedLimit = true;
+        payload.userIds = filteredUserIds.map(x => x._id.toString());
+
         let chatUsers = payload.userIds.map((userId: string) => {
             return new GroupChatUserEntity({ userId: userId, groupChatId: groupChat._id.toString(), groupRole: GroupChatUserRole.Member });
         });
 
         await GroupChatUserEntity.insertMany(chatUsers);
+        await UserEntity.updateMany({ _id: { $in: chatUsers.map(x => x.userId) } }, { $inc: { "statistics.groupCount": 1 } })
+
+        const addToUserGroupChatIdRedisOps = [];
+        for (let i = 0; i < chatUsers.length; i++) {
+            addToUserGroupChatIdRedisOps.push(RedisService.addToUserGroupChatIds(chatUsers[i].userId, chatUsers[i].groupChatId));
+        }
+        await Promise.all(addToUserGroupChatIdRedisOps);
 
         const socketUserDatas = [];
         const usersIdsNotFound = [];
         for (let i = 0; i < payload.userIds.length; i++) {
             const userId = payload.userIds[i];
-            await RedisService.delGroupChatIdsFromUser(userId);
             const socketId = OnlineUserService.onlineUsers.get(userId);
             if (socketId) {
                 const socketUser = io.sockets.sockets.get(socketId);
@@ -105,11 +119,11 @@ export class GroupAccess {
             }));
         }
         await NotificationEntity.insertMany(notifications);
+        let responseMessage = findGuardInPayloadUsers != -1 ? getMessage("groupUsersAddedGuardSuccess", acceptedLanguages) : getMessage("groupUsersAddedSuccess", acceptedLanguages);
+        if (anyUserReachedLimit)
+            responseMessage += " " + getMessage("groupCreatedSomeUsersReachedLimit", acceptedLanguages);
 
-        if (findGuardInPayloadUsers != -1)
-            return getMessage("groupUsersAddedGuardSuccess", acceptedLanguages);
-        else
-            return getMessage("groupUsersAddedSuccess", acceptedLanguages);
+        return responseMessage;
     }
 
 }

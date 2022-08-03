@@ -35,7 +35,6 @@ export const QuestionSubCommentSchema: Schema = new Schema({
 
 QuestionSubCommentSchema.index({ recordStatus: -1, questionId: -1, commentId: -1, popularity: -1, createdAt: 1 });
 
-// Just to prove that hooks are still functioning as expected
 QuestionSubCommentSchema.pre("save", function (next) {
   //
   next()

@@ -1,5 +1,5 @@
 import { EmailConfigurations } from "aws-sdk/clients/iotevents";
-import { FollowLimitation, FollowStatus, MessageLimitation, ReportType, Role } from "../../stuplus-lib/enums/enums";
+import { FollowLimitation, FollowStatus, MessageLimitation, ReportType, Role, UserProfileStatus } from "../../stuplus-lib/enums/enums";
 import { EmailConfirmation } from "../../stuplus-lib/entities/UserEntity";
 import { mapToDTO } from "../../stuplus-lib/utils/general";
 import { Gender } from "../../stuplus-lib/enums/enums_socket";
@@ -19,8 +19,9 @@ export class UpdateUserProfileDTO {
 }
 
 export class UpdatePrivacySettingsDTO {
-    followLimitation: FollowLimitation = FollowLimitation.None;
-    messageLimitation: MessageLimitation = MessageLimitation.None;
+    followLimitation?: FollowLimitation | null = null;
+    messageLimitation?: MessageLimitation | null = null;
+    profileStatus?: UserProfileStatus | null = null;
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

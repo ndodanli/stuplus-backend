@@ -75,12 +75,28 @@ export const validateUpdateProfile = [
 
 export const validateUpdatePrivacySettings = [
     check('followLimitation')
-        .notEmpty()
-        .withMessage("followLimitation boş olamaz.")
+        .custom(async (value, { req }) => {
+            if (value !== 0 && value !== 1) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
+        .withMessage("followLimitation değeri 0 ile 1 arasında olmalı.")
         .bail(),
     check('messageLimitation')
-        .notEmpty()
-        .withMessage("messageLimitation boş olamaz.")
+        .custom(async (value, { req }) => {
+            if (value !== 0 && value !== 1) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
+        .withMessage("messageLimitation değeri 0 ile 1 arasında olmalı.")
+        .bail(),
+    check('profileStatus')
+        .custom(async (value, { req }) => {
+            if (value !== 0 && value !== 1) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
+        .withMessage("profileStatus değeri 0 ile 1 arasında olmalı.")
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);

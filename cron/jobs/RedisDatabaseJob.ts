@@ -26,6 +26,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
         this.title = title;
         this.description = description;
     }
+    
     async run(): Promise<void> {
         console.log("RedisDatabaseJob Cron job started");
         const totalKeySize = await RedisService.client.dbSize();

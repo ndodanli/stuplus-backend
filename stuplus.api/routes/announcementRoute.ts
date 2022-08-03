@@ -3,11 +3,11 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
-import { validateAddAnnouncement, validateCommentAnnouncement, validateCommentLikeDislikeAnnouncement, validateGetAnnouncementsAnnouncement, validateGetCommentsAnnouncement, validateLikeDislikeAnnouncement } from "../middlewares/validation/announcement/validateAnnouncementRoute";
+import { validateAddAnnouncement, validateCommentAnnouncement, validateCommentLikeDislikeAnnouncement, validateGetAnnouncementsAnnouncement, validateGetCommentsAnnouncement, validateGetSubCommentsAnnouncement, validateLikeDislikeAnnouncement, validateSubCommentAnnouncement, validateSubCommentLikeDislikeAnnouncement } from "../middlewares/validation/announcement/validateAnnouncementRoute";
 import { authorize } from "../middlewares/auth";
 import { Role } from "../../stuplus-lib/enums/enums";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
-import { AnnouncementAddDTO, AnnouncementCommenLikeDisliketDTO, AnnouncementCommentDTO, AnnouncementLikeDislikeDTO, AnnouncementGetMultipleDTO, AnnouncementGetCommentsDTO } from "../dtos/AnnouncementDTOs";
+import { AnnouncementAddDTO, AnnouncementCommenLikeDisliketDTO, AnnouncementCommentDTO, AnnouncementLikeDislikeDTO, AnnouncementGetMultipleDTO, AnnouncementGetCommentsDTO, AnnouncementSubCommentDTO, AnnouncementSubCommenLikeDisliketDTO, AnnouncementGetSubCommentsDTO } from "../dtos/AnnouncementDTOs";
 import { AnnouncementAccess } from "../dataAccess/announcementAccess";
 import axios from "axios";
 const router = Router();
@@ -192,6 +192,84 @@ schema: { $ref: "#/definitions/AnnouncementCommentLikeDislikeRequest" }
   const response = new BaseResponse<object>();
   try {
     response.data = await AnnouncementAccess.commentLikeDislikeAnnouncement(req.selectedLangs(), new AnnouncementCommenLikeDisliketDTO(req.body), res.locals.user._id);
+  } catch (err: any) {
+    response.setErrorMessage(err.message)
+
+    if (err.status != 200)
+      return InternalError(res, response, err);
+  }
+
+  return Ok(res, response)
+});
+
+router.post("/getSubComments", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateGetSubCommentsAnnouncement, async (req: CustomRequest<AnnouncementGetSubCommentsDTO>, res: any) => {
+  /* #swagger.tags = ['Announcement']
+      #swagger.description = 'Get sub comments of a comment.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AnnouncementGetSubCommentsRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/AnnouncementGetSubCommentsResponse"
+   }
+ } */
+  const response = new BaseResponse<object>();
+  try {
+    response.data = await AnnouncementAccess.getSubComments(req.selectedLangs(), new AnnouncementGetSubCommentsDTO(req.body), res.locals.user._id);
+  } catch (err: any) {
+    response.setErrorMessage(err.message)
+
+    if (err.status != 200)
+      return InternalError(res, response, err);
+  }
+
+  return Ok(res, response)
+});
+
+router.post("/subComment", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateSubCommentAnnouncement, async (req: CustomRequest<AnnouncementSubCommentDTO>, res: any) => {
+  /* #swagger.tags = ['Announcement']
+#swagger.description = 'Comment to a comment.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AnnouncementSubCommentRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/NullResponse"
+   }
+ } */
+  const response = new BaseResponse<object>();
+  try {
+    response.data = await AnnouncementAccess.subCommentAnnouncement(req.selectedLangs(), new AnnouncementSubCommentDTO(req.body), res.locals.user._id);
+  } catch (err: any) {
+    response.setErrorMessage(err.message)
+
+    if (err.status != 200)
+      return InternalError(res, response, err);
+  }
+
+  return Ok(res, response)
+});
+
+router.post("/subCommentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateSubCommentLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementSubCommenLikeDisliketDTO>, res: any) => {
+  /* #swagger.tags = ['Announcement']
+#swagger.description = 'Like or dislike a announcement's sub comment.' */
+  /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/AnnouncementSubCommentLikeDislikeRequest" }
+} */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/NullResponse"
+   }
+ } */
+  const response = new BaseResponse<object>();
+  try {
+    response.data = await AnnouncementAccess.subCommentLikeDislikeAnnouncement(req.selectedLangs(), new AnnouncementSubCommenLikeDisliketDTO(req.body), res.locals.user._id);
   } catch (err: any) {
     response.setErrorMessage(err.message)
 

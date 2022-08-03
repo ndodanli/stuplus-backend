@@ -25,7 +25,6 @@ export const ImageStatisticSchema: Schema = new Schema({
 
 // ImageStatisticSchema.index({ recordStatus: -1 });
 
-// Just to prove that hooks are still functioning as expected
 ImageStatisticSchema.pre("save", function (next) {
   //
   next()

@@ -59,11 +59,11 @@ export class QuestionCommentDTO extends BaseFilter {
     }
 }
 
-export class QuestionSubCommentDTO extends BaseFilter {
-    questionId: string = "";
+export class QuestionCommenLikeDisliketDTO extends BaseFilter {
     commentId: string = "";
-    comment: string = "";
-    replyToId: string = "";
+    questionId: string = "";
+    type: LikeType = LikeType.Like;
+    beforeType: LikeType = LikeType.None;
     constructor(obj: any) {
         super(obj);
         if (obj) {
@@ -72,11 +72,11 @@ export class QuestionSubCommentDTO extends BaseFilter {
     }
 }
 
-export class QuestionCommenLikeDisliketDTO extends BaseFilter {
-    commentId: string = "";
+export class QuestionSubCommentDTO extends BaseFilter {
     questionId: string = "";
-    type: LikeType = LikeType.Like;
-    beforeType: LikeType = LikeType.None;
+    commentId: string = "";
+    comment: string = "";
+    replyToId: string = "";
     constructor(obj: any) {
         super(obj);
         if (obj) {

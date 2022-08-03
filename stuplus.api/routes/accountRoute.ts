@@ -15,7 +15,7 @@ import RedisService from "../../stuplus-lib/services/redisService";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { isValidObjectId } from "mongoose";
 import { User } from "../../stuplus-lib/entities/UserEntity";
-import { FollowEntity, GroupChatEntity, GroupChatUserEntity, GroupMessageReadEntity, MessageEntity, NotificationEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { FollowEntity, GroupChatEntity, GroupChatUserEntity, GroupMessageReadEntity, MessageEntity, NotificationEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { RedisKeyType, RedisSubKeyType } from "../../stuplus-lib/enums/enums_socket";
 import redisTTL from "../../stuplus-lib/constants/redisTTL";
 import { SearchAccess } from "../dataAccess/searchAccess";
@@ -44,7 +44,7 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
     response.data.followerCount = await RedisService.acquire(RedisKeyType.User + response.data._id + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
       return await FollowEntity.countDocuments({ followingId: response.data?._id });
     });
-    response.data.followingCount = await RedisService.acquire(RedisKeyType.User + response.data._id + RedisSubKeyType.FollowerCount, redisTTL.SECONDS_10, async () => {
+    response.data.followingCount = await RedisService.acquire(RedisKeyType.User + response.data._id + RedisSubKeyType.FollowingCount, redisTTL.SECONDS_10, async () => {
       return await FollowEntity.countDocuments({ followerId: response.data?._id });
     });
     response.data.unreadNotificationCount = await NotificationEntity.countDocuments({ userId: response.data._id, readed: false });
@@ -67,24 +67,6 @@ router.get("/getUserProfile/:userId", authorize([Role.User, Role.Admin, Role.Con
 "$ref": "#/definitions/AccountGetUserProfileProfileResponse"
 }
 } */
-  // let op = RedisService.client.multi();
-  // let clt = RedisService.client;
-  // let opA = [];
-  // // console.time("t1")
-  // for (let i = 375000; i < 375050; i++) {
-  //   opA.push(clt.hGet("bensubensubensudaffkferkofre21312213", "dsdasfwfwefwefwefwefwefwefwe" + i))
-  //   // await clt.hGet("bensubensubensudaffkferkofre21312213", "dsdasfwfwefwefwefwefwefwefwe" + i);
-  //   // op.hGet("bensubensubensudaffkferkofre21312213", "dsdasfwfwefwefwefwefwefwefwe" + i);
-  //   if (i == 375015)
-  //     opA.push(clt.hGet("bensubensubensudaffkferkofre21312213", "dsdasfwfwefwefwefwefwefwefwe" + "137657567"));
-  // }
-  // opA.push(clt.hGet("bensubensubensudaffkferkofre21312213", "dsdasfwfwefwefwefwefwefwefwe" + "137657567"));
-  // // console.timeEnd("t1")
-  // console.time("test");
-  // // let a = await op.exec();
-  // let a = await Promise.all(opA);
-  // // let a = await clt;
-  // console.timeEnd("test");
 
   const response = new BaseResponse<object>();
   try {
@@ -817,13 +799,9 @@ router.get("/removeNotification/:notificationId", authorize([Role.User, Role.Adm
   return Ok(res, response);
 });
 
-router.post("/notifyReadNotifications", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateNotifyReadNotifications, async (req: CustomRequest<NotificationsReadedDTO>, res: any) => {
+router.get("/notifyReadNotifications", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<any>, res: any) => {
   /* #swagger.tags = ['Account']
-#swagger.description = 'Notify readed notifications by sending their ids.' */
-  /*	#swagger.requestBody = {
-required: true,
-schema: { $ref: "#/definitions/AccountNotifyReadNotificationsRequest" }
-} */
+#swagger.description = 'Notify readed notifications.' */
   /* #swagger.responses[200] = {
    "description": "Success",
    "schema": {
@@ -832,9 +810,7 @@ schema: { $ref: "#/definitions/AccountNotifyReadNotificationsRequest" }
  } */
   const response = new BaseResponse<any>();
   try {
-    const payload = new NotificationsReadedDTO(req.body);
-
-    await UserAccess.notifyReadNotifications(req.selectedLangs(), res.locals.user._id, payload);
+    await UserAccess.notifyReadNotifications(req.selectedLangs(), res.locals.user._id);
   } catch (err: any) {
     response.setErrorMessage(err.message);
 

@@ -1,7 +1,10 @@
 server{
-server_name   stuplus.app www.stuplus.app;
+#server_name   uygulama.nakliyekullan.com www.uygulama.nakliyekullan.com;
+listen 80 default_server;
+listen [::]:80; 
    location / {
-	root /var/www/stuplus.app;
+
+	root /var/www/stuplus.backoffice.frontend;
 	index index.html;
 	try_files $uri $uri/ /index.html;
 

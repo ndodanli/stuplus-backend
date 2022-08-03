@@ -3,6 +3,7 @@ const userLimits = {
     MAX_NEW_PM_PER_DAY: 150,
     MAX_COMMENT_PER_DAY: 300, //TODO: include announcement
     MAX_FOLLOW_PER_DAY: 300,
+    TOTAL_GROUPS_PER_USER: 30,
 }
 
 export default userLimits

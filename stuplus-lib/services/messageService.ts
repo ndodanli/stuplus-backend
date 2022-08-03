@@ -55,6 +55,14 @@ export default class MessageService {
                 }
                 await RedisService.client.hSet(RedisKeyType.AllGroupChats, chatData.e.groupChatId + ":lm", stringify(chatData.e));
                 io.in(groupChatName(chatData.e.groupChatId)).emit("cGmSend", emitData);
+                const lastMessage = {
+                    text: text,
+                    files: files ? files : [],
+                    owner: {
+                        username: fromUser.username
+                    }
+                }
+                await RedisService.updateGroupChatLastMessage(lastMessage, chatData.e.groupChatId)
                 resolve(chatData.e);
             } catch (error: any) {
                 logger.error({ err: error }, `MessageService(senGroupMessage) failed. {Data}`, stringify(

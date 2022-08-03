@@ -82,6 +82,43 @@ export class AnnouncementGetCommentsDTO extends BaseFilter {
     }
 }
 
+export class AnnouncementSubCommentDTO extends BaseFilter {
+    announcementId: string = "";
+    commentId: string = "";
+    comment: string = "";
+    replyToId: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class AnnouncementSubCommenLikeDisliketDTO extends BaseFilter {
+    subCommentId: string = "";
+    commentId: string = "";
+    announcementId: string = "";
+    type: LikeType = LikeType.Like;
+    beforeType: LikeType = LikeType.None;
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class AnnouncementGetSubCommentsDTO extends BaseFilter {
+    commentId: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
 //#region AnnouncementEntity DTOs
 export class AnnouncementUserMM extends BaseFilter {
     _id: string = "";

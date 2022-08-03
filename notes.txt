@@ -15,3 +15,11 @@
 *user groupChatIdleri degisecek
 *daily user statistic => yorum ve begeniler(announcement implementation)
 *vakit kalirsa s3 sifreleme
+
+
+
+
+
+
+-Mobile Notes-
+*interneti geri gelince sockete tekrar baglanmasi(mesajlar alinacak)

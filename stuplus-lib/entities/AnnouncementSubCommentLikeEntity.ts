@@ -2,48 +2,48 @@ import { Document, Schema } from "mongoose";
 import { LikeType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 
-export interface QuestionSubCommentLike extends BaseEntity {
+export interface AnnouncementSubCommentLike extends BaseEntity {
   ownerId: string; //user id
   subCommentId: string;
   commentId: string;
-  questionId: string;
+  announcementId: string;
   type: LikeType;
 }
 
-export interface QuestionSubCommentLikeDocument extends QuestionSubCommentLike, Document {
+export interface AnnouncementSubCommentLikeDocument extends AnnouncementSubCommentLike, Document {
   minify(): unknown;
 }
 
-export const QuestionSubCommentLikeSchema: Schema = new Schema({
+export const AnnouncementSubCommentLikeSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
   subCommentId: { type: String, required: true },
   commentId: { type: String, required: true },
-  questionId: { type: String, required: true },
+  announcementId: { type: String, required: true },
   type: { type: Number, required: true }
 });
 
-QuestionSubCommentLikeSchema.index({ recordStatus: -1, subCommentId: 1, type: 1 });
+AnnouncementSubCommentLikeSchema.index({ recordStatus: -1, subCommentId: 1, type: 1 });
 
-QuestionSubCommentLikeSchema.pre("save", function (next) {
+AnnouncementSubCommentLikeSchema.pre("save", function (next) {
   //
   next()
 })
 
-QuestionSubCommentLikeSchema.pre("deleteOne", function (next) {
+AnnouncementSubCommentLikeSchema.pre("deleteOne", function (next) {
   //
   next()
 });
 
-QuestionSubCommentLikeSchema.methods.minify = async function (
-  this: QuestionSubCommentLikeDocument
+AnnouncementSubCommentLikeSchema.methods.minify = async function (
+  this: AnnouncementSubCommentLikeDocument
 ) {
-  const response: QuestionSubCommentLike & { _id: string } = {
+  const response: AnnouncementSubCommentLike & { _id: string } = {
     _id: this._id,
     recordStatus: this.recordStatus,
     ownerId: this.ownerId,
     subCommentId: this.subCommentId,
     commentId: this.commentId,
-    questionId: this.questionId,
+    announcementId: this.announcementId,
     type: this.type,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,

@@ -192,8 +192,8 @@ export const validateSubCommentLikeDislikeQuestion = [
     },
 ];
 
-export const validateGetCommentsQuestion = [
-    check('questionId')
+export const validateGetSubCommentsQuestion = [
+    check('commentId')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail()
@@ -214,8 +214,8 @@ export const validateGetCommentsQuestion = [
     },
 ];
 
-export const validateGetSubCommentsQuestion = [
-    check('commentId')
+export const validateGetCommentsQuestion = [
+    check('questionId')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail()

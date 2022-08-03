@@ -5,7 +5,8 @@ import { GroupChat } from "../../stuplus-lib/entities/GroupChatEntity";
 import { Hashtag } from "../../stuplus-lib/entities/HashtagEntity";
 import { Question } from "../../stuplus-lib/entities/QuestionEntity";
 import { User, UserDocument } from "../../stuplus-lib/entities/UserEntity";
-import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
+import { UserProfileStatus } from "../../stuplus-lib/enums/enums";
+import { GroupChatType, RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { searchable, searchableWithSpaces } from "../../stuplus-lib/utils/general";
 import { SearchGroupChatDTO } from "../dtos/SearchDTOs";
@@ -92,6 +93,7 @@ export class SearchAccess {
             groupChatsQuery = GroupChatEntity.fuzzySearch(searchableST).allowDiskUse(true);
         } else {
             groupChatsQuery = GroupChatEntity.find({
+                type: GroupChatType.Public,
                 $or: [
                     { titlesch: { $regex: searchableST, $options: "i" } },
                     { hashTags: { $regex: searchableST, $options: "i" } },
@@ -148,11 +150,12 @@ export class SearchAccess {
         let users: User[] = [];
         await RedisService.refreshFollowingsIfNotExists(rUser._id.toString());
         users = await UserEntity.find({
+            "privacySettings.profileStatus": UserProfileStatus.Public,
             schoolId: rUser.schoolId,
             departmentId: rUser.departmentId,
             grade: rUser.grade,
         }, {
-            _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+            _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
         })
             .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
             .limit(queryLimit)
@@ -173,12 +176,13 @@ export class SearchAccess {
             if (queryLimitReached)
                 while (users.length < suggestionLimit) {
                     let secondQueryUsers = await UserEntity.find({
+                        "privacySettings.profileStatus": UserProfileStatus.Public,
                         schoolId: rUser.schoolId,
                         departmentId: rUser.departmentId,
                         grade: rUser.grade,
                         createdAt: { $lt: lastUserCreatedAt },
                     }, {
-                        _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+                        _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
                     })
                         .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
                         .limit(queryLimit)
@@ -201,11 +205,12 @@ export class SearchAccess {
         const firstFoundedUserIds = users.map(user => user._id);
         if (users.length < suggestionLimit) {
             let usersWithSameDepartment = await UserEntity.find({
+                "privacySettings.profileStatus": UserProfileStatus.Public,
                 _id: { $nin: firstFoundedUserIds },
                 schoolId: rUser.schoolId,
                 departmentId: rUser.departmentId,
             }, {
-                _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+                _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
             })
                 .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
                 .limit(queryLimit)
@@ -227,12 +232,13 @@ export class SearchAccess {
                 if (queryLimitReached)
                     while (users.length < suggestionLimit) {
                         let secondQueryUsers = await UserEntity.find({
+                            "privacySettings.profileStatus": UserProfileStatus.Public,
                             _id: { $nin: firstFoundedUserIds },
                             schoolId: rUser.schoolId,
                             departmentId: rUser.departmentId,
                             createdAt: { $lt: lastUserCreatedAt },
                         }, {
-                            _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+                            _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
                         })
                             .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
                             .limit(queryLimit)
@@ -256,10 +262,11 @@ export class SearchAccess {
         const secondFoundedUserIds = users.map(user => user._id);
         if (users.length < suggestionLimit) {
             let usersWithSameSchool = await UserEntity.find({
+                "privacySettings.profileStatus": UserProfileStatus.Public,
                 _id: { $nin: secondFoundedUserIds },
                 schoolId: rUser.schoolId,
             }, {
-                _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+                _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
             })
                 .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
                 .limit(queryLimit)
@@ -281,11 +288,12 @@ export class SearchAccess {
                 if (queryLimitReached)
                     while (users.length < suggestionLimit) {
                         let secondQueryUsers = await UserEntity.find({
+                            "privacySettings.profileStatus": UserProfileStatus.Public,
                             _id: { $nin: secondFoundedUserIds },
                             schoolId: rUser.schoolId,
                             createdAt: { $lt: lastUserCreatedAt },
                         }, {
-                            _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1
+                            _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
                         })
                             .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
                             .limit(queryLimit)

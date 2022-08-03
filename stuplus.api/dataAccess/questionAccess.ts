@@ -330,6 +330,7 @@ export class QuestionAccess {
             commentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionComment + question._id.toString());
             // commentCount += await RedisService.client.hLen(RedisKeyType.DBQuestionSubComment + question._id.toString());
             commentCount += await QuestionCommentEntity.countDocuments({ questionId: question._id });
+            commentCount += await QuestionSubCommentEntity.countDocuments({ questionId: question._id });
             return commentCount;
         });
         let likeType;
@@ -376,32 +377,6 @@ export class QuestionAccess {
 
         await RedisService.incrementDailyCommentCount(currentUserId);
         return { _id: questionCommentEntity.id };
-    }
-
-    public static async subCommentQuestion(acceptedLanguages: Array<string>, payload: QuestionSubCommentDTO, currentUserId: string): Promise<object> {
-        if (await RedisService.isDailyCommentLimitExceeded(currentUserId))
-            throw new NotValidError(getMessage("dailyCommentLimitExceeded", acceptedLanguages));
-        let now = new Date();
-        const questionSubCommentEntity = new QuestionSubCommentEntity({});
-        const questionSubCommentData: any = {
-            e: {
-                _id: questionSubCommentEntity.id,
-                ownerId: currentUserId,
-                questionId: payload.questionId,
-                commentId: payload.commentId,
-                comment: payload.comment,
-                popularity: 0,
-                createdAt: now,
-                updatedAt: now
-            },
-        }
-        if (payload.replyToId)
-            questionSubCommentData.e.replyToId = payload.replyToId;
-
-        await RedisService.client.hSet(RedisKeyType.DBQuestionSubComment + payload.commentId, questionSubCommentEntity.id, stringify(questionSubCommentData));
-
-        await RedisService.incrementDailyCommentCount(currentUserId);
-        return { _id: questionSubCommentEntity.id.toString() };
     }
 
     public static async commentLikeDislikeQuestion(acceptedLanguages: Array<string>, payload: QuestionCommenLikeDisliketDTO, currentUserId: string): Promise<object> {
@@ -458,6 +433,32 @@ export class QuestionAccess {
 
         await RedisService.incrementDailyLikeCount(currentUserId);
         return { beforeType: payload.type };
+    }
+
+    public static async subCommentQuestion(acceptedLanguages: Array<string>, payload: QuestionSubCommentDTO, currentUserId: string): Promise<object> {
+        if (await RedisService.isDailyCommentLimitExceeded(currentUserId))
+            throw new NotValidError(getMessage("dailyCommentLimitExceeded", acceptedLanguages));
+        let now = new Date();
+        const questionSubCommentEntity = new QuestionSubCommentEntity({});
+        const questionSubCommentData: any = {
+            e: {
+                _id: questionSubCommentEntity.id,
+                ownerId: currentUserId,
+                questionId: payload.questionId,
+                commentId: payload.commentId,
+                comment: payload.comment,
+                popularity: 0,
+                createdAt: now,
+                updatedAt: now
+            },
+        }
+        if (payload.replyToId)
+            questionSubCommentData.e.replyToId = payload.replyToId;
+
+        await RedisService.client.hSet(RedisKeyType.DBQuestionSubComment + payload.commentId, questionSubCommentEntity.id, stringify(questionSubCommentData));
+
+        await RedisService.incrementDailyCommentCount(currentUserId);
+        return { _id: questionSubCommentEntity.id.toString() };
     }
 
     public static async subCommentLikeDislikeQuestion(acceptedLanguages: Array<string>, payload: QuestionSubCommenLikeDisliketDTO, currentUserId: string): Promise<object> {
