@@ -3,13 +3,15 @@ import { ReportType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 export interface Report extends BaseEntity {
   ownerId: string; //user id
-  reportType: ReportType;
+  reportType: ReportType[];
   details: string;
   userId: string;
   messageId: string;
   messageText: string;
   commentId: string;
   commentText: string;
+  questionId: string;
+  questionText: string;
   announcementId: string;
   announcementText: string;
 }
@@ -20,7 +22,7 @@ export interface ReportDocument extends Report, Document {
 
 export const ReportSchema: Schema = new Schema({
   ownerId: { type: String, required: true }, //user id
-  reportType: { type: String, required: true },
+  reportType: { type: Array.of(String), required: true },
   details: { type: String, required: false, default: null },
   userId: { type: String, required: false, default: null },
   messageId: { type: String, required: false, default: null },
@@ -29,6 +31,8 @@ export const ReportSchema: Schema = new Schema({
   commentText: { type: String, required: false, default: null },
   announcementId: { type: String, required: false, default: null },
   announcementText: { type: String, required: false, default: null },
+  questionId: { type: String, required: false, default: null },
+  questionText: { type: String, required: false, default: null },
 });
 
 // ReportSchema.index({ recordStatus: -1 });
@@ -59,6 +63,8 @@ ReportSchema.methods.minify = async function (
     messageText: this.messageText,
     commentId: this.commentId,
     commentText: this.commentText,
+    questionId: this.questionId,
+    questionText: this.questionText,
     announcementId: this.announcementId,
     announcementText: this.announcementText,
     recordDeletionDate: this.recordDeletionDate,

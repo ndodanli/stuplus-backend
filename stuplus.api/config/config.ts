@@ -10,7 +10,7 @@ let config = {
         BUCKET_NAME_S3: "stuplus-bucket"
     },
     MONGODB: {
-        MONGODB_URL: "mongodb+srv://testDevAdmin:TTSACQPQdb2n4S82@testdevcluster.zo4yj.mongodb.net/Stuplus?retryWrites=true&w=majority",
+        MONGODB_URL: "mongodb://admin:QfWSuFYc9sa23cGAqbjRW59EZ@212.98.224.194/Stuplus?retryWrites=true&w=majority&authSource=admin",
         MONGODB_URL_LOCAL: "mongodb://localhost/stuplus",
     },
     JWT_SECRET: "FAKULTEMJWT!!@#!@$!@SECRE@$@$T",

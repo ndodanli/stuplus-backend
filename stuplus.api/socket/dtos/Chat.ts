@@ -4,7 +4,7 @@ import { GroupChatType } from "../../../stuplus-lib/enums/enums_socket";
 import { mapToDTO } from "../../../stuplus-lib/utils/general";
 
 export class CreateGroupDTO {
-    userIds: string[] = [];
+    userIds: string[] | string = [];
     title: string = "";
     type: GroupChatType = GroupChatType.Private;
     avatarKey: string = "";

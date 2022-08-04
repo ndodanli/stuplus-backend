@@ -3005,14 +3005,73 @@
     },
     "/chat/createGroup": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Create a new group chat.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountUpdateProfilePhotoResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountUpdateProfilePhotoResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "coverImage": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "userIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "hashTags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "number",
+                    "description": "Public: 0, Private: 1"
+                  }
+                },
+                "required": [
+                  "userIds",
+                  "title",
+                  "type"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/chat/removeGroup/{groupChatId}": {
@@ -4599,6 +4658,14 @@
             "example": "62ab8a204166fd1eaebbb3fa"
           },
           "announcementText": {
+            "type": "string",
+            "example": "xxx"
+          },
+          "questionId": {
+            "type": "string",
+            "example": "62ab8a204166fd1eaebbb3fa"
+          },
+          "questionText": {
             "type": "string",
             "example": "xxx"
           }

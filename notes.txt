@@ -17,8 +17,9 @@
 *vakit kalirsa s3 sifreleme
 
 
-
-
+*arkadas onerileri genisletilecek
+*bloklanan user icerikleri duzenlenecek(bloklayan kisiye gosterilmeyecek)
+***gc total messages => save and process this count for unread message count
 
 
 -Mobile Notes-

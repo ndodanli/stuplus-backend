@@ -3,8 +3,8 @@ import BaseEntity from "./BaseEntity";
 
 export interface GroupMessageRead extends BaseEntity {
   groupChatId: string;
-  messageId: string;
   readedBy: String; //user id
+  lastReadedAt: Date;
 }
 
 export interface GroupMessageReadDocument extends GroupMessageRead, Document {
@@ -13,8 +13,8 @@ export interface GroupMessageReadDocument extends GroupMessageRead, Document {
 
 export const GroupMessageReadSchema: Schema = new Schema({
   groupChatId: { type: String, required: true },
-  messageId: { type: String, required: true },
-  readedBy: { type: String, required: true }
+  readedBy: { type: String, required: true },
+  lastReadedAt: { type: Date, required: true }
 });
 
 GroupMessageReadSchema.index({ recordStatus: -1, readedBy: -1, groupChatId: -1, createdAt: -1 });
@@ -37,10 +37,10 @@ GroupMessageReadSchema.methods.minify = async function (
     recordStatus: this.recordStatus,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
-    messageId: this.messageId,
     readedBy: this.readedBy,
     recordDeletionDate: this.recordDeletionDate,
-    groupChatId: this.groupChatId
+    groupChatId: this.groupChatId,
+    lastReadedAt: this.lastReadedAt
   };
   return response;
 };

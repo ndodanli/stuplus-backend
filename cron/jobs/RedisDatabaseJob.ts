@@ -26,7 +26,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
         this.title = title;
         this.description = description;
     }
-    
+
     async run(): Promise<void> {
         console.log("RedisDatabaseJob Cron job started");
         const totalKeySize = await RedisService.client.dbSize();
@@ -238,10 +238,10 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                     privateMessageBatches[iterator].push(query.e);
                                     break;
                                 case RedisPMOperationType.UpdateReaded:
-                                    readedBatches[iterator].push({ ...query.e, readed: true });
+                                    readedBatches[iterator].push(query.e);
                                     break;
                                 case RedisPMOperationType.UpdateForwarded:
-                                    forwardedBatches[iterator].push({ ...query.e, forwarded: true });
+                                    forwardedBatches[iterator].push(query.e);
                                     break;
                                 case RedisPMOperationType.UpdateSendFileMessage:
                                     updateSendFileBatches[iterator].push(query.e);
@@ -265,22 +265,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
 
                     if (forwardedBatches.length > 0) {
                         for (let i = 0; i < forwardedBatches.length; i++) {
-                            if (forwardedBatches[i].length > 0) {
+                            for (let j = 0; j < forwardedBatches[i].length; j++) {
                                 // console.time("PM updateForwarded Bulk operation time. order: " + i);
-                                const bulkForwardUpdateOp = forwardedBatches[i].map(obj => {
-                                    return {
-                                        updateOne: {
-                                            filter: {
-                                                _id: obj._id
-                                            },
-
-                                            update: {
-                                                forwarded: true
-                                            }
-                                        }
-                                    }
-                                })
-                                await MessageEntity.bulkWrite(bulkForwardUpdateOp);
+                                await MessageEntity.updateMany({ chatId: forwardedBatches[i][j].chatId, ownerId: { $ne: forwardedBatches[i][j].ownerId }, forwarded: false, createdAt: { $lte: forwardedBatches[i][j].createdAt } }, { forwarded: true });
                                 // console.timeEnd("PM updateForwarded Bulk operation time. order: " + i);
                             }
                         }
@@ -288,24 +275,10 @@ export default class RedisDatabaseJob implements IBaseCronJob {
 
                     if (readedBatches.length > 0) {
                         for (let i = 0; i < readedBatches.length; i++) {
-                            if (readedBatches[i].length > 0) {
+                            for (let j = 0; j < readedBatches[i].length; j++) {
                                 // console.time("PM updateReaded Bulk operation time. order: " + i);
-                                const bulkForwardUpdateOp = readedBatches[i].map(obj => {
-                                    return {
-                                        updateOne: {
-                                            filter: {
-                                                _id: obj._id
-                                            },
-
-                                            update: {
-                                                readed: true
-                                            }
-                                        }
-                                    }
-                                })
-                                await MessageEntity.bulkWrite(bulkForwardUpdateOp);
+                                await MessageEntity.updateMany({ chatId: forwardedBatches[i][j].chatId, ownerId: { $ne: forwardedBatches[i][j].ownerId }, readed: false, createdAt: { $lte: forwardedBatches[i][j].createdAt } }, { readed: true });
                                 // console.timeEnd("PM updateReaded Bulk operation time. order: " + i);
-
                             }
                         }
                     }
@@ -352,7 +325,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     const data = await RedisService.client.hVals(currentKey);
                     const keysToDelete = new Array<string>();
                     const groupMessageBatches: Array<Array<object>> = [];
-                    const readedBatches: Array<Array<object>> = [];
+                    const readedBatches: Array<Array<any>> = [];
                     const forwardedBatches: Array<Array<object>> = [];
                     const updateSendFileBatches: Array<Array<RedisFileMessageUpdateDTO>> = [];
                     const batchSize = config.BATCH_SIZES.GM_BATCH_SIZE;
@@ -360,7 +333,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         groupMessageBatches[iterator] = new Array<object>();
-                        readedBatches[iterator] = new Array<object>();
+                        readedBatches[iterator] = new Array<any>();
                         forwardedBatches[iterator] = new Array<object>();
                         updateSendFileBatches[iterator] = new Array<RedisFileMessageUpdateDTO>();
                         for (let j = 0; j < currentBatch.length; j++) {
@@ -369,7 +342,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                 case RedisGMOperationType.InsertMessage:
                                     groupMessageBatches[iterator].push(query.e);
                                     break;
-                                case RedisGMOperationType.InsertReaded:
+                                case RedisGMOperationType.UpdateReaded:
                                     readedBatches[iterator].push(query.e);
                                     break;
                                 case RedisGMOperationType.InsertForwarded:
@@ -409,7 +382,21 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         for (let i = 0; i < readedBatches.length; i++) {
                             if (readedBatches[i].length > 0) {
                                 // console.time("GM insertReaded Bulk operation time. order: " + i);
-                                await GroupMessageReadEntity.insertMany(readedBatches[i]);
+                                const bulkReadedOp = readedBatches[i].map(obj => {
+                                    return {
+                                        updateOne: {
+                                            filter: {
+                                                groupChatId: obj.groupChatId,
+                                                readedBy: obj.readedBy
+                                            },
+                                            update: {
+                                                lastReadedAt: obj.lastReadedAt,
+                                            },
+                                            upsert: true
+                                        }
+                                    }
+                                });
+                                await GroupMessageReadEntity.bulkWrite(bulkReadedOp);
                                 // console.timeEnd("GM insertReaded Bulk operation time. order: " + i);
                             }
                         }
@@ -419,7 +406,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         for (let i = 0; i < updateSendFileBatches.length; i++) {
                             if (updateSendFileBatches[i].length > 0) {
                                 // console.time("GM updateSendFile Bulk operation time. order: " + i);
-                                const bulkForwardUpdateOp = updateSendFileBatches[i].map(obj => {
+                                const bulkUpdateSendFileOp = updateSendFileBatches[i].map(obj => {
                                     return {
                                         updateOne: {
                                             filter: {
@@ -434,7 +421,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                         }
                                     }
                                 });
-                                await GroupMessageEntity.bulkWrite(bulkForwardUpdateOp);
+                                await GroupMessageEntity.bulkWrite(bulkUpdateSendFileOp);
                                 // console.timeEnd("GM updateSendFile Bulk operation time. order: " + i);
                             }
                         }

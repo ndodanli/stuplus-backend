@@ -60,10 +60,6 @@ io.on("connection", async (socket: ISocket) => {
         socket.disconnect();
         return;
     }
-
-    // await UserEntity.findOne({ _id: decodedJwtUser["_id"] }, {
-    //     "_id": 0, "__t": 0, "blockedUserIds": 1, "firstName": 1, "lastName": 1, "profilePhotoUrl": 1
-    // }, { lean: true });
     const user = await RedisService.acquireUser(decodedJwtUser["_id"], [
         "blockedUserIds", "firstName", "lastName", "profilePhotoUrl", "username", "avatarKey"
     ]);
@@ -78,7 +74,7 @@ io.on("connection", async (socket: ISocket) => {
     // const groupChats = await GroupChatUserEntity.find({ userId: decodedJwtUser["_id"] }, {
     //     "_id": 0, "groupChatId": 1
     // }, { lean: true });
-    const groupChatIds = await RedisService.acquireUserGroupChatIds(socket.data.user._id)
+    const groupChatIds = await RedisService.acquireUserGroupChatIds(socket.data.user._id);
     for (let i = 0; i < groupChatIds.length; i++) {
         socket.join(groupChatName(groupChatIds[i]));
     }
@@ -112,7 +108,7 @@ io.on("connection", async (socket: ISocket) => {
     socket.on("pmSend", async (data: RedisMessageDTO, cb: Function) => {
         try {
             //TODO: offline durumu
-            if (!data.m || !data.to) {
+            if (!data.t || !data.to) {
                 cb({ success: false, message: "Invalid parameters." });
                 return;
             }
@@ -163,7 +159,7 @@ io.on("connection", async (socket: ISocket) => {
                 e: {
                     _id: messageEntity.id,
                     ownerId: socket.data.user._id,
-                    text: data.m,
+                    text: data.t,
                     chatId: data.ci,
                     replyToId: data.rToId,
                     createdAt: now,
@@ -175,7 +171,7 @@ io.on("connection", async (socket: ISocket) => {
 
             await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, messageEntity.id + RedisPMOperationType.InsertMessage, stringify(chatData));
 
-            const emitData = { t: data.m, mi: messageEntity.id, ci: data.ci, f: null };
+            const emitData = { t: data.t, mi: messageEntity.id, ci: data.ci, f: null };
 
             if (!data.ci)
                 emitData["f"] = socket.data.user;
@@ -200,24 +196,21 @@ io.on("connection", async (socket: ISocket) => {
     socket.on("pmForwarded", async (data: RedisMessageForwardReadDTO, cb: Function) => {
         try {
             //TODO: offline durumu
-            if (!data.mids || !data.mids.length || !data.ci || !data.to) {
+            if (!data.ci || !data.to) {
                 cb({ success: false, message: "Invalid parameters." });
                 return;
             }
             const now = new Date();
-            for (let i = 0; i < data.mids.length; i++) {
-                const mi = data.mids[i];
-                const chatData: object = {
-                    e: {
-                        _id: mi,
-                        createdAt: now,
-                        updatedAt: now,
-                    }, t: RedisPMOperationType.UpdateForwarded
-                };
-                await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, mi + RedisPMOperationType.UpdateForwarded, stringify(chatData));
-            }
+            const chatData: object = {
+                e: {
+                    ownerId: socket.data.user._id,
+                    chatId: data.ci,
+                    createdAt: now
+                }, t: RedisPMOperationType.UpdateForwarded
+            };
+            await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, socket.data.user._id, stringify(chatData));
 
-            io.to(data.to).emit("cPmForwarded", { mids: data.mids, ci: data.ci });
+            io.to(data.to).emit("cPmForwarded", { ci: data.ci });
 
             cb({ success: true });
         } catch (error: any) {
@@ -228,28 +221,23 @@ io.on("connection", async (socket: ISocket) => {
     socket.on("pmReaded", async (data: RedisMessageForwardReadDTO, cb: Function) => {
         try {
             //TODO: offline durumu
-            if (!data.mids || !data.mids.length || !data.ci || !data.to) {
+            if (!data.ci || !data.to) {
                 cb({ success: false, message: "Invalid parameters." });
                 return;
             }
 
             const now = new Date();
-
-            for (let i = 0; i < data.mids.length; i++) {
-                const mi = data.mids[i];
-
-                const chatData: object = {
-                    e: {
-                        _id: mi,
-                        createdAt: now,
-                        updatedAt: now,
-                    }, t: RedisPMOperationType.UpdateReaded
-                }
-
-                await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, mi + RedisPMOperationType.UpdateReaded, stringify(chatData));
+            const chatData: object = {
+                e: {
+                    ownerId: socket.data.user._id,
+                    chatId: data.ci,
+                    createdAt: now
+                }, t: RedisPMOperationType.UpdateReaded
             }
 
-            io.to(data.to).emit("cPmReaded", { mids: data.mids, ci: data.ci });
+            await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, socket.data.user._id, stringify(chatData));
+
+            io.to(data.to).emit("cPmReaded", { ci: data.ci });
 
             cb({ success: true });
         } catch (error: any) {
@@ -318,86 +306,52 @@ io.on("connection", async (socket: ISocket) => {
     });
 
     socket.on("gmForwarded", async (data: RedisGroupMessageForwardReadDTO, cb: Function) => {
-        try {
-            //TODO: offline durumu
-            if (!data.mids || !data.mids.length || !data.gCi) {
-                cb({ success: false, message: "Invalid parameters." });
-                return;
-            }
+        // try {
+        //     //TODO: offline durumu
+        //     if (!data.gCi) {
+        //         cb({ success: false, message: "Invalid parameters." });
+        //         return;
+        //     }
 
-            const now = new Date();
-            for (let i = 0; i < data.mids.length; i++) {
-                const mi = data.mids[i];
-                const gMessageForwardEntity = new GroupMessageForwardEntity({});
-                const chatData: object = {
-                    e: {
-                        _id: gMessageForwardEntity.id, messageId: mi, forwardedTo: socket.data.user._id,
-                        createdAt: now,
-                        updatedAt: now,
-                    },
-                    t: RedisGMOperationType.InsertForwarded
-                }
-                await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, gMessageForwardEntity.id + RedisGMOperationType.InsertForwarded, stringify(chatData));
-            }
+        //     const now = new Date();
+        //     const chatData: object = {
+        //         e: {
+        //             groupChatId: data.gCi,
+        //             ownerId: socket.data.user._id,
+        //             createdAt: now,
+        //             updatedAt: now,
+        //         },
+        //         t: RedisGMOperationType.InsertForwarded
+        //     }
+        //     await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, socket.data.user._id, stringify(chatData));
 
-            socket.to(groupChatName(data.gCi)).emit("cGmForwarded",
-                {
-                    mi: data.mids,
-                    gCi: data.gCi,
-                    to: {
-                        id: socket.data.user._id,
-                        uN: socket.data.user.username,
-                        fN: socket.data.user.firstName,
-                        lN: socket.data.user.lastName
-                    }
-                });
+        //     //TODO: ileride mesaji izleme sayfasindakilere socketten veri gonderilecek
 
-            cb({ success: true });
+        //     cb({ success: true });
 
-        } catch (error: any) {
-            cb({ success: false, message: error?.message });
-        }
+        // } catch (error: any) {
+        //     cb({ success: false, message: error?.message });
+        // }
     });
 
     socket.on("gmReaded", async (data: RedisGroupMessageForwardReadDTO, cb: Function) => {
         try {
             //TODO: offline durumu
-            if (!data.mids || !data.mids.length || !data.gCi) {
+            if (!data.gCi) {
                 cb({ success: false, message: "Invalid parameters." });
                 return;
             }
 
             const now = new Date();
-            for (let i = 0; i < data.mids.length; i++) {
-                const mi = data.mids[i];
-                const gMessageReadEntity = new GroupMessageReadEntity({});
-                const chatData: object = {
-                    e: {
-                        _id: gMessageReadEntity.id,
-                        groupChatId: data.gCi,
-                        messageId: mi,
-                        readedBy: socket.data.user._id,
-                        createdAt: now,
-                        updatedAt: now,
-                    },
-                    t: RedisGMOperationType.InsertReaded
-                }
-                await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, gMessageReadEntity.id + RedisGMOperationType.InsertReaded, stringify(chatData));
+            const chatData: object = {
+                e: {
+                    groupChatId: data.gCi,
+                    readedBy: socket.data.user._id,
+                    lastReadedAt: now,
+                },
+                t: RedisGMOperationType.UpdateReaded
             }
-
-            socket.to(groupChatName(data.gCi)).emit("cGmReaded",
-                {
-                    mi: data.mids,
-                    gCi: data.gCi,
-                    by: {
-                        id: socket.data.user._id,
-                        uN: socket.data.user.username,
-                        fN: socket.data.user.firstName,
-                        lN: socket.data.user.lastName
-                    }
-                });
-
-            cb({ success: true });
+            await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, socket.data.user._id, stringify(chatData));
 
         } catch (error: any) {
             cb({ success: false, message: error?.message });
@@ -837,17 +791,17 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
             else
                 notFoundLastMessageChatIds.push(userPMChat._id.toString());
 
-            let user = users.find(x => x._id.toString() === userPMChat.ownerId);
-            if (user) {
-                userPMChat.owner = user;
+            let chatUserId: string;
+            if (userPMChat.ownerId === res.locals.user._id) {
+                chatUserId = userPMChat.participantId;
             } else {
-                user = users.find(x => x._id.toString() === userPMChat.participantId.toString());
-                if (user) {
-                    userPMChat.participant = user;
-                } else {
-                    pmIndexesToRemove.push(i);
-                }
+                chatUserId = userPMChat.ownerId;
             }
+
+            if (chatUserId)
+                userPMChat.chatUser = users.find(x => x._id.toString() === chatUserId);
+            else
+                pmIndexesToRemove.push(i);
         }
         pmIndexesToRemove.forEach(i => userPMChats.splice(i, 1));
 
@@ -1056,19 +1010,8 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
                 }
             }
         }
-        console.time("dbGMReads");
-        const dbGMReads: any = await GroupMessageReadEntity.aggregate([
-            { $match: { readedBy: res.locals.user._id, recordStatus: RecordStatus.Active } },
-            { $sort: { createdAt: -1 } },
-            {
-                $group: {
-                    _id: "$readedBy",
-                    groupChatId: { $first: "$groupChatId" },
-                    createdAt: { $first: "$createdAt" },
-                }
-            }
-        ]);
-        console.timeEnd("dbGMReads");
+
+        const dbGMReads: any = await GroupMessageReadEntity.find({ readedBy: { $in: userGroupChatsIds } });
 
         const redisGMReads: any = []; redisGroupChats
         const redisGMs: any = [];
@@ -1079,7 +1022,7 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
             const redisGMAll = await RedisService.client.hVals(RedisKeyType.DBGroupMessage + userGroupChat._id.toString());
             for (let i = 0; i < redisGMAll.length; i++) {
                 const chatData = JSON.parse(redisGMAll[i]);
-                if (chatData.t == RedisGMOperationType.InsertReaded)
+                if (chatData.t == RedisGMOperationType.UpdateReaded)
                     redisGMReads.push(chatData.e);
                 else if (chatData.t == RedisGMOperationType.InsertMessage)
                     redisGMs.push(chatData.e);
@@ -1090,7 +1033,7 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
 
             userGroupChat.unreadMessageCount = redisGMs.filter((x: { ownerId: any; readed: any; }) => !x.readed && x.ownerId != res.locals.user._id).length;
 
-            const lastReadedMessageCreatedAt = dbGMReads.find((x: { groupChatId: string; }) => x.groupChatId === userGroupChat._id.toString())?.createdAt;
+            const lastReadedMessageCreatedAt = dbGMReads.find((x: { groupChatId: string; }) => x.groupChatId === userGroupChat._id.toString())?.lastReadedAt;
             if (lastReadedMessageCreatedAt) {
                 unreadMessageCountQueries.push(GroupMessageEntity
                     .find({
@@ -1130,6 +1073,50 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
 
 //PASSED:true(not chat)
 router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "chat/group_images/", 5242880), validateCreateGroup, async (req: CustomRequest<any>, res: any) => {
+    /* #swagger.tags = ['Chat']
+       #swagger.description = 'Create a new group chat.' */
+    /*	#swagger.requestBody = {
+    required: true,
+   "@content": {
+                  "multipart/form-data": {
+                      schema: {
+                          type: "object",
+                          properties: {
+                              coverImage: {
+                                  type: "string",
+                                  format: "binary"
+                              },
+                              userIds: {
+                                    type: "array",
+                                    items: {
+                                        type: "string"
+                                    }
+                              },
+                              hashTags: {
+                                    type: "array",
+                                    items: {
+                                        type: "string"
+                                    }
+                              },
+                              title: {
+                                    type: "string",
+                              },
+                              type: {
+                                    type: "number",
+                                    description: "Public: 0, Private: 1",
+                              }
+                          },
+                          required: ["userIds", "title", "type"]
+                      }
+                  }
+              } 
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/AccountUpdateProfilePhotoResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
         if (req.fileValidationErrors?.length) {
@@ -1145,6 +1132,8 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
 
         //TODO: check if users who added can be added to group
         const payload = new CreateGroupDTO(req.body);
+        if (typeof payload.userIds === "string")
+            payload.userIds = payload.userIds.split(",");
         const redisOps: Promise<any>[] = [];
         if (payload.hashTags && payload.hashTags.length > 0) {
             payload.hashTags.forEach(async (x, index, arr) => {
@@ -1754,7 +1743,7 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
                 { ownerId: res.locals.user._id, participantId: payload.to },
                 { $setOnInsert: { ownerId: res.locals.user._id, participantId: payload.to } },
                 { upsert: true, new: true });
-            payload.ci = chatEntity.id; //may be null, catch it later
+            payload.ci = chatEntity._id.toString(); //may be null, catch it later
             response.data["ci"] = payload.ci;
             await RedisService.incrementDailyNewPMCount(res.locals.user._id);
         }

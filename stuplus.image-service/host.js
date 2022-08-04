@@ -30,7 +30,13 @@ module.exports = class HostRepo {
     static resetHosts() {
         return new Promise((resolve, reject) => {
             lock.acquire(["hosts"], async function (done) {
-                HostRepo.Hosts = [];
+                for (let i = 0; i < HostRepo.Hosts.length; i++) {
+                    HostRepo.Hosts[i].totalMasterImage = 0;
+                    HostRepo.Hosts[i].totalTransformation = 0;
+                    HostRepo.Hosts[i].totalSize = 0;
+                    HostRepo.Hosts[i].totalBandwidth = 0;
+                    HostRepo.Hosts[i].totalView = 0;
+                }
                 done();
             }, function (err, ret) {
                 if (err)

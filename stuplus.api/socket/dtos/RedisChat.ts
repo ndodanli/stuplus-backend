@@ -1,7 +1,7 @@
 import { mapToDTO } from "../../../stuplus-lib/utils/general";
 
 export class RedisMessageDTO {
-    m?: string;
+    t?: string;
     ci?: string;
     to?: string;
     rToId?: string;
@@ -26,7 +26,6 @@ export class RedisGroupMessageDTO {
 }
 
 export class RedisMessageForwardReadDTO {
-    mids?: string[];
     ci?: string;
     to?: string;
     constructor(obj: any) {
@@ -37,9 +36,7 @@ export class RedisMessageForwardReadDTO {
 }
 
 export class RedisGroupMessageForwardReadDTO {
-    mids?: string[];
     gCi?: string;
-    to?: string;
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);
@@ -48,12 +45,9 @@ export class RedisGroupMessageForwardReadDTO {
 }
 
 export class RedisMessageReceiptUpdateDTO {
-    _id?: string;
-    constructor(obj: any) {
-        if (obj) {
-            mapToDTO(this, obj);
-        }
-    }
+    createdAt?: Date;
+    chatId?: string;
+    ownerId?: string;
 }
 
 export class RedisFileMessageUpdateDTO {

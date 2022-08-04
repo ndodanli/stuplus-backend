@@ -691,7 +691,9 @@ const doc = {
             commentId: "62ab8a204166fd1eaebbb3fa",
             commentText: "xxx",
             announcementId: "62ab8a204166fd1eaebbb3fa",
-            announcementText: "xxx"
+            announcementText: "xxx",
+            questionId: "62ab8a204166fd1eaebbb3fa",
+            questionText: "xxx"
         },
         GetNotificationHistoryResponse: {
             hasError: {

@@ -25,7 +25,7 @@ export enum RedisPMOperationType {
 
 export enum RedisGMOperationType {
    InsertMessage = 0,
-   InsertReaded = 1,
+   UpdateReaded = 1,
    InsertForwarded = 2,
    UpdateSendFileMessage = 3
 }

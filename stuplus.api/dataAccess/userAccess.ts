@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs"
 import { FollowEntity, FollowRequestEntity, GroupChatEntity, NotificationEntity, ReportEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { SchoolEntity } from "../../stuplus-lib/entities/BaseEntity";
-import { ExternalLogin, UserDocument } from "../../stuplus-lib/entities/UserEntity";
+import { ExternalLogin, User, UserDocument } from "../../stuplus-lib/entities/UserEntity";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { FollowLimitation, FollowStatus, NotificationType, RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { getNewToken } from "../utils/token";
@@ -849,7 +849,7 @@ export class UserAccess {
     }
 
     public static async report(acceptedLanguages: Array<string>, userId: string, payload: ReportDTO): Promise<boolean> {
-        await ReportEntity.create({ ...payload, userId: userId });
+        await ReportEntity.create({ ...payload, ownerId: userId });
         //TODO: send notification to admin and maybe to user
         return true;
     }
@@ -893,5 +893,11 @@ export class UserAccess {
         if (!notificationsReaded)
             throw new NotValidError(getMessage("unknownError", acceptedLanguages));
         return true;
+    }
+
+    public static async getBlockedUsers(acceptedLanguages: Array<string>, currentUserId: string): Promise<User[]> {
+        const currentUser = await RedisService.acquireUser(currentUserId, ["blockedUserIds"]);
+        return await UserEntity.find({ _id: { $in: currentUser.blockedUserIds } },
+            { username: 1, firstName: 1, lastName: 1, profilePhotoUrl: 1, avatarKey: 1 });
     }
 }

@@ -7,6 +7,19 @@
         {
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",
+            "name": "image-service",
+            "program": "${workspaceFolder}/stuplus.image-service/index.js",
+            "request": "launch",
+            "restart": true,
+            "runtimeExecutable": "node",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "pwa-node"
+        },
+        {
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
             "name": "api",
             "program": "${workspaceFolder}/stuplus.api/server.ts",
             "request": "launch",

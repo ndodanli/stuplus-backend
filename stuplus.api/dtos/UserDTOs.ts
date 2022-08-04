@@ -123,7 +123,7 @@ export class UserRemoveFollowerDTO {
 
 export class ReportDTO {
     ownerId: string = ""; //user id
-    reportType: ReportType = ReportType.Other;
+    reportType: ReportType[] = [ReportType.Other];
     details: string = "";
     userId: string = "";
     messageId: string = "";

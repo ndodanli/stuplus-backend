@@ -31,6 +31,32 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
 "$ref": "#/definitions/GetAccountUserResponse"
 }
 } */
+  await GroupMessageReadEntity.bulkWrite([
+    {
+      updateOne: {
+        filter: {
+          groupChatId: "dsadsadsads1",
+          readedBy: "dsadsafasffsd5551"
+        },
+        update: {
+          lastReadedAt: new Date(),
+        },
+        upsert: true
+      }
+    },
+    {
+      updateOne: {
+        filter: {
+          groupChatId: "dsadsadsads2",
+          readedBy: "dsadsafasffsd555"
+        },
+        update: {
+          lastReadedAt: new Date(),
+        },
+        upsert: true
+      }
+    }
+  ]);
   const response = new BaseResponse<User>();
   try {
 
@@ -47,7 +73,7 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
     response.data.followingCount = await RedisService.acquire(RedisKeyType.User + response.data._id + RedisSubKeyType.FollowingCount, redisTTL.SECONDS_10, async () => {
       return await FollowEntity.countDocuments({ followerId: response.data?._id });
     });
-    response.data.unreadNotificationCount = await NotificationEntity.countDocuments({ userId: response.data._id, readed: false });
+    response.data.unreadNotificationCount = await NotificationEntity.countDocuments({ ownerId: response.data._id, readed: false });
   } catch (err: any) {
     response.setErrorMessage(err.message);
 
@@ -811,6 +837,28 @@ router.get("/notifyReadNotifications", authorize([Role.User, Role.Admin, Role.Co
   const response = new BaseResponse<any>();
   try {
     await UserAccess.notifyReadNotifications(req.selectedLangs(), res.locals.user._id);
+  } catch (err: any) {
+    response.setErrorMessage(err.message);
+
+    if (err.status != 200)
+      return InternalError(res, response, err);
+  }
+
+  return Ok(res, response);
+});
+
+router.get("/getBlockedUsers", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<any>, res: any) => {
+  /* #swagger.tags = ['Account']
+#swagger.description = 'Notify readed notifications.' */
+  /* #swagger.responses[200] = {
+   "description": "Success",
+   "schema": {
+     "$ref": "#/definitions/NullResponse"
+   }
+ } */
+  const response = new BaseResponse<any>();
+  try {
+    response.data = await UserAccess.getBlockedUsers(req.selectedLangs(), res.locals.user._id);
   } catch (err: any) {
     response.setErrorMessage(err.message);
 

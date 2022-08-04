@@ -96,10 +96,12 @@ export const validateUpdateGroupInfo = [
 
 export const validateCreateGroup = [
     check('userIds')
-        .isArray({ min: 0, max: 1000 })
-        .withMessage((value: any, { req }: any) => getMessage("mustBeArray", req.selectedLangs()))
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail()
         .custom(async (value, { req }) => {
+            if (typeof value === "string")
+                value = value.split(",");
             for (let i = 0; i < value.length; i++) {
                 if (!isValidObjectId(value[i])) {
                     throw new Error(getMessage("incorrectId", req.selectedLangs()));
@@ -116,9 +118,11 @@ export const validateCreateGroup = [
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
         .bail(),
     check('type')
-        .notEmpty()
-        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
-        .bail(),
+        .custom(async (value, { req }) => {
+            if (value !== "0" && value !== "1") {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
