@@ -2857,17 +2857,35 @@
     },
     "/chat/getBlockedUsers": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get blocked users.",
         "parameters": [],
         "responses": {},
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/BasePaginationRequest"
+              }
+            }
+          }
+        }
       }
     },
-    "/chat/blockuser/{userId}": {
+    "/chat/blockUser/{userId}": {
       "get": {
         "tags": [
           "Chat"

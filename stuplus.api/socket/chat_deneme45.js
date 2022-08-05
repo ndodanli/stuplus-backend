@@ -66,8 +66,8 @@ $(document).ready(async function () {
         }
         socket.emit("pmSend", {
             to: USER_TO,
-            m: msgText,
-            // ci: "dasds"
+            t: msgText,
+            ci: "62c96f8cea5d4faa1448e904"
             // + Math.random() * 10000
         }, (res) => {
             console.log("response: ", res);

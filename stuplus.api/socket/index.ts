@@ -208,7 +208,7 @@ io.on("connection", async (socket: ISocket) => {
                     createdAt: now
                 }, t: RedisPMOperationType.UpdateForwarded
             };
-            await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, socket.data.user._id, stringify(chatData));
+            await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, socket.data.user._id + RedisPMOperationType.UpdateForwarded, stringify(chatData));
 
             io.to(data.to).emit("cPmForwarded", { ci: data.ci });
 
@@ -235,7 +235,7 @@ io.on("connection", async (socket: ISocket) => {
                 }, t: RedisPMOperationType.UpdateReaded
             }
 
-            await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, socket.data.user._id, stringify(chatData));
+            await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, socket.data.user._id + RedisPMOperationType.UpdateReaded, stringify(chatData));
 
             io.to(data.to).emit("cPmReaded", { ci: data.ci });
 
@@ -248,25 +248,21 @@ io.on("connection", async (socket: ISocket) => {
     socket.on("gmSend", async (data: RedisGroupMessageDTO, cb: Function) => {
         try {
             //TODO: offline durumu
-            if (!data.gCi || !data.m) {
+            if (!data.gCi || !data.t) {
                 cb({ success: false, message: "Invalid parameters." });
                 return;
             }
-            const userGroupChatIds = await RedisService.acquire<string[]>(RedisKeyType.User + socket.data.user._id + ":groupChats", 60 * 60 * 8, async () => {
-                const groupChats = await GroupChatUserEntity.find({ userId: socket.data.user._id });
-                return groupChats.map(x => x.groupChatId);
-            });
-            // if (!await) {
-            //     cb({ success: false, message: "Unauthorized." });
-            //     return;
-            // }
+            if (!await RedisService.isUserInGroupChat(socket.data.user._id, data.gCi)) {
+                cb({ success: false, message: getMessage("youAreNotInGroup", ["tr"]) });
+                return;
+            }
             const now = new Date();
             const gMessageEntity = new GroupMessageEntity({});
             const chatData: { e: any, t: number } = {
                 e: {
                     _id: gMessageEntity.id,
                     ownerId: socket.data.user._id,
-                    text: data.m,
+                    text: data.t,
                     groupChatId: data.gCi,
                     replyToId: data.rToId,
                     createdAt: now
@@ -284,7 +280,7 @@ io.on("connection", async (socket: ISocket) => {
             }
             await RedisService.client.hSet(RedisKeyType.AllGroupChats, data.gCi + ":lm", stringify(chatData.e));
             const gcName = groupChatName(data.gCi);
-            socket.to(gcName).emit("cGmSend", { t: data.m, mi: gMessageEntity.id, gCi: data.gCi, f: socket.data.user });
+            socket.to(gcName).emit("cGmSend", { t: data.t, mi: gMessageEntity.id, gCi: data.gCi, f: socket.data.user });
             cb({ success: true, mi: gMessageEntity.id });
 
             // const online
@@ -306,32 +302,27 @@ io.on("connection", async (socket: ISocket) => {
     });
 
     socket.on("gmForwarded", async (data: RedisGroupMessageForwardReadDTO, cb: Function) => {
-        // try {
-        //     //TODO: offline durumu
-        //     if (!data.gCi) {
-        //         cb({ success: false, message: "Invalid parameters." });
-        //         return;
-        //     }
+        try {
+            //TODO: offline durumu
+            if (!data.gCi) {
+                cb({ success: false, message: "Invalid parameters." });
+                return;
+            }
 
-        //     const now = new Date();
-        //     const chatData: object = {
-        //         e: {
-        //             groupChatId: data.gCi,
-        //             ownerId: socket.data.user._id,
-        //             createdAt: now,
-        //             updatedAt: now,
-        //         },
-        //         t: RedisGMOperationType.InsertForwarded
-        //     }
-        //     await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, socket.data.user._id, stringify(chatData));
+            const now = new Date();
+            const chatData: object = {
+                e: {
+                    groupChatId: data.gCi,
+                    forwardedTo: socket.data.user._id,
+                    lastForwardedAt: now,
+                },
+                t: RedisGMOperationType.UpdateForwarded
+            }
+            await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, socket.data.user._id + RedisGMOperationType.UpdateForwarded, stringify(chatData));
 
-        //     //TODO: ileride mesaji izleme sayfasindakilere socketten veri gonderilecek
-
-        //     cb({ success: true });
-
-        // } catch (error: any) {
-        //     cb({ success: false, message: error?.message });
-        // }
+        } catch (error: any) {
+            cb({ success: false, message: error?.message });
+        }
     });
 
     socket.on("gmReaded", async (data: RedisGroupMessageForwardReadDTO, cb: Function) => {
@@ -351,7 +342,7 @@ io.on("connection", async (socket: ISocket) => {
                 },
                 t: RedisGMOperationType.UpdateReaded
             }
-            await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, socket.data.user._id, stringify(chatData));
+            await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, socket.data.user._id + RedisGMOperationType.UpdateReaded, stringify(chatData));
 
         } catch (error: any) {
             cb({ success: false, message: error?.message });
@@ -437,6 +428,12 @@ router.get("/unblockUser/:userId", authorize([Role.User, Role.Admin, Role.Conten
 
 //TEST: PASSED
 router.post("/getBlockedUsers", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+    /* #swagger.tags = ['Chat']
+          #swagger.description = 'Get blocked users.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/BasePaginationRequest" }
+  } */
     const response = new BaseResponse<any>();
     try {
 
@@ -464,7 +461,7 @@ router.post("/getBlockedUsers", authorize([Role.User, Role.Admin, Role.ContentCr
 });
 
 //TEST: PASSED
-router.get("/blockuser/:userId", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateBlockUser, async (req: CustomRequest<any>, res: any) => {
+router.get("/blockUser/:userId", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateBlockUser, async (req: CustomRequest<any>, res: any) => {
     /* #swagger.tags = ['Chat']
           #swagger.description = 'Block user by id.' */
     const response = new BaseResponse<any>();
@@ -482,7 +479,9 @@ router.get("/blockuser/:userId", authorize([Role.User, Role.Admin, Role.ContentC
         if (!user)
             throw new NotValidError(getMessage("userNotFound", req.selectedLangs()));
 
-        user.blockedUserIds.push(userId);
+        if (!user.blockedUserIds.includes(userId))
+            user.blockedUserIds.push(userId);
+
         user.markModified("blockedUserIds");
         await user.save();
 
@@ -1003,17 +1002,14 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
                     //deep copy object
                     const notFoundUser = JSON.parse(JSON.stringify(notFoundUsers.find((x: any) => x._id.toString() === groupChat.lastMessage.ownerId.toString())));
                     groupChat.lastMessage.owner = notFoundUser;
-                    delete groupChat.lastMessage.ownerId;
-                    delete groupChat.lastMessage.owner._id;
-                    delete groupChat.lastMessage.owner.__t;
                     await RedisService.updateGroupChatLastMessage(groupChat.lastMessage, groupChat._id.toString());
                 }
             }
         }
 
-        const dbGMReads: any = await GroupMessageReadEntity.find({ readedBy: { $in: userGroupChatsIds } });
+        const dbGMReads: any = await GroupMessageReadEntity.find({ groupChatId: { $in: userGroupChatsIds }, readedBy: res.locals.user._id });
 
-        const redisGMReads: any = []; redisGroupChats
+        let redisGMReadLastReadedAt: any = [];
         const redisGMs: any = [];
         const unreadMessageCountQueries: any = [];
         let unreadMessageCounts = [];
@@ -1022,16 +1018,17 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
             const redisGMAll = await RedisService.client.hVals(RedisKeyType.DBGroupMessage + userGroupChat._id.toString());
             for (let i = 0; i < redisGMAll.length; i++) {
                 const chatData = JSON.parse(redisGMAll[i]);
-                if (chatData.t == RedisGMOperationType.UpdateReaded)
-                    redisGMReads.push(chatData.e);
+                if (chatData.t == RedisGMOperationType.UpdateReaded && chatData.readedBy == res.locals.user._id)
+                    redisGMReadLastReadedAt = chatData.e?.lastReadedAt;
                 else if (chatData.t == RedisGMOperationType.InsertMessage)
                     redisGMs.push(chatData.e);
             }
-            for (let i = 0; i < redisGMs.length; i++) {
-                redisGMs[i].readed = redisGMReads.find((x: { messageId: string; }) => x.messageId === redisGMs[i]._id);
+            if (redisGMReadLastReadedAt) {
+                for (let i = 0; i < redisGMs.length; i++) {
+                    if (redisGMReadLastReadedAt <= redisGMs[i].createdAt && redisGMs[i].ownerId != res.locals.user._id)
+                        userGroupChat.unreadMessageCount++
+                }
             }
-
-            userGroupChat.unreadMessageCount = redisGMs.filter((x: { ownerId: any; readed: any; }) => !x.readed && x.ownerId != res.locals.user._id).length;
 
             const lastReadedMessageCreatedAt = dbGMReads.find((x: { groupChatId: string; }) => x.groupChatId === userGroupChat._id.toString())?.lastReadedAt;
             if (lastReadedMessageCreatedAt) {

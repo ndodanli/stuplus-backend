@@ -26,7 +26,7 @@ export enum RedisPMOperationType {
 export enum RedisGMOperationType {
    InsertMessage = 0,
    UpdateReaded = 1,
-   InsertForwarded = 2,
+   UpdateForwarded = 2,
    UpdateSendFileMessage = 3
 }
 export const RedisPrefixKeyType = {

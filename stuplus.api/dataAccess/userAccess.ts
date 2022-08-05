@@ -28,13 +28,15 @@ import { AddToGroupChatDTO } from "../socket/dtos/Chat";
 import { SearchAccess } from "./searchAccess";
 export class UserAccess {
     public static async getUserProfile(acceptedLanguages: Array<string>, currentUserId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
-        const response = new UserProfileResponseDTO();
+        let response: any;
         response.user = await RedisService.acquireUser(targetUserId, ["_id", "firstName", "lastName", "profilePhotoUrl",
             "role", "grade", "schoolId", "departmentId", "isAccEmailConfirmed", "relatedSchoolIds",
             "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings", "lastSeenDate", "blockedUserIds"]);
 
-        if (response.user.blockedUserIds.includes(currentUserId))
+        if (response.user.blockedUserIds.includes(currentUserId)) {
+            response = null;
             throw new NotValidError(getMessage("userBlockedShowProfile", acceptedLanguages));
+        }
 
         if (response.user.privacySettings.followLimitation == FollowLimitation.ByRequest) {
             if (!await FollowEntity.exists({

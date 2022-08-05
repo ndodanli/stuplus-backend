@@ -4,6 +4,7 @@ import BaseEntity from "./BaseEntity";
 export interface GroupMessageForward extends BaseEntity {
   messageId: string;
   forwardedTo: String; //user id
+  lastForwardedAt: Date;
 }
 
 export interface GroupMessageForwardDocument extends GroupMessageForward, Document {
@@ -12,7 +13,8 @@ export interface GroupMessageForwardDocument extends GroupMessageForward, Docume
 
 export const GroupMessageForwardSchema: Schema = new Schema({
   messageId: { type: String, required: true },
-  forwardedTo: { type: String, required: true }
+  forwardedTo: { type: String, required: true },
+  lastForwardedAt: { type: Date, required: true }
 });
 
 GroupMessageForwardSchema.index({ recordStatus: -1 });
@@ -38,6 +40,7 @@ GroupMessageForwardSchema.methods.minify = async function (
     messageId: this.messageId,
     forwardedTo: this.forwardedTo,
     recordDeletionDate: this.recordDeletionDate,
+    lastForwardedAt: this.lastForwardedAt
   };
   return response;
 };

@@ -84,15 +84,14 @@ export default class RedisService {
     static async acquireUser(userId: string, project: string[]): Promise<User> {
         return await this.acquireHash<User>(RedisKeyType.User + userId, async () => {
             const user = await UserEntity.findOne({ _id: userId }, {
-                username_fuzzy: 0, firstName_fuzzy: 0, lastName_fuzzy: 0, externalLogins: 0,
-
+                username_fuzzy: 0, firstName_fuzzy: 0, lastName_fuzzy: 0, externalLogins: 0, password: 0
             }, { lean: true });
 
             if (!user) throw new NotValidError(getMessage("userNotFound", ["tr"]));
 
-            const school = await SchoolEntity.findOne({ _id: user.schoolId }, { "title": 1, "_id": 0 });
-            const faculty = await FacultyEntity.findOne({ _id: user.facultyId }, { "title": 1, "_id": 0 });
-            const department = await DepartmentEntity.findOne({ _id: user.departmentId }, { "title": 1, "_id": 0 });
+            const school = await SchoolEntity.findOne({ _id: user.schoolId }, { title: 1, _id: 0 });
+            const faculty = await FacultyEntity.findOne({ _id: user.facultyId }, { title: 1, _id: 0 });
+            const department = await DepartmentEntity.findOne({ _id: user.departmentId }, { title: 1, _id: 0 });
 
             if (school)
                 user.schoolName = school.title;
@@ -139,7 +138,8 @@ export default class RedisService {
         for (const key in user) {
             if (!["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
                 "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
-                "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings"].includes(key))
+                "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings",
+                "blockedUserIds"].includes(key))
                 delete user[key];
         }
         const ops: any = [this.client.hSet(RedisKeyType.User + userId, user)]
@@ -258,6 +258,10 @@ export default class RedisService {
         }
         //delete first 30 item from array
         return ids;
+    }
+
+    static async isUserInGroupChat(userId: string, groupChatId: string): Promise<boolean> {
+        return await this.client.sIsMember(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userId, groupChatId);
     }
 
     static async addToUserGroupChatIds(userId: string, groupChatId: string): Promise<void> {
@@ -382,7 +386,11 @@ export default class RedisService {
     }
 
     static async updateGroupChatLastMessage(groupChatLM: any, groupChatId: string): Promise<void> {
-        this.client.hSet(RedisKeyType.AllGroupChats, groupChatId + ":lm", JSON.stringify(groupChatLM))
+        this.client.hSet(RedisKeyType.AllGroupChats, groupChatId + ":lm", JSON.stringify({
+            text: groupChatLM.text,
+            files: groupChatLM.files,
+            owner: groupChatLM.owner,
+        }))
     }
 
     static async isDailyLikeLimitExceeded(userId: string): Promise<boolean> {

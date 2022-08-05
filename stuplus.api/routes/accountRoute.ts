@@ -847,26 +847,4 @@ router.get("/notifyReadNotifications", authorize([Role.User, Role.Admin, Role.Co
   return Ok(res, response);
 });
 
-router.get("/getBlockedUsers", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<any>, res: any) => {
-  /* #swagger.tags = ['Account']
-#swagger.description = 'Notify readed notifications.' */
-  /* #swagger.responses[200] = {
-   "description": "Success",
-   "schema": {
-     "$ref": "#/definitions/NullResponse"
-   }
- } */
-  const response = new BaseResponse<any>();
-  try {
-    response.data = await UserAccess.getBlockedUsers(req.selectedLangs(), res.locals.user._id);
-  } catch (err: any) {
-    response.setErrorMessage(err.message);
-
-    if (err.status != 200)
-      return InternalError(res, response, err);
-  }
-
-  return Ok(res, response);
-});
-
 export default router;

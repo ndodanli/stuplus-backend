@@ -17,8 +17,6 @@
 *vakit kalirsa s3 sifreleme
 
 
-*redis user cacheinden parolayi kaldir
-*database sunucusundan nginxi kaldir, gereksiz portlari kapat
 *arkadas onerileri genisletilecek
 *bloklanan user icerikleri duzenlenecek(bloklayan kisiye gosterilmeyecek)
 ***gc total messages => save and process this count for unread message count

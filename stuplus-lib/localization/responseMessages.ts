@@ -123,6 +123,7 @@ const systemLangs: Record<string, Function> = {
             likeDislikeTypeNotValid: "Beğenme veya beğenmeme için tip geçerli değil.",
             userGroupLimitReached: "Daha fazla gruba katılmana izin veremeyiz maalesef, senin için tüm grupların gerekli olduğunu ve bu limitin sana yetmediğini düşünüyorsan bize geri bildirimde bulunabilirsin, fikirlerin bizim için önemli.",
             groupCreatedSomeUsersReachedLimit: "Bazı kullanıcıları kendi grup limitlerini aştıkları için gruba alamadık maalesef, haberin olsun.",
+            youAreNotInGroup: "Bu grubu mesaj göndermek için katılmamışsın.",
         }
     },
     "en": function (args: string[] = []) {

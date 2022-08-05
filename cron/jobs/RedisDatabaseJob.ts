@@ -236,20 +236,23 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                             switch (query.t) {
                                 case RedisPMOperationType.InsertMessage:
                                     privateMessageBatches[iterator].push(query.e);
+                                    keysToDelete.push(query.e._id + query.t);
                                     break;
                                 case RedisPMOperationType.UpdateReaded:
                                     readedBatches[iterator].push(query.e);
+                                    keysToDelete.push(query.e.ownerId + query.t);
                                     break;
                                 case RedisPMOperationType.UpdateForwarded:
                                     forwardedBatches[iterator].push(query.e);
+                                    keysToDelete.push(query.e.ownerId + query.t);
                                     break;
                                 case RedisPMOperationType.UpdateSendFileMessage:
                                     updateSendFileBatches[iterator].push(query.e);
+                                    keysToDelete.push(query.e._id + query.t);
                                     break;
                                 default:
                                     break;
                             }
-                            keysToDelete.push(query.e._id + query.t);
                         }
                         iterator++;
                     }
@@ -326,7 +329,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     const keysToDelete = new Array<string>();
                     const groupMessageBatches: Array<Array<object>> = [];
                     const readedBatches: Array<Array<any>> = [];
-                    const forwardedBatches: Array<Array<object>> = [];
+                    const forwardedBatches: Array<Array<any>> = [];
                     const updateSendFileBatches: Array<Array<RedisFileMessageUpdateDTO>> = [];
                     const batchSize = config.BATCH_SIZES.GM_BATCH_SIZE;
                     let iterator = 0;
@@ -334,27 +337,30 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         const currentBatch = data.slice(i, i + batchSize);
                         groupMessageBatches[iterator] = new Array<object>();
                         readedBatches[iterator] = new Array<any>();
-                        forwardedBatches[iterator] = new Array<object>();
+                        forwardedBatches[iterator] = new Array<any>();
                         updateSendFileBatches[iterator] = new Array<RedisFileMessageUpdateDTO>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             switch (query.t) {
                                 case RedisGMOperationType.InsertMessage:
                                     groupMessageBatches[iterator].push(query.e);
+                                    keysToDelete.push(query.e._id + query.t);
                                     break;
                                 case RedisGMOperationType.UpdateReaded:
                                     readedBatches[iterator].push(query.e);
+                                    keysToDelete.push(query.e.readedBy + query.t);
                                     break;
-                                case RedisGMOperationType.InsertForwarded:
+                                case RedisGMOperationType.UpdateForwarded:
                                     forwardedBatches[iterator].push(query.e);
+                                    keysToDelete.push(query.e.forwardedTo + query.t);
                                     break;
                                 case RedisGMOperationType.UpdateSendFileMessage:
                                     updateSendFileBatches[iterator].push(query.e);
+                                    keysToDelete.push(query.e._id + query.t);
                                     break;
                                 default:
                                     break;
                             }
-                            keysToDelete.push(query.e._id + query.t);
                         }
                         iterator++;
                     }
@@ -372,7 +378,21 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         for (let i = 0; i < forwardedBatches.length; i++) {
                             if (forwardedBatches[i].length > 0) {
                                 // console.time("GM insertForwarded Bulk operation time. order: " + i);
-                                await GroupMessageForwardEntity.insertMany(forwardedBatches[i]);
+                                const bulkForwardedOp = forwardedBatches[i].map(obj => {
+                                    return {
+                                        updateOne: {
+                                            filter: {
+                                                groupChatId: obj.groupChatId,
+                                                forwardedTo: obj.forwardedTo
+                                            },
+                                            update: {
+                                                lastForwardedAt: obj.lastForwardedAt,
+                                            },
+                                            upsert: true
+                                        }
+                                    }
+                                });
+                                await GroupMessageForwardEntity.bulkWrite(bulkForwardedOp);
                                 // console.timeEnd("GM insertForwarded Bulk operation time. order: " + i);
                             }
                         }

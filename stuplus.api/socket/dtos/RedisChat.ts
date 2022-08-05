@@ -14,7 +14,7 @@ export class RedisMessageDTO {
 }
 
 export class RedisGroupMessageDTO {
-    m?: string;
+    t?: string;
     gCi?: string;
     rToId?: string;
 
