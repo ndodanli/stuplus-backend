@@ -2,7 +2,7 @@ $(document).ready(async function () {
     const baseUrl = "http://localhost:25010";
     axios.defaults.baseURL = baseUrl;
     axios.defaults.headers.common["Authorization"] = "Bearer " +
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmFiOGEyMDQxNjZmZDFlYWViYmIzZmEiLCJyb2xlIjowLCJpYXQiOjE2NTczNjc5NjIsImV4cCI6MTY4ODQ3MTk2Mn0.U3N6QR4fakNtpLHwEhkKpG3-Cf997Pwkb7Q4fsCbu1w";
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MmU5NjA1YTZlYzNjNDBlYjA5YmFlYjMiLCJyb2xlIjoxLCJpYXQiOjE2NTk3Mjg4MTUsImV4cCI6MTY5MDgzMjgxNX0.yIBOEuj3r90dDYw4f9PkgsMWwFErHOwrMoRkr3WuNxM";
     const msgerForm = get(".msger-inputarea");
     const msgerInput = get(".msger-input");
     const msgerChat = get(".msger-chat");
@@ -18,7 +18,7 @@ $(document).ready(async function () {
     const BOT_NAME = "deneme45";
     const PERSON_NAME = user.username
     const USER_TO = "62ab8a204166fd1eaebbb3fa"; //ndodanli14
-
+console.log("messageData", messageData)
     const messages = messageData.data;
     for (let i = messages.length - 1; i >= 0; i--) {
         const message = messages[i];
@@ -184,6 +184,14 @@ async function createGroup() {
 async function watchUsers() {
     socket.emit("watch-users", {
         uIds: ["628a9e39b483f428a74e75c1", "62aa35971c1df0aaea949dfe"]
+    }, (res) => {
+        console.log("response: ", res);
+    });
+}
+async function markAsForwarded() {
+    socket.emit("pmForwarded", {
+       ci: "62c96f8cea5d4faa1448e904",
+       to: "62ab8a204166fd1eaebbb3fa"
     }, (res) => {
         console.log("response: ", res);
     });

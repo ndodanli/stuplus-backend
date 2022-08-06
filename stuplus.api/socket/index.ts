@@ -12,7 +12,7 @@ import { AddToGroupChatDTO, ClearPMChatHistoryDTO, CreateGroupDTO, DeleteSingleG
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { groupChatName, userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 import RedisService from "../../stuplus-lib/services/redisService";
-import { searchable, stringify, searchableWithSpaces, chunk } from "../../stuplus-lib/utils/general";
+import { searchable, stringify, searchableWithSpaces, chunk, sortByCreatedAtDesc } from "../../stuplus-lib/utils/general";
 import { MessageDocument, MessageFiles, ReplyToDTO } from "../../stuplus-lib/entities/MessageEntity";
 import { DeleteChatForType, GroupChatUserRole, MessageLimitation, RecordStatus, RedisMessagesNotFoundType } from "../../stuplus-lib/enums/enums";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
@@ -1025,17 +1025,18 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
             }
             if (redisGMReadLastReadedAt) {
                 for (let i = 0; i < redisGMs.length; i++) {
-                    if (redisGMReadLastReadedAt <= redisGMs[i].createdAt && redisGMs[i].ownerId != res.locals.user._id)
+                    if (new Date(redisGMReadLastReadedAt) <= new Date(redisGMs[i].createdAt) && redisGMs[i].ownerId != res.locals.user._id)
                         userGroupChat.unreadMessageCount++
                 }
+            } else {
+                redisGMReadLastReadedAt = dbGMReads.find((x: { groupChatId: string; }) => x.groupChatId === userGroupChat._id.toString())?.lastReadedAt;
             }
 
-            const lastReadedMessageCreatedAt = dbGMReads.find((x: { groupChatId: string; }) => x.groupChatId === userGroupChat._id.toString())?.lastReadedAt;
-            if (lastReadedMessageCreatedAt) {
+            if (redisGMReadLastReadedAt) {
                 unreadMessageCountQueries.push(GroupMessageEntity
                     .find({
                         groupChatId: userGroupChat._id,
-                        createdAt: { $gt: lastReadedMessageCreatedAt }
+                        createdAt: { $gt: redisGMReadLastReadedAt }
                     }).limit(100).count());
             } else {
                 unreadMessageCountQueries.push(GroupMessageEntity
@@ -1381,25 +1382,28 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
     const response = new BaseResponse<object>();
     try {
         const payload = new GetChatMessagesDTO(req.body);
-        if (!await ChatEntity.exists({
+        const chat = await ChatEntity.findOne({
             _id: payload.chatId,
-            recordStatus: RecordStatus.Active,
             $or: [
                 { ownerId: res.locals.user._id },
                 { participantId: res.locals.user._id }
             ]
-        })) {
+        }, { _id: 0, ownerId: 1, participantId: 1 });
+
+        if (!chat)
             throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
-        }
+
+        const otherUserId = chat.ownerId == res.locals.user._id ? chat.participantId : chat.ownerId;
 
         let messages: MessageDocument[] = [];
         let isFirstPage = !payload.lastRecordDate;
-        // const redisMaxMessagesWithFRCount = -60;
 
         const redisMessagesWithFR = await RedisService.client
             .hVals(RedisKeyType.DBPrivateMessage + payload.chatId).then(x => x.map(y => JSON.parse(y)));
-        let forwards = redisMessagesWithFR.filter(x => x.t == RedisPMOperationType.UpdateForwarded).map(x => x.e);
-        let reads = redisMessagesWithFR.filter(x => x.t == RedisPMOperationType.UpdateReaded).map(x => x.e);
+        let otherUserLastForwardedAt = await RedisService.client.hGet(RedisKeyType.DBPrivateMessage + payload.chatId, otherUserId + RedisPMOperationType.UpdateForwarded)
+            .then(x => x ? JSON.parse(x).e.createdAt : new Date(0));
+        let otherUserLastReadedAt = await RedisService.client.hGet(RedisKeyType.DBPrivateMessage + payload.chatId, otherUserId + RedisPMOperationType.UpdateReaded)
+            .then(x => x ? JSON.parse(x).e.createdAt : new Date(0));
         if (isFirstPage) {
             let redisMessages = redisMessagesWithFR.filter(x => x.t == RedisPMOperationType.InsertMessage).map(x => x.e)
                 .filter(x => x.recordStatus == undefined || x.recordStatus == RecordStatus.Active &&
@@ -1408,7 +1412,6 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
             payload.take -= redisMessages.length
             let newMessages: MessageDocument[] = [];
             if (payload.take > 0) {
-
                 let newMessagesQuery = MessageEntity.find({
                     chatId: payload.chatId,
                     deletedForUserIds: {
@@ -1420,30 +1423,28 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                     newMessagesQuery = newMessagesQuery.where({ createdAt: { $lt: redisMessages[0].createdAt } });
 
                 newMessages = await newMessagesQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);
-
             }
-            for (let i = redisMessages.length - 1; i >= 0; i--)
-                messages.push(redisMessages[i]);
 
-            messages = messages.concat(newMessages);
+            messages = messages.concat(redisMessages).concat(newMessages);
 
             const messagesNotFound: any[] = [];
 
             for (let i = messages.length - 1; i >= 0; i--) {
                 const message = messages[i];
                 if (!message.forwarded) {
-                    const forwarded = forwards.find(x => x._id == message._id.toString());
+                    const a = new Date(otherUserLastForwardedAt);
+                    const forwarded = new Date(otherUserLastForwardedAt) > new Date(message.createdAt);
                     message.forwarded = forwarded ? true : false;
                     if (message.forwarded)
-                        message.forwardedAt = forwarded.createdAt;
+                        message.forwardedAt = otherUserLastForwardedAt;
                     // else if (typeof message._id == "string") //if it comes from redis
                     //     messagesNotFound.push({ index: i, messageId: message._id, type: RedisMessagesNotFoundType.Forward });
                 }
                 if (!message.readed) {
-                    const readed = reads.find(x => x._id == message._id.toString());
+                    const readed = new Date(otherUserLastReadedAt) > new Date(message.createdAt);
                     message.readed = readed ? true : false;
                     if (message.readed)
-                        message.readedAt = readed.createdAt;
+                        message.readedAt = otherUserLastReadedAt;
                     // else if (typeof message._id == "string") //if it comes from redis
                     //     messagesNotFound.push({ index: i, messageId: message._id, type: RedisMessagesNotFoundType.Read });
                 }
@@ -1455,7 +1456,7 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                 if (message.replyToId) {
                     const repliedMessage = messages.find(x => x._id.toString() == message.replyToId);
                     if (repliedMessage) {
-                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, repliedMessage.text, repliedMessage.files);
+                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, undefined, repliedMessage.text, repliedMessage.files);
                     } else {
                         messagesNotFound.push({ index: i, messageId: message.replyToId, type: RedisMessagesNotFoundType.Reply });
                     }
@@ -1469,12 +1470,7 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                     const messageNotFound = messagesNotFound[i];
                     const message = messagesNotFoundFromDB.find(x => x._id.toString() == messageNotFound.messageId);
                     if (message) {
-                        // if (messageNotFound.type == RedisMessagesNotFoundType.Reply)
-                        messages[messageNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, message.text, message.files);
-                        // else if (messageNotFound.type == RedisMessagesNotFoundType.Forward)
-                        //     messages[messageNotFound.index].forwarded = message.forwarded;
-                        // else if (messageNotFound.type == RedisMessagesNotFoundType.Read)
-                        //     messages[messageNotFound.index].readed = message.readed;
+                        messages[messageNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, undefined, message.text, message.files);
                     }
                 }
             }
@@ -1491,21 +1487,21 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
             for (let i = 0; i < messages.length; i++) {
                 const message = messages[i];
                 if (!message.forwarded) {
-                    const forwarded = forwards.find(x => x._id == message._id.toString());
+                    const forwarded = new Date(otherUserLastForwardedAt) > message.createdAt;
                     message.forwarded = forwarded ? true : false;
                     if (message.forwarded)
-                        message.forwardedAt = forwarded.createdAt;
+                        message.forwardedAt = otherUserLastForwardedAt;
                 }
                 if (!message.readed) {
-                    const readed = reads.find(x => x._id == message._id.toString());
+                    const readed = new Date(otherUserLastReadedAt) > message.createdAt;
                     message.readed = readed ? true : false;
                     if (message.readed)
-                        message.readedAt = readed.createdAt;
+                        message.readedAt = otherUserLastReadedAt;
                 }
                 if (message.replyToId) {
                     const repliedMessage = messages.find(x => x._id.toString() == message.replyToId);
                     if (repliedMessage) {
-                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, repliedMessage.text, repliedMessage.files);
+                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, undefined, repliedMessage.text, repliedMessage.files);
                     } else {
                         messagesRepliesNotFound.push({ index: i, messageId: message.replyToId });
                     }
@@ -1519,13 +1515,13 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                     const messageReplyNotFound = messagesRepliesNotFound[i];
                     const message = messagesNotFoundFromDB.find(x => x._id.toString() == messageReplyNotFound.messageId);
                     if (message) {
-                        messages[messageReplyNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, message.text, message.files);
+                        messages[messageReplyNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, undefined, message.text, message.files);
                     }
                 }
             }
         }
 
-        response.data = messages;
+        response.data = sortByCreatedAtDesc(messages);
     }
     catch (err: any) {
         response.setErrorMessage(err.message);
@@ -1640,7 +1636,7 @@ router.post("/getSearchedGMs", authorize([Role.User, Role.Admin, Role.ContentCre
     return Ok(res, response);
 });
 
-router.post("/getSearchedPM", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<GetSearchedGroupChatMessageDTO>, res: any) => {
+router.post("/getSearchedGM", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<GetSearchedGroupChatMessageDTO>, res: any) => {
     const response = new BaseResponse<object>();
     try {
         const payload = new GetSearchedGroupChatMessageDTO(req.body);
@@ -1881,15 +1877,11 @@ router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
     const response = new BaseResponse<object>();
     try {
         const payload = new GetGroupChatMessagesDTO(req.body);
-        const userGroupChatIds = await RedisService.acquire<string[]>(RedisKeyType.User + res.locals.user._id + ":groupChats", 60 * 60 * 8, async () => {
-            const groupChats = await GroupChatUserEntity.find({ userId: res.locals.user._id });
-            return groupChats.map(x => x.groupChatId);
-        });
-        if (!userGroupChatIds.includes(payload.groupChatId)) {
+        if (!await RedisService.isUserInGroupChat(res.locals.user._id, payload.groupChatId))
             throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
-        }
 
         let messages: GroupMessageDocument[] = [];
+        const replyToUserIds: string[] = [];
         let isFirstPage = !payload.lastRecordDate;
         // const redisMaxMessagesWithFRCount = -60;
 
@@ -1915,12 +1907,9 @@ router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                     newMessagesQuery = newMessagesQuery.where({ createdAt: { $lt: redisMessages[0].createdAt } });
 
                 newMessages = await newMessagesQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);
-
             }
-            for (let i = redisMessages.length - 1; i >= 0; i--)
-                messages.push(redisMessages[i]);
 
-            messages = messages.concat(newMessages);
+            messages = messages.concat(redisMessages).concat(newMessages);
 
             const messagesNotFound: any[] = [];
 
@@ -1933,7 +1922,8 @@ router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                 if (message.replyToId) {
                     const repliedMessage = messages.find(x => x._id.toString() == message.replyToId);
                     if (repliedMessage) {
-                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, repliedMessage.text, repliedMessage.files);
+                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, undefined, repliedMessage.text, repliedMessage.files);
+                        replyToUserIds.push(repliedMessage.ownerId);
                     } else {
                         messagesNotFound.push({ index: i, messageId: message.replyToId, type: RedisMessagesNotFoundType.Reply });
                     }
@@ -1947,16 +1937,11 @@ router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                     const messageNotFound = messagesNotFound[i];
                     const message = messagesNotFoundFromDB.find(x => x._id.toString() == messageNotFound.messageId);
                     if (message) {
-                        // if (messageNotFound.type == RedisMessagesNotFoundType.Reply)
-                        messages[messageNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, message.text, message.files);
-                        // else if (messageNotFound.type == RedisMessagesNotFoundType.Forward)
-                        //     messages[messageNotFound.index].forwarded = message.forwarded;
-                        // else if (messageNotFound.type == RedisMessagesNotFoundType.Read)
-                        //     messages[messageNotFound.index].readed = message.readed;
+                        messages[messageNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, undefined, message.text, message.files);
+                        replyToUserIds.push(message.ownerId);
                     }
                 }
             }
-
         } else {
             const messagesRepliesNotFound: any[] = [];
             messages = await GroupMessageEntity.find({
@@ -1971,7 +1956,8 @@ router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                 if (message.replyToId) {
                     const repliedMessage = messages.find(x => x._id.toString() == message.replyToId);
                     if (repliedMessage) {
-                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, repliedMessage.text, repliedMessage.files);
+                        message.replyTo = new ReplyToDTO(repliedMessage._id.toString(), repliedMessage.ownerId, undefined, repliedMessage.text, repliedMessage.files);
+                        replyToUserIds.push(repliedMessage.ownerId);
                     } else {
                         messagesRepliesNotFound.push({ index: i, messageId: message.replyToId });
                     }
@@ -1985,14 +1971,23 @@ router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                     const messageReplyNotFound = messagesRepliesNotFound[i];
                     const message = messagesNotFoundFromDB.find(x => x._id.toString() == messageReplyNotFound.messageId);
                     if (message) {
-                        messages[messageReplyNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, message.text, message.files);
+                        messages[messageReplyNotFound.index].replyTo = new ReplyToDTO(message._id.toString(), message.ownerId, undefined, message.text, message.files);
+                        replyToUserIds.push(message.ownerId);
                     }
                 }
             }
         }
 
+        const replyToUsers = await UserEntity.find({ _id: { $in: replyToUserIds } }, { username: 1 }).lean(true);
+        for (let i = 0; i < messages.length; i++) {
+            let message = messages[i];
+            if (message.replyTo) {
+                message.replyTo.messageOwner = replyToUsers.find(x => x._id.toString() == message.replyTo?.messageOwnerId);
+            }
+        }
+
         response.data = {
-            messages: messages,
+            messages: sortByCreatedAtDesc(messages),
             groupChat: {
                 memberCount: await GroupChatUserEntity.countDocuments({ groupChatId: payload.groupChatId }),
             }
@@ -2100,13 +2095,9 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
 
         //TODO: offline durumu
         response.data = { gCi: null, mi: null };
-        const userGroupChatIds = await RedisService.acquire<string[]>(RedisKeyType.User + res.locals.user._id + ":groupChats", 60 * 60 * 8, async () => {
-            const groupChats = await GroupChatUserEntity.find({ userId: res.locals.user._id });
-            return groupChats.map(x => x.groupChatId);
-        });
-        if (!userGroupChatIds.includes(payload.gCi)) {
+        if (!await RedisService.isUserInGroupChat(res.locals.user._id, payload.gCi))
             throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
-        }
+
 
         const senderUser = await RedisService.acquireUser(res.locals.user._id, ["_id", "username", "firstName", "lastName", "profilePhotoUrl", "avatarKey"]);
 

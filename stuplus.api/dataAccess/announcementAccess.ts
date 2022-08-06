@@ -44,7 +44,8 @@ export class AnnouncementAccess {
         return announcement;
     }
 
-    public static async getAnnouncements(acceptedLanguages: Array<string>, payload: AnnouncementGetMultipleDTO, currentUserId: string): Promise<AnnouncementDocument[] | null> {
+    public static async getAnnouncements(acceptedLanguages: Array<string>, payload: AnnouncementGetMultipleDTO, currentUserId: string): Promise<Announcement[] | null> {
+        let announcements: Announcement[] = [];
         let now = new Date();
         let announcementsQuery = AnnouncementEntity.find({
             isActive: true, $and: [
@@ -71,13 +72,43 @@ export class AnnouncementAccess {
             });
         }
 
+        if (payload.schoolSearch) {
+            announcementsQuery = announcementsQuery.where({ ownerSchoolId: payload.ownerSchoolId });
+        } else {
+            announcementsQuery = announcementsQuery.where({ ownerSchoolId: { $ne: payload.ownerSchoolId } });
+        }
+
         if (payload.lastRecordDate)
             announcementsQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
 
-        const announcements = await announcementsQuery
+        announcements = await announcementsQuery
             .sort({ createdAt: -1 })
             .limit(payload.take)
             .lean(true);
+
+
+        if (payload.schoolSearch && announcements.length < payload.take) {
+            let announcementsSecond = await AnnouncementEntity.find({
+                ownerSchoolId: { $ne: payload.ownerSchoolId }, isActive: true, $and: [
+                    {
+                        $or: [
+                            { fromDate: null },
+                            { fromDate: { $gte: now } },
+                        ]
+                    },
+                    {
+                        $or: [
+                            { toDate: null },
+                            { toDate: { $lte: now } },
+                        ],
+                    }
+                ]
+            })
+                .sort({ createdAt: -1 })
+                .limit(payload.take - announcements.length)
+                .lean(true);
+            announcements = announcements.concat(announcementsSecond);
+        }
 
         if (announcements.length) {
             let announcementIds = announcements.map(x => x._id);

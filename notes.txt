@@ -12,8 +12,6 @@
 -gizlilik ayarlari guncellenirken bildirim ayarlari kapatiyor
 
 *chat read olaylari degisecek
-*user groupChatIdleri degisecek
-*daily user statistic => yorum ve begeniler(announcement implementation)
 *vakit kalirsa s3 sifreleme
 
 

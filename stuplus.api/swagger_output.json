@@ -3207,6 +3207,18 @@
         ]
       }
     },
+    "/chat/getSearchedGM": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/chat/sendPMFile": {
       "post": {
         "tags": [
@@ -5043,6 +5055,19 @@
             "type": "string",
             "example": "string"
           },
+          "ownerSchoolId": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Duyurunun sahibinin school idsi."
+              }
+            }
+          },
           "hashTags": {
             "type": "array",
             "example": [
@@ -5056,7 +5081,8 @@
         "required": [
           "relatedSchoolIds",
           "title",
-          "text"
+          "text",
+          "ownerSchoolId"
         ],
         "xml": {
           "name": "AnnouncementAddRequest"
@@ -5097,6 +5123,19 @@
             "type": "string",
             "example": "string"
           },
+          "ownerSchoolId": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Sorunun sahibinin school idsi."
+              }
+            }
+          },
           "hashTags": {
             "type": "array",
             "example": [
@@ -5109,7 +5148,8 @@
         },
         "required": [
           "title",
-          "text"
+          "text",
+          "ownerSchoolId"
         ],
         "xml": {
           "name": "QuestionAddRequest"
@@ -6126,6 +6166,32 @@
             "type": "string",
             "example": "2022-07-02T20:12:59.891Z"
           },
+          "schoolSearch": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Eğer gönderilen son kaydın(lastRecordDate'in alındığı kayıt) okul idsi sorguyu yapan kullanıcının okul idsine eşit ise true, değilse false gönderilecek."
+              }
+            }
+          },
+          "ownerSchoolId": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Sorguyu yapan kullanıcının okul idsi."
+              }
+            }
+          },
           "pageSize": {
             "type": "number",
             "example": 20
@@ -6142,6 +6208,8 @@
           }
         },
         "required": [
+          "schoolSearch",
+          "ownerSchoolId",
           "pageSize"
         ],
         "xml": {
@@ -7933,6 +8001,32 @@
             "type": "string",
             "example": "2022-07-02T20:12:59.891Z"
           },
+          "schoolSearch": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Eğer gönderilen son kaydın(lastRecordDate'in alındığı kayıt) okul idsi sorguyu yapan kullanıcının okul idsine eşit ise true, değilse false gönderilecek."
+              }
+            }
+          },
+          "ownerSchoolId": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Sorguyu yapan kullanıcının okul idsi."
+              }
+            }
+          },
           "pageSize": {
             "type": "number",
             "example": 20
@@ -7949,6 +8043,8 @@
           }
         },
         "required": [
+          "schoolSearch",
+          "ownerSchoolId",
           "pageSize"
         ],
         "xml": {

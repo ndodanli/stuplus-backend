@@ -819,6 +819,10 @@ const doc = {
             $relatedSchoolIds: ["62ab8a204166fd1eaebbb3fa", "62ab8a204166fd1eaebbb3fa"],
             $title: "string",
             $text: "string",
+            $ownerSchoolId: {
+                type: "string",
+                description: "Duyurunun sahibinin school idsi."
+            },
             hashTags: ["string"],
         },
         QuestionAddRequest: {
@@ -832,6 +836,10 @@ const doc = {
             ],
             $title: "string",
             $text: "string",
+            $ownerSchoolId: {
+                type: "string",
+                description: "Sorunun sahibinin school idsi."
+            },
             hashTags: ["string"],
         },
         BasePaginationRequest: {
@@ -1127,6 +1135,15 @@ const doc = {
         },
         AnnouncementGetAnnouncementsRequest: {
             lastRecordDate: "2022-07-02T20:12:59.891Z",
+            $schoolSearch: {
+                type: "boolean",
+                description: "Eğer gönderilen son kaydın(lastRecordDate'in alındığı kayıt) " +
+                    "okul idsi sorguyu yapan kullanıcının okul idsine eşit ise true, değilse false gönderilecek."
+            },
+            $ownerSchoolId: {
+                type: "string",
+                description: "Sorguyu yapan kullanıcının okul idsi."
+            },
             $pageSize: 20,
             schoolIds: ["schoolId1", "schoolId2"],
         },
@@ -1736,6 +1753,11 @@ const doc = {
         //#region Questions
         QuestionGetQuestionsRequest: {
             lastRecordDate: "2022-07-02T20:12:59.891Z",
+            $schoolSearch: {
+                type: "boolean", description: "Eğer gönderilen son kaydın(lastRecordDate'in alındığı kayıt) "
+                    + "okul idsi sorguyu yapan kullanıcının okul idsine eşit ise true, değilse false gönderilecek."
+            },
+            $ownerSchoolId: { type: "string", description: "Sorguyu yapan kullanıcının okul idsi." },
             $pageSize: 20,
             schoolIds: ["schoolId1", "schoolId2"],
         },

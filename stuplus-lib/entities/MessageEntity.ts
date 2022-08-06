@@ -23,11 +23,13 @@ export interface Message extends BaseEntity {
 export class ReplyToDTO {
   messageId: string;
   messageOwnerId: string;
+  messageOwner: User | undefined;
   text: string;
   files: MessageFiles[];
-  constructor(messageId: string, messageOwnerId: string, text: string, files: MessageFiles[]) {
+  constructor(messageId: string, messageOwnerId: string, messageOwner: User | undefined = undefined, text: string, files: MessageFiles[]) {
     this.messageId = messageId;
     this.messageOwnerId = messageOwnerId;
+    this.messageOwner = messageOwner;
     this.text = text;
     this.files = files;
   }

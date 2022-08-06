@@ -133,3 +133,14 @@ export const isImage = (mimeType: string): Boolean => {
 export const removeDuplicates = (arr: string[]): string[] => {
     return arr.filter((item, index) => arr.indexOf(item) === index);
 }
+
+export const sortByCreatedAtDesc = (arr: any[]): any[] => {
+    arr.sort((a, b) => {
+        if (a.createdAt > b.createdAt)
+            return -1;
+        if (a.createdAt < b.createdAt)
+            return 1;
+        return 0;
+    });
+    return arr;
+}

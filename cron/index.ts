@@ -12,7 +12,7 @@ setup()
 
 function setup() {
     import("./config/logger");
-    jobs.push(new RedisDatabaseJob({ customLockKey: "1", cronExpression: cronTimes.everyFifteenSeconds, title: "RedisDatabaseJob", description: "Job for database operations recorded in redis." }));
+    // jobs.push(new RedisDatabaseJob({ customLockKey: "1", cronExpression: cronTimes.everyFifteenSeconds, title: "RedisDatabaseJob", description: "Job for database operations recorded in redis." }));
     jobs.push(new UpdateScoresJob({ customLockKey: "2", cronExpression: cronTimes.everyThirtySeconds, title: "UpdateAnnouncementScoresJob", description: "Job for update active announcement scores(based on only likes right now)." }));
     jobs.push(new UserLimitsJob({ customLockKey: "3", cronExpression: cronTimes.everyDayAtMidnight, title: "UserLimitsJob", description: "Job for user limits." }));
 

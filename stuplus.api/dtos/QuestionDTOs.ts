@@ -9,6 +9,7 @@ export class QuestionAddDTO {
     relatedSchoolIds: string[] | string = [];
     text: string = "";
     hashTags: string[] = [];
+    ownerSchoolId: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);
@@ -17,6 +18,8 @@ export class QuestionAddDTO {
 }
 
 export class QuestionGetMultipleDTO extends BaseFilter {
+    ownerSchoolId: string = "";
+    schoolSearch: boolean = true;
     schoolIds: string[] = [];
     constructor(obj: any) {
         super(obj);

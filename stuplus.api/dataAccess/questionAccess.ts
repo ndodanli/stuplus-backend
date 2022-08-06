@@ -37,24 +37,31 @@ export class QuestionAccess {
         return question;
     }
 
-    public static async getQuestions(acceptedLanguages: Array<string>, payload: QuestionGetMultipleDTO, currentUserId: string): Promise<QuestionDocument[] | null> {
+    public static async getQuestions(acceptedLanguages: Array<string>, payload: QuestionGetMultipleDTO, currentUserId: string): Promise<Question[] | null> {
+        let questions: Question[] = [];
         let questionsQuery = QuestionEntity.find({});
-        if (payload.schoolIds && payload.schoolIds.length) {
-            questionsQuery = questionsQuery.where({
-                $or: [
-                    { relatedSchoolIds: { $in: payload.schoolIds } },
-                    { relatedSchoolIds: [] }
-                ]
-            });
+
+        if (payload.schoolSearch) {
+            questionsQuery = questionsQuery.where({ ownerSchoolId: payload.ownerSchoolId });
+        } else {
+            questionsQuery = questionsQuery.where({ ownerSchoolId: { $ne: payload.ownerSchoolId } });
         }
 
         if (payload.lastRecordDate)
             questionsQuery = questionsQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
 
-        const questions = await questionsQuery
+        questions = await questionsQuery
             .sort({ createdAt: -1 })
             .limit(payload.take)
             .lean(true);
+
+        if (payload.schoolSearch && questions.length < payload.take) {
+            let questionsSecond = await QuestionEntity.find({ ownerSchoolId: { $ne: payload.ownerSchoolId } })
+                .sort({ createdAt: -1 })
+                .limit(payload.take - questions.length)
+                .lean(true);
+            questions = questions.concat(questionsSecond);
+        }
 
         if (questions.length) {
             let questionIds = questions.map(x => x._id);

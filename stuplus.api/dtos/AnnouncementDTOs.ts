@@ -17,6 +17,8 @@ export class AnnouncementAddDTO {
 }
 
 export class AnnouncementGetMultipleDTO extends BaseFilter {
+    ownerSchoolId: string = "";
+    schoolSearch: boolean = true;
     schoolIds: string[] = [];
     constructor(obj: any) {
         super(obj);

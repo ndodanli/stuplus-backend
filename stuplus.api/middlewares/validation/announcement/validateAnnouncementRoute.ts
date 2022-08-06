@@ -25,6 +25,15 @@ export const validateAddAnnouncement = [
                 }
             }
         }),
+    check('ownerSchoolId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);
         if (!errors.isEmpty())
@@ -151,6 +160,22 @@ export const validateGetAnnouncementsAnnouncement = [
     check('pageSize')
         .notEmpty()
         .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail(),
+    check('ownerSchoolId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+    check('schoolSearch')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .isBoolean()
+        .withMessage((value: any, { req }: any) => getMessage("mustBeBoolean", req.selectedLangs()))
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);

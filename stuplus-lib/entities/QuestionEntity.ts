@@ -6,6 +6,7 @@ import mongoose_fuzzy_searching from "@imranbarbhuiya/mongoose-fuzzy-searching";
 
 export interface Question extends BaseEntity {
   ownerId: string; //user id
+  ownerSchoolId: string; //user school id
   title: string;
   titlesch: string;
   relatedSchoolIds: Array<string>;
@@ -44,6 +45,7 @@ export interface QuestionDocument extends Question, Document {
 
 export const QuestionSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
+  ownerSchoolId: { type: String, required: true },
   title: { type: String, required: true },
   titlesch: { type: String, required: true },
   relatedSchoolIds: { type: Array.of(String), required: false, default: [] },
@@ -105,6 +107,7 @@ QuestionSchema.methods.minify = async function (
     _id: this._id,
     recordStatus: this.recordStatus,
     ownerId: this.ownerId,
+    ownerSchoolId: this.ownerSchoolId,
     title: this.title,
     titlesch: this.titlesch,
     relatedSchoolIds: this.relatedSchoolIds,

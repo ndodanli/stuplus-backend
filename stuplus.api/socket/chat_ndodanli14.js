@@ -7,8 +7,10 @@ $(document).ready(async function () {
     const msgerInput = get(".msger-input");
     const msgerChat = get(".msger-chat");
     const { data } = await axios.get("/account/user");
-    const { data: messageData } = await axios.post("/chat/getPMChats");
-    console.log("messageData: ", messageData);
+    const { data: messageData } = await axios.post("/chat/getPMs", {
+        chatId: "62c96f8cea5d4faa1448e904",
+        pageSize: 20
+    });
 
     const user = data.data;
     const BOT_IMG = "https://thumbs.dreamstime.com/b/closeup-photo-funny-excited-lady-raise-fists-screaming-loudly-celebrating-money-lottery-winning-wealthy-rich-person-wear-casual-172563278.jpg";
@@ -36,7 +38,7 @@ $(document).ready(async function () {
     const forwardMessages = messages.filter(x => x.ownerId != user._id && x.forwarded == false).map(x => x._id);
     const readMessages = messages.filter(x => x.ownerId != user._id && x.readed == false).map(x => x._id);
     if (forwardMessages.length > 0)
-        socket.emit("pm-forwarded", {
+        socket.emit("pmForwarded", {
             to: USER_TO,
             mids: forwardMessages,
             ci: "62c96f8cea5d4faa1448e904"
@@ -44,7 +46,7 @@ $(document).ready(async function () {
             console.log("response: ", res);
         });
     if (readMessages.length > 0)
-        socket.emit("pm-readed", {
+        socket.emit("pmReaded", {
             to: USER_TO,
             mids: readMessages,
             ci: "62c96f8cea5d4faa1448e904"
@@ -56,7 +58,7 @@ $(document).ready(async function () {
     });
     async function getOldMessages() {
         console.log("messages length before: ", messages.length)
-        const { data: messageData } = await axios.post("/chat/getMessages", {
+        const { data: messageData } = await axios.post("/chat/getPMs", {
             lastRecordDate: messages[messages.length - 1].createdAt,
             chatId: "62c96f8cea5d4faa1448e904",
             pageSize: 20
@@ -91,10 +93,10 @@ $(document).ready(async function () {
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
-        socket.emit("pm-send", {
+        socket.emit("pmSend", {
             to: USER_TO,
-            m: msgText,
-            // ci: "dasds"
+            t: msgText,
+            ci: "62c96f8cea5d4faa1448e904"
             // + Math.random() * 10000
         }, (res) => {
             console.log("response: ", res);
