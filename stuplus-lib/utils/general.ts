@@ -135,12 +135,14 @@ export const removeDuplicates = (arr: string[]): string[] => {
 }
 
 export const sortByCreatedAtDesc = (arr: any[]): any[] => {
-    arr.sort((a, b) => {
-        if (a.createdAt > b.createdAt)
-            return -1;
-        if (a.createdAt < b.createdAt)
-            return 1;
-        return 0;
-    });
+    if (arr.length > 1) {
+        arr.sort((a, b) => {
+            if (a.createdAt > b.createdAt)
+                return -1;
+            if (a.createdAt < b.createdAt)
+                return 1;
+            return 0;
+        });
+    }
     return arr;
 }

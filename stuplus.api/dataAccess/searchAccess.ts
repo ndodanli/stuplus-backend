@@ -28,7 +28,7 @@ export class SearchAccess {
             });
         }
         const announcements = await announcementQuery
-            .sort({ createdAt: -1 })
+            .sort({ _id: -1 })
             .select({ hashTags_fuzzy: 0, titlesch_fuzzy: 0 })
             .skip(payload.skip)
             .limit(payload.pageSize)
@@ -52,7 +52,7 @@ export class SearchAccess {
             });
         }
         const questions = await questionQuery
-            .sort({ createdAt: -1 })
+            .sort({ _id: -1 })
             .select({ hashTags_fuzzy: 0, titlesch_fuzzy: 0 })
             .skip(payload.skip)
             .limit(payload.pageSize)
@@ -157,11 +157,11 @@ export class SearchAccess {
         }, {
             _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
         })
-            .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+            .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
             .limit(queryLimit)
             .lean(true);
         if (users.length > 0) {
-            let lastUserCreatedAt: Date = users[users.length - 1].createdAt;
+            let lastUserId: Date = users[users.length - 1]._id;
             const userIds = users.map(user => user._id.toString());
             const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, userIds);
             //delete users that are already followed
@@ -180,16 +180,16 @@ export class SearchAccess {
                         schoolId: rUser.schoolId,
                         departmentId: rUser.departmentId,
                         grade: rUser.grade,
-                        createdAt: { $lt: lastUserCreatedAt },
+                        _id: { $lt: lastUserId },
                     }, {
                         _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
                     })
-                        .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+                        .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
                         .limit(queryLimit)
                         .lean(true);
                     if (secondQueryUsers.length === 0)
                         break;
-                    lastUserCreatedAt = secondQueryUsers[secondQueryUsers.length - 1].createdAt;
+                    lastUserId = secondQueryUsers[secondQueryUsers.length - 1]._id;
                     const secondUserIds = secondQueryUsers.map(user => user._id.toString());
                     const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, secondUserIds);
                     //delete users that are already followed
@@ -212,11 +212,11 @@ export class SearchAccess {
             }, {
                 _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
             })
-                .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+                .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
                 .limit(queryLimit)
                 .lean(true);
             if (usersWithSameDepartment.length > 0) {
-                let lastUserCreatedAt: Date = usersWithSameDepartment[usersWithSameDepartment.length - 1].createdAt;
+                let lastUserId: Date = usersWithSameDepartment[usersWithSameDepartment.length - 1]._id;
                 const userIds = usersWithSameDepartment.map(user => user._id.toString());
                 const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, userIds);
                 if (usersWithSameDepartment.length < queryLimit)
@@ -233,19 +233,18 @@ export class SearchAccess {
                     while (users.length < suggestionLimit) {
                         let secondQueryUsers = await UserEntity.find({
                             "privacySettings.profileStatus": UserProfileStatus.Public,
-                            _id: { $nin: firstFoundedUserIds },
+                            _id: { $nin: firstFoundedUserIds, $lt: lastUserId },
                             schoolId: rUser.schoolId,
                             departmentId: rUser.departmentId,
-                            createdAt: { $lt: lastUserCreatedAt },
                         }, {
                             _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
                         })
-                            .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+                            .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
                             .limit(queryLimit)
                             .lean(true);
                         if (secondQueryUsers.length === 0)
                             break;
-                        lastUserCreatedAt = secondQueryUsers[secondQueryUsers.length - 1].createdAt;
+                        lastUserId = secondQueryUsers[secondQueryUsers.length - 1]._id;
                         const secondUserIds = secondQueryUsers.map(user => user._id.toString());
                         const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, secondUserIds);
                         //delete users that are already followed
@@ -268,11 +267,11 @@ export class SearchAccess {
             }, {
                 _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
             })
-                .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+                .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
                 .limit(queryLimit)
                 .lean(true);
             if (usersWithSameSchool.length > 0) {
-                let lastUserCreatedAt: Date = usersWithSameSchool[usersWithSameSchool.length - 1].createdAt;
+                let lastUserId: Date = usersWithSameSchool[usersWithSameSchool.length - 1]._id;
                 const userIds = usersWithSameSchool.map(user => user._id.toString());
                 const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, userIds);
                 if (usersWithSameSchool.length < queryLimit)
@@ -289,18 +288,17 @@ export class SearchAccess {
                     while (users.length < suggestionLimit) {
                         let secondQueryUsers = await UserEntity.find({
                             "privacySettings.profileStatus": UserProfileStatus.Public,
-                            _id: { $nin: secondFoundedUserIds },
+                            _id: { $nin: secondFoundedUserIds, $lt: lastUserId },
                             schoolId: rUser.schoolId,
-                            createdAt: { $lt: lastUserCreatedAt },
                         }, {
                             _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
                         })
-                            .sort({ createdAt: -1, popularity: -1, lastSeenDate: -1 })
+                            .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
                             .limit(queryLimit)
                             .lean(true);
                         if (secondQueryUsers.length === 0)
                             break;
-                        lastUserCreatedAt = secondQueryUsers[secondQueryUsers.length - 1].createdAt;
+                        lastUserId = secondQueryUsers[secondQueryUsers.length - 1]._id;
                         const secondUserIds = secondQueryUsers.map(user => user._id.toString());
                         const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, secondUserIds);
                         //delete users that are already followed
@@ -311,6 +309,58 @@ export class SearchAccess {
                             }
                         }
                         users = users.concat(secondQueryUsers);
+                    }
+            }
+        }
+        const thirdFoundedUserIds = users.map(user => user._id);
+        if (users.length < suggestionLimit) {
+            let usersRandom = await UserEntity.find({
+                "privacySettings.profileStatus": UserProfileStatus.Public,
+                _id: { $nin: thirdFoundedUserIds },
+            }, {
+                _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
+            })
+                .sort({ popularity: -1, lastSeenDate: -1 })
+                .limit(queryLimit)
+                .lean(true);
+            if (usersRandom.length > 0) {
+                let lastUserId: Date = usersRandom[usersRandom.length - 1]._id;
+                const userIds = usersRandom.map(user => user._id.toString());
+                const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, userIds);
+                if (usersRandom.length < queryLimit)
+                    queryLimitReached = false;
+                //delete users that are already followed
+                for (let i = 0; i < usersRandom.length; i++) {
+                    if (redisFollows[i]) {
+                        usersRandom.splice(i, 1);
+                        i--;
+                    }
+                }
+                users = users.concat(usersRandom);
+                if (queryLimitReached)
+                    while (users.length < suggestionLimit) {
+                        let thirdQueryUsers = await UserEntity.find({
+                            "privacySettings.profileStatus": UserProfileStatus.Public,
+                            _id: { $nin: thirdFoundedUserIds, $lt: lastUserId },
+                        }, {
+                            _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
+                        })
+                            .sort({ popularity: -1, lastSeenDate: -1 })
+                            .limit(queryLimit)
+                            .lean(true);
+                        if (thirdQueryUsers.length === 0)
+                            break;
+                        lastUserId = thirdQueryUsers[thirdQueryUsers.length - 1]._id;
+                        const secondUserIds = thirdQueryUsers.map(user => user._id.toString());
+                        const redisFollows = await RedisService.client.smIsMember(RedisKeyType.UserFollowings + currentUserId, secondUserIds);
+                        //delete users that are already followed
+                        for (let i = 0; i < thirdQueryUsers.length; i++) {
+                            if (redisFollows[i]) {
+                                thirdQueryUsers.splice(i, 1);
+                                i--;
+                            }
+                        }
+                        users = users.concat(thirdQueryUsers);
                     }
             }
         }

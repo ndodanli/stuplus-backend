@@ -9,7 +9,7 @@ export interface Chat extends BaseEntity {
   owner?: User | null; //ignore
   participant?: User | null; //ignore
   unreadMessageCount: number;
-  lastMessage?: Message | null;
+  lastMessage?: any | null;
 }
 
 export interface ChatDocument extends Chat, Document {

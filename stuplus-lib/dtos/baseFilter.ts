@@ -5,7 +5,7 @@ export class BaseFilter {
     pageSize: number = 20;
     skip: number = 0;
     take: number = 20;
-    lastRecordDate: Date | null = null;
+    lastRecordId: Date | null = null;
     searchTerm: string | null = null;
     constructor(filter: BaseFilter) {
         if (filter.page && filter.pageSize) {
@@ -15,8 +15,8 @@ export class BaseFilter {
             this.take = filter.pageSize;
         }
 
-        if (filter.lastRecordDate) {
-            this.lastRecordDate = filter.lastRecordDate;
+        if (filter.lastRecordId) {
+            this.lastRecordId = filter.lastRecordId;
         }
         this.searchTerm = filter.searchTerm;
     }

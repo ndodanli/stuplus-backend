@@ -78,11 +78,11 @@ export class AnnouncementAccess {
             announcementsQuery = announcementsQuery.where({ ownerSchoolId: { $ne: payload.ownerSchoolId } });
         }
 
-        if (payload.lastRecordDate)
-            announcementsQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            announcementsQuery.where({ _id: { $lt: payload.lastRecordId } });
 
         announcements = await announcementsQuery
-            .sort({ createdAt: -1 })
+            .sort({ _id: -1 })
             .limit(payload.take)
             .lean(true);
 
@@ -104,7 +104,7 @@ export class AnnouncementAccess {
                     }
                 ]
             })
-                .sort({ createdAt: -1 })
+                .sort({ _id: -1 })
                 .limit(payload.take - announcements.length)
                 .lean(true);
             announcements = announcements.concat(announcementsSecond);
@@ -155,7 +155,7 @@ export class AnnouncementAccess {
     public static async getComments(acceptedLanguages: Array<string>, payload: AnnouncementGetCommentsDTO, currentUserId: string): Promise<AnnouncementCommentDocument[]> {
         let favoriteTake = 5;
         let comments: AnnouncementCommentDocument[] = [];
-        let isFirstPage = !payload.lastRecordDate;
+        let isFirstPage = !payload.lastRecordId;
         // const redisMaxCommentCount = -30;
 
         if (isFirstPage) {
@@ -182,9 +182,9 @@ export class AnnouncementAccess {
                 });
 
                 if (redisComments.length > 0)
-                    newCommentsQuery = newCommentsQuery.where({ createdAt: { $lt: redisComments[0].createdAt } });
+                    newCommentsQuery = newCommentsQuery.where({ _id: { $lt: redisComments[0]._id } });
 
-                newComments = await newCommentsQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);;
+                newComments = await newCommentsQuery.sort({ _id: -1 }).limit(payload.take).lean(true);;
             }
             for (let i = redisComments.length - 1; i >= 0; i--)
                 comments.push(redisComments[i]);
@@ -194,8 +194,8 @@ export class AnnouncementAccess {
         } else {
             comments = await AnnouncementCommentEntity.find({
                 announcementId: payload.announcementId,
-                createdAt: { $lt: payload.lastRecordDate }
-            }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+                _id: { $lt: payload.lastRecordId }
+            }).sort({ _id: -1 }).limit(payload.take).lean(true);
         }
         if (comments.length) {
             const commentIds = comments.map(x => x._id);
@@ -405,7 +405,7 @@ export class AnnouncementAccess {
 
     public static async getSubComments(acceptedLanguages: Array<string>, payload: AnnouncementGetSubCommentsDTO, currentUserId: string): Promise<AnnouncementSubCommentDocument[]> {
         let subComments: AnnouncementSubCommentDocument[] = [];
-        let isFirstPage = !payload.lastRecordDate;
+        let isFirstPage = !payload.lastRecordId;
         // const redisMaxCommentCount = -30;
 
         if (isFirstPage) {
@@ -420,9 +420,9 @@ export class AnnouncementAccess {
                 });
 
                 if (redisSubComments.length > 0)
-                    newSubCommentsQuery = newSubCommentsQuery.where({ createdAt: { $lt: redisSubComments[0].createdAt } });
+                    newSubCommentsQuery = newSubCommentsQuery.where({ _id: { $lt: redisSubComments[0]._id } });
 
-                newSubComments = await newSubCommentsQuery.sort({ createdAt: 1 }).limit(payload.take).lean(true);
+                newSubComments = await newSubCommentsQuery.sort({ _id: 1 }).limit(payload.take).lean(true);
             }
 
             for (let i = 0; i < newSubComments.length; i++)
@@ -435,8 +435,8 @@ export class AnnouncementAccess {
         } else {
             subComments = await AnnouncementSubCommentEntity.find({
                 commentId: payload.commentId,
-                createdAt: { $gt: payload.lastRecordDate }
-            }).sort({ createdAt: 1 }).limit(payload.take).lean(true);
+                _id: { $gt: payload.lastRecordId }
+            }).sort({ _id: 1 }).limit(payload.take).lean(true);
         }
 
         if (subComments.length) {

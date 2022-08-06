@@ -47,17 +47,17 @@ export class QuestionAccess {
             questionsQuery = questionsQuery.where({ ownerSchoolId: { $ne: payload.ownerSchoolId } });
         }
 
-        if (payload.lastRecordDate)
-            questionsQuery = questionsQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            questionsQuery = questionsQuery.where({ _id: { $lt: payload.lastRecordId } });
 
         questions = await questionsQuery
-            .sort({ createdAt: -1 })
+            .sort({ _id: -1 })
             .limit(payload.take)
             .lean(true);
 
         if (payload.schoolSearch && questions.length < payload.take) {
             let questionsSecond = await QuestionEntity.find({ ownerSchoolId: { $ne: payload.ownerSchoolId } })
-                .sort({ createdAt: -1 })
+                .sort({ _id: -1 })
                 .limit(payload.take - questions.length)
                 .lean(true);
             questions = questions.concat(questionsSecond);
@@ -109,7 +109,7 @@ export class QuestionAccess {
     public static async getComments(acceptedLanguages: Array<string>, payload: QuestionGetCommentsDTO, currentUserId: string): Promise<QuestionCommentDocument[]> {
         let favoriteTake = 5;
         let comments: QuestionCommentDocument[] = [];
-        let isFirstPage = !payload.lastRecordDate;
+        let isFirstPage = !payload.lastRecordId;
         // const redisMaxCommentCount = -30;
 
         if (isFirstPage) {
@@ -136,9 +136,9 @@ export class QuestionAccess {
                 });
 
                 if (redisComments.length > 0)
-                    newCommentsQuery = newCommentsQuery.where({ createdAt: { $lt: redisComments[0].createdAt } });
+                    newCommentsQuery = newCommentsQuery.where({ _id: { $lt: redisComments[0]._id } });
 
-                newComments = await newCommentsQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);
+                newComments = await newCommentsQuery.sort({ _id: -1 }).limit(payload.take).lean(true);
             }
 
             for (let i = redisComments.length - 1; i >= 0; i--)
@@ -150,8 +150,8 @@ export class QuestionAccess {
         } else {
             comments = await QuestionCommentEntity.find({
                 questionId: payload.questionId,
-                createdAt: { $lt: payload.lastRecordDate }
-            }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+                _id: { $lt: payload.lastRecordId }
+            }).sort({ _id: -1 }).limit(payload.take).lean(true);
         }
 
         if (comments.length) {
@@ -195,7 +195,7 @@ export class QuestionAccess {
 
     public static async getSubComments(acceptedLanguages: Array<string>, payload: QuestionGetSubCommentsDTO, currentUserId: string): Promise<QuestionSubCommentDocument[]> {
         let subComments: QuestionSubCommentDocument[] = [];
-        let isFirstPage = !payload.lastRecordDate;
+        let isFirstPage = !payload.lastRecordId;
         // const redisMaxCommentCount = -30;
 
         if (isFirstPage) {
@@ -210,9 +210,9 @@ export class QuestionAccess {
                 });
 
                 if (redisSubComments.length > 0)
-                    newSubCommentsQuery = newSubCommentsQuery.where({ createdAt: { $lt: redisSubComments[0].createdAt } });
+                    newSubCommentsQuery = newSubCommentsQuery.where({ _id: { $lt: redisSubComments[0]._id } });
 
-                newSubComments = await newSubCommentsQuery.sort({ createdAt: 1 }).limit(payload.take).lean(true);
+                newSubComments = await newSubCommentsQuery.sort({ _id: 1 }).limit(payload.take).lean(true);
             }
 
             for (let i = 0; i < newSubComments.length; i++)
@@ -225,8 +225,8 @@ export class QuestionAccess {
         } else {
             subComments = await QuestionSubCommentEntity.find({
                 commentId: payload.commentId,
-                createdAt: { $gt: payload.lastRecordDate }
-            }).sort({ createdAt: 1 }).limit(payload.take).lean(true);
+                _id: { $gt: payload.lastRecordId }
+            }).sort({ _id: 1 }).limit(payload.take).lean(true);
         }
 
         if (subComments.length) {

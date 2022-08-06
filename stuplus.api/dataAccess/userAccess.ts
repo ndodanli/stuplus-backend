@@ -26,6 +26,7 @@ import { NotificationDocument } from "../../stuplus-lib/entities/NotificationEnt
 import { GroupAccess } from "./groupAccess";
 import { AddToGroupChatDTO } from "../socket/dtos/Chat";
 import { SearchAccess } from "./searchAccess";
+import OnlineUserService from "../../stuplus-lib/services/onlineUsersService";
 export class UserAccess {
     public static async getUserProfile(acceptedLanguages: Array<string>, currentUserId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
         let response: any;
@@ -196,6 +197,17 @@ export class UserAccess {
         user.avatarKey = payload.avatarKey;
         user.about = payload.about;
 
+        const socketId = OnlineUserService.onlineUsers.get(id);
+        if (socketId) {
+            const socketUser = io.sockets.sockets.get(socketId);
+            if (socketUser) {
+                socketUser.data.user.username = payload.username;
+                socketUser.data.user.firstName = payload.firstName;
+                socketUser.data.user.lastName = payload.lastName;
+                socketUser.data.user.avatarKey = payload.avatarKey;
+            }
+        }
+
         await user.save();
         await RedisService.updateUser(user);
 
@@ -234,6 +246,14 @@ export class UserAccess {
         const user = await UserEntity.findOneAndUpdate({ _id: id }, { $set: { 'profilePhotoUrl': newPPUrl } }, { new: true });
 
         if (!user) throw new NotValidError(getMessage("userNotFound", acceptedLanguages));
+
+        const socketId = OnlineUserService.onlineUsers.get(id);
+        if (socketId) {
+            const socketUser = io.sockets.sockets.get(socketId);
+            if (socketUser) {
+                socketUser.data.user.profilePhotoUrl = newPPUrl;
+            }
+        }
 
         await RedisService.updateUser(user);
 
@@ -763,10 +783,10 @@ export class UserAccess {
 
         let followRequestsQuery = FollowRequestEntity.find({ ownerId: userId }, { "ownerId": 0 })
 
-        if (payload.lastRecordDate)
-            followRequestsQuery = followRequestsQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            followRequestsQuery = followRequestsQuery.where({ _id: { $lt: payload.lastRecordId } });
 
-        const followRequests = await followRequestsQuery.sort({ createdAt: -1 })
+        const followRequests = await followRequestsQuery.sort({ _id: -1 })
             .limit(payload.take)
             .lean(true);
 
@@ -785,11 +805,11 @@ export class UserAccess {
 
         let followRequestsQuery = FollowRequestEntity.find({ requestedId: userId }, { "requestedId": 0 })
 
-        if (payload.lastRecordDate)
-            followRequestsQuery = followRequestsQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            followRequestsQuery = followRequestsQuery.where({ _id: { $lt: payload.lastRecordId } });
 
         const followRequests = await followRequestsQuery
-            .sort({ createdAt: -1 })
+            .sort({ _id: -1 })
             .limit(payload.take)
             .lean(true);
 
@@ -808,11 +828,11 @@ export class UserAccess {
 
         let followersQuery = FollowEntity.find({ followingId: userId }, { followingId: 0, followingUsername: 0, followingFirstName: 0, followingLastName: 0 })
 
-        if (payload.lastRecordDate)
-            followersQuery = followersQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            followersQuery = followersQuery.where({ _id: { $lt: payload.lastRecordId } });
 
         const followers = await followersQuery
-            .sort({ createdAt: -1 })
+            .sort({ _id: -1 })
             .limit(payload.take)
             .lean(true);
 
@@ -831,11 +851,11 @@ export class UserAccess {
 
         let followingQuery = FollowEntity.find({ followerId: userId }, { followerId: 0, followerUsername: 0, followerFirstName: 0, followerLastName: 0 })
 
-        if (payload.lastRecordDate)
-            followingQuery = followingQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            followingQuery = followingQuery.where({ _id: { $lt: payload.lastRecordId } });
 
         const following = await followingQuery
-            .sort({ createdAt: -1 })
+            .sort({ _id: -1 })
             .limit(payload.take)
             .lean(true);
 
@@ -859,11 +879,11 @@ export class UserAccess {
     public static async getNotificationHistory(acceptedLanguages: Array<string>, userId: string, payload: BaseFilter): Promise<NotificationDocument[]> {
         let notificationHistoryQuery = NotificationEntity.find({ ownerId: userId })
 
-        if (payload.lastRecordDate)
-            notificationHistoryQuery = notificationHistoryQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            notificationHistoryQuery = notificationHistoryQuery.where({ _id: { $lt: payload.lastRecordId } });
 
         const notificationHistory = await notificationHistoryQuery
-            .sort({ createdAt: -1 })
+            .sort({ _id: -1 })
             .limit(payload.take)
             .lean(true);
 

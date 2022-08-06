@@ -15,7 +15,7 @@
 *vakit kalirsa s3 sifreleme
 
 
-*arkadas onerileri genisletilecek
+*kullanicinin private chati kaldirmasi(kaldirirsa redisten de silinmeli)
 *bloklanan user icerikleri duzenlenecek(bloklayan kisiye gosterilmeyecek)
 ***gc total messages => save and process this count for unread message count
 

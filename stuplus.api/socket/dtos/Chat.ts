@@ -61,7 +61,7 @@ export class GetSearchedChatMessagesDTO extends BaseFilter {
 
 export class GetSearchedChatMessageDTO extends BaseFilter {
     chatId: string = "";
-    messageCreatedAt: string = "";
+    messageId: string = "";
     constructor(obj: any) {
         super(obj);
         if (obj) {
@@ -83,7 +83,7 @@ export class GetSearchedGroupChatMessagesDTO extends BaseFilter {
 
 export class GetSearchedGroupChatMessageDTO extends BaseFilter {
     groupChatId: string = "";
-    messageCreatedAt: string = "";
+    messageId: string = "";
     constructor(obj: any) {
         super(obj);
         if (obj) {

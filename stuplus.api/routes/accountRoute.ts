@@ -31,32 +31,6 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
 "$ref": "#/definitions/GetAccountUserResponse"
 }
 } */
-  await GroupMessageReadEntity.bulkWrite([
-    {
-      updateOne: {
-        filter: {
-          groupChatId: "dsadsadsads1",
-          readedBy: "dsadsafasffsd5551"
-        },
-        update: {
-          lastReadedAt: new Date(),
-        },
-        upsert: true
-      }
-    },
-    {
-      updateOne: {
-        filter: {
-          groupChatId: "dsadsadsads2",
-          readedBy: "dsadsafasffsd555"
-        },
-        update: {
-          lastReadedAt: new Date(),
-        },
-        upsert: true
-      }
-    }
-  ]);
   const response = new BaseResponse<User>();
   try {
 

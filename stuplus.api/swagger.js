@@ -843,11 +843,11 @@ const doc = {
             hashTags: ["string"],
         },
         BasePaginationRequest: {
-            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            lastRecordId: "62ee7233490026ff5d31726b",
             $pageSize: 20,
         },
         BasePaginationSearchTermRequest: {
-            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            lastRecordId: "62ee7233490026ff5d31726b",
             $pageSize: 20,
             searchTerm: "xxx"
         },
@@ -1134,10 +1134,10 @@ const doc = {
             }
         },
         AnnouncementGetAnnouncementsRequest: {
-            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            lastRecordId: "62ee7233490026ff5d31726b",
             $schoolSearch: {
                 type: "boolean",
-                description: "Eğer gönderilen son kaydın(lastRecordDate'in alındığı kayıt) " +
+                description: "Eğer gönderilen son kaydın(lastRecordId'nin alındığı kayıt) " +
                     "okul idsi sorguyu yapan kullanıcının okul idsine eşit ise true, değilse false gönderilecek."
             },
             $ownerSchoolId: {
@@ -1193,7 +1193,7 @@ const doc = {
             ],
         },
         AnnouncementGetCommentsRequest: {
-            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            lastRecordId: "62ee7233490026ff5d31726b",
             $pageSize: 20,
             $announcementId: "announcementId",
         },
@@ -1379,7 +1379,7 @@ const doc = {
             replyToId: "replyToId"
         },
         AnnouncementGetSubCommentsRequest: {
-            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            lastRecordId: "62ee7233490026ff5d31726b",
             $pageSize: 20,
             $commentId: "commentId",
         },
@@ -1752,9 +1752,9 @@ const doc = {
         },
         //#region Questions
         QuestionGetQuestionsRequest: {
-            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            lastRecordId: "62ee7233490026ff5d31726b",
             $schoolSearch: {
-                type: "boolean", description: "Eğer gönderilen son kaydın(lastRecordDate'in alındığı kayıt) "
+                type: "boolean", description: "Eğer gönderilen son kaydın(lastRecordId'nin alındığı kayıt) "
                     + "okul idsi sorguyu yapan kullanıcının okul idsine eşit ise true, değilse false gönderilecek."
             },
             $ownerSchoolId: { type: "string", description: "Sorguyu yapan kullanıcının okul idsi." },
@@ -1805,7 +1805,7 @@ const doc = {
             },
         },
         QuestionGetCommentsRequest: {
-            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            lastRecordId: "62ee7233490026ff5d31726b",
             $pageSize: 20,
             $questionId: "questionId",
         },
@@ -1870,7 +1870,7 @@ const doc = {
             ]
         },
         QuestionGetSubCommentsRequest: {
-            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            lastRecordId: "62ee7233490026ff5d31726b",
             $pageSize: 20,
             $commentId: "commentId",
         },
@@ -2081,7 +2081,7 @@ const doc = {
         //#region Chat
         ChatGetGroupMessagesRequest: {
             $groupChatId: "groupChatId",
-            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            lastRecordId: "62ee7233490026ff5d31726b",
             $pageSize: 20,
         },
         ChatGetGroupMessagesResponse: {
@@ -2167,7 +2167,7 @@ const doc = {
         },
         ChatGetPrivateMessagesRequest: {
             $chatId: "chatId",
-            lastRecordDate: "2022-07-02T20:12:59.891Z",
+            lastRecordId: "62ee7233490026ff5d31726b",
             $pageSize: 20,
         },
         ChatGetPrivateMessagesResponse: {

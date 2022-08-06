@@ -1,5 +1,5 @@
 import ISocket from "./interfaces/socket";
-import { ChatEntity, GroupMessageForwardEntity, GroupMessageEntity, GroupMessageReadEntity, MessageEntity, UserEntity, GroupChatEntity, GroupChatUserEntity, FollowEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { ChatEntity, GroupMessageEntity, GroupMessageReadEntity, MessageEntity, UserEntity, GroupChatEntity, GroupChatUserEntity, FollowEntity } from "../../stuplus-lib/entities/BaseEntity";
 import "../../stuplus-lib/extensions/extensionMethods"
 require("dotenv").config();
 import { RedisSendFileMessageDTO, RedisGroupMessageDTO, RedisGroupMessageForwardReadDTO, RedisMessageDTO, RedisMessageForwardReadDTO, RedisUpdateFileMessageDTO, RedisGroupSendFileMessageDTO, RedisGroupUpdateFileMessageDTO } from "./dtos/RedisChat";
@@ -22,8 +22,8 @@ import { validateAddToGroup, validateBlockUser, validateClearPMChat, validateCre
 import { GroupMessageDocument } from "../../stuplus-lib/entities/GroupMessageEntity";
 import { GroupChatUserDocument } from "../../stuplus-lib/entities/GroupChatUserEntity";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
-import { ChatDocument } from "../../stuplus-lib/entities/ChatEntity";
-import { GroupChat, GroupChatDocument } from "../../stuplus-lib/entities/GroupChatEntity";
+import { Chat } from "../../stuplus-lib/entities/ChatEntity";
+import { GroupChat } from "../../stuplus-lib/entities/GroupChatEntity";
 import { isValidObjectId } from "mongoose";
 import { GroupAccess } from "../dataAccess/groupAccess";
 import OnlineUserService from "../../stuplus-lib/services/onlineUsersService";
@@ -48,12 +48,14 @@ const io = require("socket.io")(3000, {
         // credentials: true
     }
 });
+
 const initializeSocket = async () => {
     return new Promise(async (resolve, reject) => {
-        await RedisService.setGroupChats();
+    await RedisService.setGroupChats();
         resolve(true);
     });
 }
+
 io.on("connection", async (socket: ISocket) => {
     const decodedJwtUser: any = authorizeSocket(socket.handshake.auth.token);
     if (!decodedJwtUser) {
@@ -112,13 +114,11 @@ io.on("connection", async (socket: ISocket) => {
                 cb({ success: false, message: "Invalid parameters." });
                 return;
             }
+
             const toUser = await RedisService.acquireUser(data.to, [
                 "_id", "blockedUserIds", "privacySettings", "username"
             ]);
             const toUserId = toUser._id.toString();
-            // const toUserFollows = await RedisService.acquire<string[]>(RedisKeyType.User + data.to + ":follows", 60 * 60 * 8, async () => {
-            //     //TODO:add hash set logic here
-            // });
 
             if (!toUser)
                 cb({ success: false, message: "User not found." });
@@ -151,11 +151,17 @@ io.on("connection", async (socket: ISocket) => {
                     { upsert: true, new: true });
                 data.ci = chatEntity.id; //may be null, catch it later
                 responseData["ci"] = data.ci;
+                await RedisService.addPrivateChat(chatEntity);
+                if (data.ci) {
+                    await RedisService.addToUserPrivateChatIds(chatEntity.ownerId, data.ci);
+                    await RedisService.addToUserPrivateChatIds(chatEntity.participantId, data.ci);
+                }
                 await RedisService.incrementDailyNewPMCount(socket.data.user._id);
             }
+
             const now = new Date();
             const messageEntity = new MessageEntity({});
-            const chatData: object = {
+            const chatData: { e: any, t: number } = {
                 e: {
                     _id: messageEntity.id,
                     ownerId: socket.data.user._id,
@@ -170,14 +176,18 @@ io.on("connection", async (socket: ISocket) => {
             responseData["mi"] = messageEntity.id;
 
             await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, messageEntity.id + RedisPMOperationType.InsertMessage, stringify(chatData));
-
+            chatData.e["owner"] = {
+                _id: socket.data.user._id,
+                username: socket.data.user.username,
+            }
+            await RedisService.updatePrivateChatLastMessage(chatData.e, chatData.e.chatId);
             const emitData = { t: data.t, mi: messageEntity.id, ci: data.ci, f: null };
 
             if (!data.ci)
                 emitData["f"] = socket.data.user;
 
             if (await OnlineUserService.isOnline(data.to)) {
-                io.to(data.to).emit("cPmSend", emitData);
+                socket.to(data.to).emit("cPmSend", emitData);
             }
             else {
                 // await OneSignalService.sendNotificationWithUserIds({
@@ -273,12 +283,8 @@ io.on("connection", async (socket: ISocket) => {
             chatData.e["owner"] = {
                 _id: socket.data.user._id,
                 username: socket.data.user.username,
-                avatarKey: socket.data.user.avatarKey,
-                profilePhotoUrl: socket.data.user.profilePhotoUrl,
-                firstName: socket.data.user.firstName,
-                lastName: socket.data.user.lastName
             }
-            await RedisService.client.hSet(RedisKeyType.AllGroupChats, data.gCi + ":lm", stringify(chatData.e));
+            await RedisService.updateGroupChatLastMessage(chatData.e, chatData.e.groupChatId);
             const gcName = groupChatName(data.gCi);
             socket.to(gcName).emit("cGmSend", { t: data.t, mi: gMessageEntity.id, gCi: data.gCi, f: socket.data.user });
             cb({ success: true, mi: gMessageEntity.id });
@@ -444,10 +450,10 @@ router.post("/getBlockedUsers", authorize([Role.User, Role.Admin, Role.ContentCr
             profilePhotoUrl: 1, avatarKey: 1
         });
 
-        if (payload.lastRecordDate)
-            blockedUsersQuery = blockedUsersQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            blockedUsersQuery = blockedUsersQuery.where({ _id: { $lt: payload.lastRecordId } });
 
-        const blockedUsers = await blockedUsersQuery.sort({ createdAt: -1 }).limit(payload.take).lean();
+        const blockedUsers = await blockedUsersQuery.sort({ _id: -1 }).limit(payload.take).lean();
         response.data = blockedUsers;
 
     } catch (err: any) {
@@ -720,75 +726,129 @@ router.post("/clearPMChatHistory", authorize([Role.User, Role.Admin, Role.Conten
 router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
     /* #swagger.tags = ['Chat']
       #swagger.description = 'Get pm chats.' */
-    const response = new BaseResponse<ChatDocument[]>();
+    const response = new BaseResponse<Chat[]>();
     try {
-        // const payload = new BaseFilter(req.body);
-        let userPMChatsQuery = ChatEntity.find({
-            $or: [
-                { ownerId: res.locals.user._id },
-                { participantId: res.locals.user._id }
-            ]
-        });
-        // if (payload.lastRecordDate)
-        //     userPMChatsQuery = userPMChatsQuery.where({ updatedAt: { $lt: payload.lastRecordDate } });
+        const userPrivateChatIds = await RedisService.acquireUserPrivateChatIds(res.locals.user._id);
+        if (userPrivateChatIds.length == 0)
+            return Ok(res, response);
 
-        // const userPMChats: ChatDocument[] = await userPMChatsQuery.sort({ updatedAt: -1 }).limit(payload.take).lean(true);;
-        const userPMChats: ChatDocument[] = await userPMChatsQuery.lean(true);;
+        const getPMChatOps = [];
+        for (let i = 0; i < userPrivateChatIds.length; i++) {
+            getPMChatOps.push(RedisService.client.hGet(RedisKeyType.AllPrivateChats, userPrivateChatIds[i]));
+            getPMChatOps.push(RedisService.client.hGet(RedisKeyType.AllPrivateChats, userPrivateChatIds[i] + ":lm"));
+        }
+        const redisPrivateChats = await Promise.all(getPMChatOps);
+        const userPrivateChats: Chat[] = [];
+        const missingPrivateChatIds = [];
+        const missingPrivateChatLMIds = [];
+        let indexCounter = 0;
+        for (let i = 0; i < redisPrivateChats.length; i += 2) {
+            let privateChat: any = null;
+            if (!redisPrivateChats[i]) {
+                missingPrivateChatIds.push(userPrivateChatIds[indexCounter]);
+            } else {
+                privateChat = JSON.parse(redisPrivateChats[i] ?? "{}");
+            }
+            if (privateChat) {
+                if (!redisPrivateChats[i + 1]) {
+                    missingPrivateChatLMIds.push(userPrivateChatIds[indexCounter]);
+                } else {
+                    privateChat.lastMessage = JSON.parse(redisPrivateChats[i + 1] ?? "{}");
+                }
+                userPrivateChats.push(privateChat);
+            }
+            indexCounter++;
+        }
+        if (missingPrivateChatIds.length > 0) {
+            const privateChatsFromDb = await ChatEntity.find({ _id: { $in: missingPrivateChatIds } }, { _id: 1, ownerId: 1, participantId: 1 }).lean(true);
+            for (let i = 0; i < privateChatsFromDb.length; i++) {
+                userPrivateChats.push(privateChatsFromDb[i]);
+                missingPrivateChatLMIds.push(privateChatsFromDb[i]._id.toString());
+                await RedisService.addPrivateChat(privateChatsFromDb[i]);
+            }
+        }
+        if (missingPrivateChatLMIds.length > 0) {
+            const notFoundLastMessages: any = await MessageEntity.aggregate([
+                { $match: { chatId: { $in: missingPrivateChatLMIds }, recordStatus: RecordStatus.Active } },
+                { $sort: { _id: -1 } },
+                {
+                    $group: {
+                        _id: "$chatId",
+                        ownerId: { $first: "$ownerId" },
+                        text: { $first: "$text" },
+                        files: { $first: "$files" },
+                    }
+                }
+            ]);
+            const notFoundUserIds = [];
+            for (let i = 0; i < notFoundLastMessages.length; i++) {
+                const privateChat = userPrivateChats.find((x: Chat) => x._id.toString() === notFoundLastMessages[i]._id.toString());
+                if (privateChat) {
+                    privateChat.lastMessage = {
+                        ownerId: notFoundLastMessages[i].ownerId,
+                        text: notFoundLastMessages[i].text,
+                        files: notFoundLastMessages[i].files,
+                    };
+                    notFoundUserIds.push(notFoundLastMessages[i].ownerId);
+                }
+            }
+            const notFoundUsers = await UserEntity.find({ _id: { $in: notFoundUserIds } }, { _id: 1, username: 1 }).lean(true);
+            for (let i = 0; i < notFoundLastMessages.length; i++) {
+                const privateChat = userPrivateChats.find((x: Chat) => x._id.toString() === notFoundLastMessages[i]._id.toString());
+                if (privateChat) {
+                    //deep copy object
+                    const notFoundUser = JSON.parse(JSON.stringify(notFoundUsers.find((x: any) => x._id.toString() === privateChat.lastMessage.ownerId.toString())));
+                    privateChat.lastMessage.owner = notFoundUser;
+                    await RedisService.updatePrivateChatLastMessage(privateChat.lastMessage, privateChat._id.toString());
+                }
+            }
+        }
 
-        const requiredUserIds = userPMChats.map(x => {
+        const requiredUserIds = userPrivateChats.map(x => {
             if (x.ownerId === res.locals.user._id) {
                 return x.participantId;
             } else {
                 return x.ownerId;
             }
         });
+
         const users = await UserEntity.find({ _id: { $in: requiredUserIds } }, {
             _id: 1, username: 1, firstName: 1, lastName: 1,
             avatarKey: 1, profilePhotoUrl: 1, lastSeenDate: 1
         }).lean(true);
+
         const pmIndexesToRemove: number[] = [];
-        const redisPMReads: any = [];
+        let redisPMReadLastReadedAt: any;
         const redisPMs: any = [];
-        let lastMessageUserIds: string[] = [];
-        const notFoundLastMessageChatIds: string[] = [];
-        for (let i = 0; i < userPMChats.length; i++) {
-            const userPMChat = userPMChats[i];
+        for (let i = 0; i < userPrivateChats.length; i++) {
+            const userPMChat = userPrivateChats[i];
+            userPMChat.unreadMessageCount = 0;
             const redisPMAll = await RedisService.client.hVals(RedisKeyType.DBPrivateMessage + userPMChat._id.toString());
             for (let i = 0; i < redisPMAll.length; i++) {
                 const chatData = JSON.parse(redisPMAll[i]);
-                if (chatData.t == RedisPMOperationType.UpdateReaded)
-                    redisPMReads.push(chatData.e);
+                if (chatData.t == RedisPMOperationType.UpdateReaded && chatData.e.ownerId == res.locals.user._id)
+                    redisPMReadLastReadedAt = chatData.e?.createdAt;
                 else if (chatData.t == RedisPMOperationType.InsertMessage)
                     redisPMs.push(chatData.e);
 
             }
-            for (let i = 0; i < redisPMs.length; i++) {
-                const redisPM = redisPMs[i];
-                const readed = redisPMReads.find((x: { _id: any; }) => x._id === redisPM._id);
-                if (readed) {
-                    redisPM.readed;
-                    redisPM.readedAt = readed.createdAt;
-                } else {
-                    redisPM.readed = false;
-                    redisPM.readedAt = null;
+            if (redisPMReadLastReadedAt) {
+                for (let i = 0; i < redisPMs.length; i++) {
+                    if (new Date(redisPMReadLastReadedAt) <= new Date(redisPMs[i].createdAt) && redisPMs[i].ownerId != res.locals.user._id)
+                        userPMChat.unreadMessageCount++
                 }
-
+                userPMChat.unreadMessageCount += await MessageEntity.find({
+                    chatId: userPMChat._id,
+                    createdAt: { $gt: redisPMReadLastReadedAt }
+                }).limit(100).count();
+            } else {
+                userPMChat.unreadMessageCount += redisPMs.filter((x: { ownerId: string; }) => x.ownerId != res.locals.user._id).length;
+                userPMChat.unreadMessageCount += await MessageEntity.find({
+                    chatId: userPMChat._id,
+                    readed: false,
+                    ownerId: { $ne: res.locals.user._id }
+                }).limit(100).count();
             }
-            userPMChat.unreadMessageCount = await MessageEntity.countDocuments({
-                chatId: userPMChat._id,
-                readed: false,
-                ownerId: { $ne: res.locals.user._id }
-            });
-
-            userPMChat.unreadMessageCount += redisPMs.filter((x: { ownerId: any; readed: any; }) => !x.readed && x.ownerId != res.locals.user._id).length;
-
-            userPMChat.lastMessage = redisPMs.length ?
-                redisPMs[redisPMs.length - 1] : null;
-
-            if (userPMChat.lastMessage)
-                lastMessageUserIds.push(userPMChat.lastMessage.ownerId);
-            else
-                notFoundLastMessageChatIds.push(userPMChat._id.toString());
 
             let chatUserId: string;
             if (userPMChat.ownerId === res.locals.user._id) {
@@ -802,48 +862,9 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
             else
                 pmIndexesToRemove.push(i);
         }
-        pmIndexesToRemove.forEach(i => userPMChats.splice(i, 1));
+        pmIndexesToRemove.forEach(i => userPrivateChats.splice(i, 1));
 
-        const notFoundLastMessages: any = await MessageEntity.aggregate([
-            { $match: { chatId: { $in: notFoundLastMessageChatIds }, recordStatus: RecordStatus.Active } },
-            { $sort: { createdAt: -1 } },
-            {
-                $group: {
-                    _id: "$chatId",
-                    ownerId: { $first: "$ownerId" },
-                    text: { $first: "$text" },
-                    forwarded: { $first: "$forwarded" },
-                    forwardedAt: { $first: "$forwardedAt" },
-                    readed: { $first: "$readed" },
-                    readedAt: { $first: "$readedAt" },
-                    files: { $first: "$files" },
-                    replyToId: { $first: "$replyToId" },
-                }
-            }
-        ]);
-        lastMessageUserIds = lastMessageUserIds.concat(notFoundLastMessages.map((x: { ownerId: string; }) => x.ownerId));
-
-        const lastMessageUsers = await UserEntity.find({ _id: { $in: [...new Set(lastMessageUserIds)] } }, {
-            _id: 1, username: 1, firstName: 1, lastName: 1,
-            avatarKey: 1, profilePhotoUrl: 1
-        }).lean(true);
-        for (let i = 0; i < userPMChats.length; i++) {
-            const userPMChat = userPMChats[i];
-            if (!userPMChat.lastMessage)
-                userPMChat.lastMessage = notFoundLastMessages.find((x: { _id: any; }) => x._id.toString() === userPMChat._id.toString());
-            const lastMessageUser = lastMessageUsers.find(x => x._id.toString() === userPMChat.lastMessage?.ownerId.toString());
-            if (userPMChat.lastMessage)
-                userPMChat.lastMessage.owner = lastMessageUser;
-
-        }
-
-        response.data = userPMChats.sort((a: any, b: any) => {
-            a = new Date(a.lastMessage?.createdAt ?? 0);
-            b = new Date(b.lastMessage?.createdAt ?? 0);
-            if (a < b) return 1;
-            if (a > b) return -1;
-            return 0;
-        });
+        response.data = sortByCreatedAtDesc(userPrivateChats);
     }
     catch (err: any) {
         response.setErrorMessage(err.message);
@@ -873,8 +894,8 @@ router.post("/getNewChatUsers", authorize([Role.User, Role.Admin, Role.ContentCr
         const payload = new BaseFilter(req.body);
         let newChatUsersQuery = FollowEntity.find({ followerId: res.locals.user._id }, { _id: 0, followingId: 1, followingUsername: 1, followingFirstName: 1, followingLastName: 1, createdAt: 1 });
 
-        if (payload.lastRecordDate)
-            newChatUsersQuery = newChatUsersQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            newChatUsersQuery = newChatUsersQuery.where({ _id: { $lt: payload.lastRecordId } });
 
         if (payload.searchTerm)
             newChatUsersQuery = newChatUsersQuery.where({
@@ -886,7 +907,7 @@ router.post("/getNewChatUsers", authorize([Role.User, Role.Admin, Role.ContentCr
             });
 
         const newChatFollowingUsers = await newChatUsersQuery
-            .sort({ createdAt: -1 })
+            .sort({ _id: -1 })
             .limit(payload.take)
             .lean(true);
 
@@ -972,7 +993,7 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
         if (missingGroupChatLMIds.length > 0) {
             const notFoundLastMessages: any = await GroupMessageEntity.aggregate([
                 { $match: { groupChatId: { $in: missingGroupChatLMIds }, recordStatus: RecordStatus.Active } },
-                { $sort: { createdAt: -1 } },
+                { $sort: { _id: -1 } },
                 {
                     $group: {
                         _id: "$groupChatId",
@@ -1009,12 +1030,13 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
 
         const dbGMReads: any = await GroupMessageReadEntity.find({ groupChatId: { $in: userGroupChatsIds }, readedBy: res.locals.user._id });
 
-        let redisGMReadLastReadedAt: any = [];
+        let redisGMReadLastReadedAt: any;
         const redisGMs: any = [];
         const unreadMessageCountQueries: any = [];
         let unreadMessageCounts = [];
         for (let i = 0; i < userGroupChats.length; i++) {
             const userGroupChat = userGroupChats[i];
+            userGroupChat.unreadMessageCount = 0;
             const redisGMAll = await RedisService.client.hVals(RedisKeyType.DBGroupMessage + userGroupChat._id.toString());
             for (let i = 0; i < redisGMAll.length; i++) {
                 const chatData = JSON.parse(redisGMAll[i]);
@@ -1029,6 +1051,7 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
                         userGroupChat.unreadMessageCount++
                 }
             } else {
+                userGroupChat.unreadMessageCount += redisGMs.filter((x: { ownerId: string; }) => x.ownerId != res.locals.user._id).length;
                 redisGMReadLastReadedAt = dbGMReads.find((x: { groupChatId: string; }) => x.groupChatId === userGroupChat._id.toString())?.lastReadedAt;
             }
 
@@ -1052,13 +1075,8 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
                 userGroupChats[i].unreadMessageCount += unreadMessageCounts[i];
             }
         }
-        response.data = userGroupChats.sort((a: any, b: any) => {
-            a = new Date(a.lastMessage?.createdAt ?? 0);
-            b = new Date(b.lastMessage?.createdAt ?? 0);
-            if (a < b) return 1;
-            if (a > b) return -1;
-            return 0;
-        });
+
+        response.data = sortByCreatedAtDesc(userGroupChats);
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -1396,7 +1414,7 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
         const otherUserId = chat.ownerId == res.locals.user._id ? chat.participantId : chat.ownerId;
 
         let messages: MessageDocument[] = [];
-        let isFirstPage = !payload.lastRecordDate;
+        let isFirstPage = !payload.lastRecordId;
 
         const redisMessagesWithFR = await RedisService.client
             .hVals(RedisKeyType.DBPrivateMessage + payload.chatId).then(x => x.map(y => JSON.parse(y)));
@@ -1408,6 +1426,7 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
             let redisMessages = redisMessagesWithFR.filter(x => x.t == RedisPMOperationType.InsertMessage).map(x => x.e)
                 .filter(x => x.recordStatus == undefined || x.recordStatus == RecordStatus.Active &&
                     (x.deletedForUserIds == undefined || !x.deletedForUserIds.includes(res.locals.user._id)));
+            sortByCreatedAtDesc(redisMessages);
             let redisFileMessageUpdates = redisMessagesWithFR.filter(x => x.t == RedisPMOperationType.UpdateSendFileMessage).map(x => x.e);
             payload.take -= redisMessages.length
             let newMessages: MessageDocument[] = [];
@@ -1420,9 +1439,9 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                 });
 
                 if (redisMessages.length > 0)
-                    newMessagesQuery = newMessagesQuery.where({ createdAt: { $lt: redisMessages[0].createdAt } });
+                    newMessagesQuery = newMessagesQuery.where({ _id: { $lt: redisMessages[0]._id } });
 
-                newMessages = await newMessagesQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);
+                newMessages = await newMessagesQuery.sort({ _id: -1 }).limit(payload.take).lean(true);
             }
 
             messages = messages.concat(redisMessages).concat(newMessages);
@@ -1482,8 +1501,8 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                 deletedForUserIds: {
                     $ne: res.locals.user._id
                 },
-                createdAt: { $lt: payload.lastRecordDate }
-            }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+                _id: { $lt: payload.lastRecordId }
+            }).sort({ _id: -1 }).limit(payload.take).lean(true);
             for (let i = 0; i < messages.length; i++) {
                 const message = messages[i];
                 if (!message.forwarded) {
@@ -1521,7 +1540,7 @@ router.post("/getPMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
             }
         }
 
-        response.data = sortByCreatedAtDesc(messages);
+        response.data = messages;
     }
     catch (err: any) {
         response.setErrorMessage(err.message);
@@ -1552,10 +1571,10 @@ router.post("/getSearchedPMs", authorize([Role.User, Role.Admin, Role.ContentCre
 
         let query = MessageEntity.find({ chatId: payload.chatId, text: { $regex: payload.searchedText, $options: "i" } })
 
-        if (payload.lastRecordDate)
-            query = query.where({ createdAt: { $gt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            query = query.where({ _id: { $gt: payload.lastRecordId } });
 
-        response.data = query.sort({ createdAt: 1 }).limit(payload.take).lean(true);
+        response.data = query.sort({ _id: 1 }).limit(payload.take).lean(true);
 
     } catch (err: any) {
         response.setErrorMessage(err.message);
@@ -1585,13 +1604,13 @@ router.post("/getSearchedPM", authorize([Role.User, Role.Admin, Role.ContentCrea
 
         const beforeMessage10 = await MessageEntity.findOne({
             chatId: payload.chatId,
-            createdAt: { $lt: payload.messageCreatedAt }
-        }).sort({ createdAt: -1 }).limit(10).lean(true);
+            _id: { $lt: payload.messageId }
+        }).sort({ _id: -1 }).limit(10).lean(true);
 
         const afterMessage10 = await MessageEntity.findOne({
             chatId: payload.chatId,
-            createdAt: { $gt: payload.messageCreatedAt }
-        }).sort({ createdAt: 1 }).limit(10).lean(true);
+            _id: { $gt: payload.messageId }
+        }).sort({ _id: 1 }).limit(10).lean(true);
 
         response.data = { tenMessageBefore: beforeMessage10, tenMessageAfter: afterMessage10 };
 
@@ -1621,10 +1640,10 @@ router.post("/getSearchedGMs", authorize([Role.User, Role.Admin, Role.ContentCre
 
         let query = GroupMessageEntity.find({ groupChatId: payload.groupChatId, text: { $regex: payload.searchedText, $options: "i" } })
 
-        if (payload.lastRecordDate)
-            query = query.where({ createdAt: { $gt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            query = query.where({ _id: { $gt: payload.lastRecordId } });
 
-        response.data = query.sort({ createdAt: 1 }).limit(payload.take).lean(true);
+        response.data = query.sort({ _id: 1 }).limit(payload.take).lean(true);
 
     } catch (err: any) {
         response.setErrorMessage(err.message);
@@ -1651,13 +1670,13 @@ router.post("/getSearchedGM", authorize([Role.User, Role.Admin, Role.ContentCrea
 
         const beforeMessage10 = await GroupMessageEntity.findOne({
             groupChatId: payload.groupChatId,
-            createdAt: { $lt: payload.messageCreatedAt }
-        }).sort({ createdAt: -1 }).limit(10).lean(true);
+            _id: { $lt: payload.messageId }
+        }).sort({ _id: -1 }).limit(10).lean(true);
 
-        const afterMessage10 = await MessageEntity.findOne({
+        const afterMessage10 = await GroupMessageEntity.findOne({
             groupChatId: payload.groupChatId,
-            createdAt: { $gt: payload.messageCreatedAt }
-        }).sort({ createdAt: 1 }).limit(10).lean(true);
+            _id: { $gt: payload.messageId }
+        }).sort({ _id: 1 }).limit(10).lean(true);
 
         response.data = { tenMessageBefore: beforeMessage10, tenMessageAfter: afterMessage10 };
 
@@ -1882,7 +1901,7 @@ router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
 
         let messages: GroupMessageDocument[] = [];
         const replyToUserIds: string[] = [];
-        let isFirstPage = !payload.lastRecordDate;
+        let isFirstPage = !payload.lastRecordId;
         // const redisMaxMessagesWithFRCount = -60;
 
         const redisMessagesWithFileUpdates = await RedisService.client
@@ -1904,9 +1923,9 @@ router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                 });
 
                 if (redisMessages.length > 0)
-                    newMessagesQuery = newMessagesQuery.where({ createdAt: { $lt: redisMessages[0].createdAt } });
+                    newMessagesQuery = newMessagesQuery.where({ _id: { $lt: redisMessages[0]._id } });
 
-                newMessages = await newMessagesQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);
+                newMessages = await newMessagesQuery.sort({ _id: -1 }).limit(payload.take).lean(true);
             }
 
             messages = messages.concat(redisMessages).concat(newMessages);
@@ -1949,8 +1968,8 @@ router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
                 deletedForUserIds: {
                     $ne: res.locals.user._id
                 },
-                createdAt: { $lt: payload.lastRecordDate }
-            }).sort({ createdAt: -1 }).limit(payload.take).lean(true);
+                _id: { $lt: payload.lastRecordId }
+            }).sort({ _id: -1 }).limit(payload.take).lean(true);
             for (let i = 0; i < messages.length; i++) {
                 const message = messages[i];
                 if (message.replyToId) {
@@ -2019,10 +2038,10 @@ router.post("/getGroupUsers", authorize([Role.User, Role.Admin, Role.ContentCrea
 
         let groupUsersEntityQuery = GroupChatUserEntity.find({ groupChatId: payload.groupChatId });
 
-        if (payload.lastRecordDate)
-            groupUsersEntityQuery = groupUsersEntityQuery.where({ createdAt: { $lt: payload.lastRecordDate } });
+        if (payload.lastRecordId)
+            groupUsersEntityQuery = groupUsersEntityQuery.where({ _id: { $lt: payload.lastRecordId } });
 
-        const groupUsersEntity = await groupUsersEntityQuery.sort({ createdAt: -1 }).limit(payload.take).lean(true);
+        const groupUsersEntity = await groupUsersEntityQuery.sort({ _id: -1 }).limit(payload.take).lean(true);
 
         const groupUsersIds = groupUsersEntity.map(x => x.userId);
 
@@ -2364,7 +2383,7 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
             if (groupChat.ownerId != res.locals.user._id)
                 throw new NotValidError(getMessage("cannotRemoveOwner", req.selectedLangs()));
 
-            const oldestMembers = await GroupChatUserEntity.find({ groupChatId: payload.groupChatId }, { userId: 1, createdAt: 1 }).sort({ createdAt: 1 }).limit(5);
+            const oldestMembers = await GroupChatUserEntity.find({ groupChatId: payload.groupChatId }, { userId: 1, createdAt: 1 }).sort({ _id: 1 }).limit(5);
             if (oldestMembers.length > 0) {
                 const oldMemberId = oldestMembers[Math.floor(Math.random() * oldestMembers.length)].userId;
                 randomOldMember = await RedisService.acquireUser(oldMemberId, ["username"]);
@@ -2511,7 +2530,7 @@ router.get("/getGroupProfile/:groupChatId", authorize([Role.User, Role.Admin, Ro
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
         }
 
-        const last10User = await GroupChatUserEntity.find({ groupChatId: groupChatId }).sort({ createdAt: -1 }).limit(10).lean(true);
+        const last10User = await GroupChatUserEntity.find({ groupChatId: groupChatId }).sort({ _id: -1 }).limit(10).lean(true);
         const last10UserIds = last10User.map(x => x.userId);
         const users = await UserEntity.find({ _id: { $in: last10UserIds } }, { "username": 1, "firstName": 1, "lastName": 1, "profilePhotoUrl": 1, "avatarKey": 1, "lastSeenDate": 1 }).lean(true);
 
@@ -2571,7 +2590,7 @@ router.post("/leaveGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
         const groupOwnedLeaved = groupChat.ownerId == res.locals.user._id
         let randomOldMember: User = new UserEntity();
         if (groupOwnedLeaved) {
-            const oldestMembers = await GroupChatUserEntity.find({ groupChatId: payload.groupChatId }, { userId: 1, createdAt: 1 }).sort({ createdAt: 1 }).limit(5);
+            const oldestMembers = await GroupChatUserEntity.find({ groupChatId: payload.groupChatId }, { userId: 1, createdAt: 1 }).sort({ _id: 1 }).limit(5);
             if (oldestMembers.length > 0) {
                 const user = await RedisService.acquireUser(res.locals.user._id, ["username"]);
                 const oldMemberId = oldestMembers[Math.floor(Math.random() * oldestMembers.length)].userId;

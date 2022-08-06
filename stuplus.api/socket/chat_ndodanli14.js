@@ -37,22 +37,19 @@ $(document).ready(async function () {
     }
     const forwardMessages = messages.filter(x => x.ownerId != user._id && x.forwarded == false).map(x => x._id);
     const readMessages = messages.filter(x => x.ownerId != user._id && x.readed == false).map(x => x._id);
-    if (forwardMessages.length > 0)
-        socket.emit("pmForwarded", {
-            to: USER_TO,
-            mids: forwardMessages,
-            ci: "62c96f8cea5d4faa1448e904"
-        }, (res) => {
-            console.log("response: ", res);
-        });
-    if (readMessages.length > 0)
-        socket.emit("pmReaded", {
-            to: USER_TO,
-            mids: readMessages,
-            ci: "62c96f8cea5d4faa1448e904"
-        }, (res) => {
-            console.log("response: ", res);
-        });
+
+    socket.emit("pmForwarded", {
+        to: USER_TO,
+        ci: "62c96f8cea5d4faa1448e904"
+    }, (res) => {
+        console.log("response: ", res);
+    });
+    socket.emit("pmReaded", {
+        to: USER_TO,
+        ci: "62c96f8cea5d4faa1448e904"
+    }, (res) => {
+        console.log("response: ", res);
+    });
     $("#get-old-messages").on("click", async event => {
         await getOldMessages();
     });
@@ -214,6 +211,15 @@ async function createGroup() {
 async function watchUsers() {
     socket.emit("watch-users", {
         uIds: ["628a9e39b483f428a74e75c1", "62aa35971c1df0aaea949dfe"]
+    }, (res) => {
+        console.log("response: ", res);
+    });
+}
+
+async function markAsForwarded() {
+    socket.emit("pmForwarded", {
+        ci: "62c96f8cea5d4faa1448e904",
+        to: "62ad8f706cc42f3e54e3d1e8"
     }, (res) => {
         console.log("response: ", res);
     });

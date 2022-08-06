@@ -1,7 +1,7 @@
 import path from 'path';
 import { createClient } from 'redis';
 import logger from '../config/logger';
-import { DepartmentEntity, FacultyEntity, FollowEntity, GroupChatEntity, GroupChatUserEntity, GroupMessageEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
+import { ChatEntity, DepartmentEntity, FacultyEntity, FollowEntity, GroupChatEntity, GroupChatUserEntity, GroupMessageEntity, SchoolEntity, UserEntity } from '../entities/BaseEntity';
 import { User, UserDocument } from '../entities/UserEntity';
 import { RedisGMOperationType, RedisKeyType, RedisSubKeyType } from '../enums/enums_socket';
 import NotValidError from '../errors/NotValidError';
@@ -11,21 +11,11 @@ import { RecordStatus, RedisAcquireEntityFilterOrder } from '../enums/enums';
 import userLimits from '../constants/userLimits';
 import { GroupChat } from '../entities/GroupChatEntity';
 import { chunk } from '../utils/general';
+import { Chat } from '../entities/ChatEntity';
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 // const url = process.env.REDIS_URL
 let client = createClient({ url: process.env.REDIS_URL });
-
-async function initializeRedis() {
-    try {
-        await client.connect();
-        console.log("redis client created");
-    } catch (error) {
-        logger.error({ err: error }, "An error occurred while connecting to redis.");
-        console.error({ err: error }, "An error occurred while connecting to redis.");
-        process.exit(1);
-    }
-}
 
 interface RedisAcquireEntityFilters {
     sort: { property: string, order: RedisAcquireEntityFilterOrder };
@@ -227,14 +217,14 @@ export default class RedisService {
     //         const chunkCount = Math.ceil(totalGroupChatUserCount / chunkSize);
     //         let lastOneCount = 0;
     //         for (let i = 0; i < chunkCount; i++) {
-    //             const groupChatUserChunk = await GroupChatUserEntity.find({ groupChatId: groupChatId }, {},).sort({ createdAt: -1 }).skip(i * chunkSize).limit(chunkSize).lean(true);
+    //             const groupChatUserChunk = await GroupChatUserEntity.find({ groupChatId: groupChatId }, {},).sort({ _id: -1 }).skip(i * chunkSize).limit(chunkSize).lean(true);
     //             if (i === chunkCount - 1)
     //                 lastOneCount = groupChatUserChunk.length;
     //             await this.client.sAdd(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId, groupChatUserChunk.map(x => x.userId));
     //         }
     //         const totalGroupChatUserCountAfter = await GroupChatUserEntity.countDocuments({ groupChatId: groupChatId });
     //         if (totalGroupChatUserCountAfter !== totalGroupChatUserCount) {
-    //             const leftOverUsers = await GroupChatUserEntity.find({ groupChatId: groupChatId }, {},).sort({ createdAt: -1 }).skip(((chunkCount - 1) * chunkSize) + lastOneCount).lean(true);
+    //             const leftOverUsers = await GroupChatUserEntity.find({ groupChatId: groupChatId }, {},).sort({ _id: -1 }).skip(((chunkCount - 1) * chunkSize) + lastOneCount).lean(true);
     //             await this.client.sAdd(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId, leftOverUsers.map(x => x.userId));
     //         }
     //         // await this.client.multi()
@@ -244,6 +234,42 @@ export default class RedisService {
     //     }
     // }
 
+    static async acquireUserPrivateChatIds(userId: string): Promise<string[]> {
+        let ids = await this.client.sMembers(RedisKeyType.User + RedisSubKeyType.PrivateChatIds + userId);
+        if (ids.length === 0) {
+            const privateChats = await ChatEntity.find({
+                $or: [
+                    { ownerId: userId },
+                    { participantId: userId }
+                ]
+            }).lean(true);
+            if (privateChats.length > 0) {
+                ids = privateChats.map(x => x._id.toString());
+                await Promise.all([
+                    this.client.sAdd(RedisKeyType.User + RedisSubKeyType.PrivateChatIds + userId, ids),
+                    this.client.expire(RedisKeyType.User + RedisSubKeyType.PrivateChatIds + userId, 60 * 60 * 24 * 7)
+                ]);
+            }
+        }
+        return ids;
+    }
+
+    static async addToUserPrivateChatIds(userId: string, chatId: string): Promise<void> {
+        await this.client.sAdd(RedisKeyType.User + RedisSubKeyType.PrivateChatIds + userId, chatId);
+    }
+
+    static async delPrivateChatIdsFromUsers(userIds: string[], chatIds: string[]): Promise<void> {
+        let remOps = [];
+        const userIdChunks = chunk(userIds, 500);
+        for (let i = 0; i < userIdChunks.length; i++) {
+            for (let j = 0; j < userIdChunks[i].length; j++) {
+                remOps.push(this.client.sRem(RedisKeyType.User + RedisSubKeyType.PrivateChatIds + userIdChunks[i][j], chatIds));
+            }
+            await Promise.all(remOps);
+            remOps = [];
+        }
+    }
+
     static async acquireUserGroupChatIds(userId: string): Promise<string[]> {
         let ids = await this.client.sMembers(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userId);
         if (ids.length === 0) {
@@ -252,11 +278,10 @@ export default class RedisService {
                 ids = groupChatUsers.map(x => x.groupChatId);
                 await Promise.all([
                     this.client.sAdd(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userId, ids),
-                    this.client.expire(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userId, 60 * 60 * 24)
+                    this.client.expire(RedisKeyType.User + RedisSubKeyType.GroupChatIds + userId, 60 * 60 * 24 * 7)
                 ]);
             }
         }
-        //delete first 30 item from array
         return ids;
     }
 
@@ -290,7 +315,7 @@ export default class RedisService {
         //     const chunkCount = Math.ceil(totalGroupChatCount / chunkSize);
         //     for (let i = 0; i < chunkCount; i++) {
         //         const groupChatChunkQuery = GroupChatEntity.find({}, { titlesch_fuzzy: 0, hashTags_fuzzy: 0, __t: 0, __v: 0, createdAt: 0, updatedAt: 0, recordStatus: 0 })
-        //             .sort({ createdAt: -1 }).skip(i * chunkSize).limit(chunkSize).lean(true).allowDiskUse(true);
+        //             .sort({ _id: -1 }).skip(i * chunkSize).limit(chunkSize).lean(true).allowDiskUse(true);
         //         const groupChatChunk = await groupChatChunkQuery;
         //         for (let k = 0; k < groupChatChunk.length; k++) {
         //             const groupChat = groupChatChunk[k];
@@ -378,6 +403,24 @@ export default class RedisService {
         // }
     }
 
+    static async addPrivateChat(privateChat: Chat): Promise<void> {
+        const privateChatId = privateChat._id.toString();
+        this.client.hSet(RedisKeyType.AllPrivateChats, privateChatId, JSON.stringify(
+            { _id: privateChatId, ownerId: privateChat.ownerId, participantId: privateChat.participantId }
+        ));
+    }
+
+    static async updatePrivateChatLastMessage(chatLM: any, chatId: string): Promise<void> {
+        this.client.hSet(RedisKeyType.AllPrivateChats, chatId + ":lm", JSON.stringify({
+            text: chatLM.text,
+            files: chatLM.files,
+            owner: {
+                _id: chatLM.owner._id,
+                username: chatLM.owner.username,
+            },
+        }))
+    }
+
     static async addGroupChat(groupChat: GroupChat): Promise<void> {
         const groupChatId = groupChat._id.toString();
         this.client.hSet(RedisKeyType.AllGroupChats, groupChatId, JSON.stringify(
@@ -389,7 +432,10 @@ export default class RedisService {
         this.client.hSet(RedisKeyType.AllGroupChats, groupChatId + ":lm", JSON.stringify({
             text: groupChatLM.text,
             files: groupChatLM.files,
-            owner: groupChatLM.owner,
+            owner: {
+                _id: groupChatLM.owner._id,
+                username: groupChatLM.owner.username,
+            },
         }))
     }
 
@@ -424,8 +470,4 @@ export default class RedisService {
     static async incrementDailyFollowCount(userId: string): Promise<void> {
         await this.client.incr(RedisKeyType.DailyFollowLimit + userId);
     }
-}
-
-export {
-    initializeRedis
 }

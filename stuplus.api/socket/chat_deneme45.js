@@ -18,7 +18,7 @@ $(document).ready(async function () {
     const BOT_NAME = "deneme45";
     const PERSON_NAME = user.username
     const USER_TO = "62ab8a204166fd1eaebbb3fa"; //ndodanli14
-console.log("messageData", messageData)
+    console.log("messageData", messageData)
     const messages = messageData.data;
     for (let i = messages.length - 1; i >= 0; i--) {
         const message = messages[i];
@@ -38,22 +38,18 @@ console.log("messageData", messageData)
     }
     const forwardMessages = messages.filter(x => x.ownerId != user._id && x.forwarded == false).map(x => x._id);
     const readMessages = messages.filter(x => x.ownerId != user._id && x.readed == false).map(x => x._id);
-    if (forwardMessages.length > 0)
-        socket.emit("pm-forwarded", {
-            to: USER_TO,
-            mids: forwardMessages,
-            ci: "62c96f8cea5d4faa1448e904"
-        }, (res) => {
-            console.log("response: ", res);
-        });
-    if (readMessages.length > 0)
-        socket.emit("pm-readed", {
-            to: USER_TO,
-            mids: readMessages,
-            ci: "62c96f8cea5d4faa1448e904"
-        }, (res) => {
-            console.log("response: ", res);
-        });
+    socket.emit("pmForwarded", {
+        to: USER_TO,
+        ci: "62c96f8cea5d4faa1448e904"
+    }, (res) => {
+        console.log("response: ", res);
+    });
+    socket.emit("pmReaded", {
+        to: USER_TO,
+        ci: "62c96f8cea5d4faa1448e904"
+    }, (res) => {
+        console.log("response: ", res);
+    });
 
     msgerForm.addEventListener("submit", event => {
         event.preventDefault();
@@ -190,8 +186,8 @@ async function watchUsers() {
 }
 async function markAsForwarded() {
     socket.emit("pmForwarded", {
-       ci: "62c96f8cea5d4faa1448e904",
-       to: "62ab8a204166fd1eaebbb3fa"
+        ci: "62c96f8cea5d4faa1448e904",
+        to: "62ab8a204166fd1eaebbb3fa"
     }, (res) => {
         console.log("response: ", res);
     });

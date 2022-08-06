@@ -47,22 +47,10 @@ export default class MessageService {
                 await RedisService.client.hSet(RedisKeyType.DBGroupMessage + chatData.e.groupChatId, gMessageEntity.id + RedisGMOperationType.InsertMessage, stringify(chatData));
                 chatData.e["owner"] = {
                     _id: chatData.e.ownerId,
-                    username: fromUser.username,
-                    avatarKey: fromUser.avatarKey,
-                    profilePhotoUrl: fromUser.profilePhotoUrl,
-                    firstName: fromUser.firstName,
-                    lastName: fromUser.lastName
+                    username: fromUser.username
                 }
-                await RedisService.client.hSet(RedisKeyType.AllGroupChats, chatData.e.groupChatId + ":lm", stringify(chatData.e));
+                await RedisService.updateGroupChatLastMessage(chatData.e, chatData.e.groupChatId);
                 io.in(groupChatName(chatData.e.groupChatId)).emit("cGmSend", emitData);
-                const lastMessage = {
-                    text: text,
-                    files: files ? files : [],
-                    owner: {
-                        username: fromUser.username
-                    }
-                }
-                await RedisService.updateGroupChatLastMessage(lastMessage, chatData.e.groupChatId)
                 resolve(chatData.e);
             } catch (error: any) {
                 logger.error({ err: error }, `MessageService(senGroupMessage) failed. {Data}`, stringify(
@@ -118,8 +106,12 @@ export default class MessageService {
                     chatData.e["replyToId"] = replyToId;
                 }
                 await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + chatData.e.chatId, messageEntity.id + RedisPMOperationType.InsertMessage, stringify(chatData));
-
-                io.to(toUserId).emit("cGmSend", emitData);
+                chatData.e["owner"] = {
+                    _id: chatData.e.ownerId,
+                    username: fromUser.username
+                }
+                await RedisService.updateGroupChatLastMessage(chatData.e, chatData.e.groupChatId);
+                io.in(toUserId).emit("cPmSend", emitData);
                 resolve(chatData.e);
             } catch (error: any) {
                 logger.error({ err: error }, `MessageService(sendPrivateMessage) failed. {Data}`, stringify(

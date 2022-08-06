@@ -5158,9 +5158,9 @@
       "BasePaginationRequest": {
         "type": "object",
         "properties": {
-          "lastRecordDate": {
+          "lastRecordId": {
             "type": "string",
-            "example": "2022-07-02T20:12:59.891Z"
+            "example": "62ee7233490026ff5d31726b"
           },
           "pageSize": {
             "type": "number",
@@ -5177,9 +5177,9 @@
       "BasePaginationSearchTermRequest": {
         "type": "object",
         "properties": {
-          "lastRecordDate": {
+          "lastRecordId": {
             "type": "string",
-            "example": "2022-07-02T20:12:59.891Z"
+            "example": "62ee7233490026ff5d31726b"
           },
           "pageSize": {
             "type": "number",
@@ -6162,9 +6162,9 @@
       "AnnouncementGetAnnouncementsRequest": {
         "type": "object",
         "properties": {
-          "lastRecordDate": {
+          "lastRecordId": {
             "type": "string",
-            "example": "2022-07-02T20:12:59.891Z"
+            "example": "62ee7233490026ff5d31726b"
           },
           "schoolSearch": {
             "type": "object",
@@ -6175,7 +6175,7 @@
               },
               "description": {
                 "type": "string",
-                "example": "Eğer gönderilen son kaydın(lastRecordDate'in alındığı kayıt) okul idsi sorguyu yapan kullanıcının okul idsine eşit ise true, değilse false gönderilecek."
+                "example": "Eğer gönderilen son kaydın(lastRecordId'nin alındığı kayıt) okul idsi sorguyu yapan kullanıcının okul idsine eşit ise true, değilse false gönderilecek."
               }
             }
           },
@@ -6364,9 +6364,9 @@
       "AnnouncementGetCommentsRequest": {
         "type": "object",
         "properties": {
-          "lastRecordDate": {
+          "lastRecordId": {
             "type": "string",
-            "example": "2022-07-02T20:12:59.891Z"
+            "example": "62ee7233490026ff5d31726b"
           },
           "pageSize": {
             "type": "number",
@@ -6903,9 +6903,9 @@
       "AnnouncementGetSubCommentsRequest": {
         "type": "object",
         "properties": {
-          "lastRecordDate": {
+          "lastRecordId": {
             "type": "string",
-            "example": "2022-07-02T20:12:59.891Z"
+            "example": "62ee7233490026ff5d31726b"
           },
           "pageSize": {
             "type": "number",
@@ -7997,9 +7997,9 @@
       "QuestionGetQuestionsRequest": {
         "type": "object",
         "properties": {
-          "lastRecordDate": {
+          "lastRecordId": {
             "type": "string",
-            "example": "2022-07-02T20:12:59.891Z"
+            "example": "62ee7233490026ff5d31726b"
           },
           "schoolSearch": {
             "type": "object",
@@ -8010,7 +8010,7 @@
               },
               "description": {
                 "type": "string",
-                "example": "Eğer gönderilen son kaydın(lastRecordDate'in alındığı kayıt) okul idsi sorguyu yapan kullanıcının okul idsine eşit ise true, değilse false gönderilecek."
+                "example": "Eğer gönderilen son kaydın(lastRecordId'nin alındığı kayıt) okul idsi sorguyu yapan kullanıcının okul idsine eşit ise true, değilse false gönderilecek."
               }
             }
           },
@@ -8196,9 +8196,9 @@
       "QuestionGetCommentsRequest": {
         "type": "object",
         "properties": {
-          "lastRecordDate": {
+          "lastRecordId": {
             "type": "string",
-            "example": "2022-07-02T20:12:59.891Z"
+            "example": "62ee7233490026ff5d31726b"
           },
           "pageSize": {
             "type": "number",
@@ -8349,9 +8349,9 @@
       "QuestionGetSubCommentsRequest": {
         "type": "object",
         "properties": {
-          "lastRecordDate": {
+          "lastRecordId": {
             "type": "string",
-            "example": "2022-07-02T20:12:59.891Z"
+            "example": "62ee7233490026ff5d31726b"
           },
           "pageSize": {
             "type": "number",
@@ -8850,9 +8850,9 @@
             "type": "string",
             "example": "groupChatId"
           },
-          "lastRecordDate": {
+          "lastRecordId": {
             "type": "string",
-            "example": "2022-07-02T20:12:59.891Z"
+            "example": "62ee7233490026ff5d31726b"
           },
           "pageSize": {
             "type": "number",
@@ -9015,9 +9015,9 @@
             "type": "string",
             "example": "chatId"
           },
-          "lastRecordDate": {
+          "lastRecordId": {
             "type": "string",
-            "example": "2022-07-02T20:12:59.891Z"
+            "example": "62ee7233490026ff5d31726b"
           },
           "pageSize": {
             "type": "number",
