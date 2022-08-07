@@ -2911,38 +2911,140 @@
     },
     "/chat/deleteSingleGM": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Delete a gm from gm chat.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatDeleteSingleGMRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatDeleteSingleGMRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/deleteSinglePM": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Delete a pm from pm chat.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatDeleteSinglePMRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatDeleteSinglePMRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/clearPMChatHistory": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Clear pm chat history.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/NullResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatClearPMChatHistoryRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatClearPMChatHistoryRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/getPMChats": {
@@ -9260,6 +9362,130 @@
         },
         "xml": {
           "name": "ChatUpdateGMFileResponse"
+        }
+      },
+      "ChatDeleteSingleGMRequest": {
+        "type": "object",
+        "properties": {
+          "chatId": {
+            "type": "string",
+            "example": "chatId"
+          },
+          "messageId": {
+            "type": "string",
+            "example": "messageId"
+          },
+          "deleteFor": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Me": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Both": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "chatId",
+          "messageId",
+          "deleteFor"
+        ],
+        "xml": {
+          "name": "ChatDeleteSingleGMRequest"
+        }
+      },
+      "ChatDeleteSinglePMRequest": {
+        "type": "object",
+        "properties": {
+          "chatId": {
+            "type": "string",
+            "example": "chatId"
+          },
+          "messageId": {
+            "type": "string",
+            "example": "messageId"
+          },
+          "deleteFor": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Me": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Both": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "chatId",
+          "messageId",
+          "deleteFor"
+        ],
+        "xml": {
+          "name": "ChatDeleteSinglePMRequest"
+        }
+      },
+      "ChatClearPMChatHistoryRequest": {
+        "type": "object",
+        "properties": {
+          "chatId": {
+            "type": "string",
+            "example": "chatId"
+          },
+          "deleteFor": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "enum"
+              },
+              "values": {
+                "type": "object",
+                "properties": {
+                  "Me": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "Both": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "chatId",
+          "deleteFor"
+        ],
+        "xml": {
+          "name": "ChatClearPMChatHistoryRequest"
         }
       }
     },

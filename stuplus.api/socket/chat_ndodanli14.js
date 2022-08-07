@@ -13,11 +13,12 @@ $(document).ready(async function () {
     });
 
     const user = data.data;
+    console.log("user", user._id)
     const BOT_IMG = "https://thumbs.dreamstime.com/b/closeup-photo-funny-excited-lady-raise-fists-screaming-loudly-celebrating-money-lottery-winning-wealthy-rich-person-wear-casual-172563278.jpg";
     const PERSON_IMG = "https://image.shutterstock.com/image-photo/image-serious-confident-dark-skinned-260nw-1417352750.jpg";
     const BOT_NAME = "deneme45";
     const PERSON_NAME = user.username
-    const USER_TO = "62ad8f706cc42f3e54e3d1e8"; //ndodanli14
+    const USER_TO = "62e9605a6ec3c40eb09baeb3"; //ndodanli14
 
     const messages = messageData.data;
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -101,6 +102,16 @@ $(document).ready(async function () {
 
             $(`<span style="color:yellow;">sended</span>`).appendTo(`#${res.mi}`)
         });
+        socket.emit("gmSend", {
+            t: msgText,
+            gCi: "62efafbc4a210d4ef6887c6f"
+            // + Math.random() * 10000
+        }, (res) => {
+            console.log("response: ", res);
+            appendMessage(PERSON_NAME, PERSON_IMG, "right", msgText, res.mi);
+
+            $(`<span style="color:yellow;">sended</span>`).appendTo(`#${res.mi}`)
+        });
 
 
         // socket.emit("gm-send", {
@@ -126,6 +137,7 @@ $(document).ready(async function () {
         // });
     });
     socket.on("cPmSend", data => {
+        console.log("cPmSend: ", data);
         appendMessage(BOT_NAME, BOT_IMG, "left", data.t, data.mi);
     });
     socket.on("cPmForwarded", data => {
@@ -220,6 +232,20 @@ async function markAsForwarded() {
     socket.emit("pmForwarded", {
         ci: "62c96f8cea5d4faa1448e904",
         to: "62ad8f706cc42f3e54e3d1e8"
+    }, (res) => {
+        console.log("response: ", res);
+    });
+}
+
+async function markAsReaded() {
+    socket.emit("pmReaded", {
+        ci: "62c96f8cea5d4faa1448e904",
+        to: "62ad8f706cc42f3e54e3d1e8"
+    }, (res) => {
+        console.log("response: ", res);
+    });
+    socket.emit("gmReaded", {
+        gCi: "62efafbc4a210d4ef6887c6f",
     }, (res) => {
         console.log("response: ", res);
     });

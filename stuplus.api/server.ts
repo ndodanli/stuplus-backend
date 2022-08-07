@@ -18,7 +18,7 @@ import swaggerRoute from "./routes/swaggerRoute";
 import path from "path";
 import interestRoute from "./routes/interestRoute";
 import logger, { setLogger } from "../stuplus-lib/config/logger";
-import { initializeRedis } from "./config/redis";
+import { initializeRedis } from "../stuplus-lib/services/redisService";
 
 dotenv.config();
 

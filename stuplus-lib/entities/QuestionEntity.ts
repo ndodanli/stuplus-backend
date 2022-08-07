@@ -14,7 +14,7 @@ export interface Question extends BaseEntity {
   isActive: boolean;
   fromDate: Date | null;
   toDate: Date | null;
-  score: number;
+  popularity: number;
   hashTags: string[];
   images: ImageFiles[];
   //ignore
@@ -53,7 +53,7 @@ export const QuestionSchema: Schema = new Schema({
   isActive: { type: Boolean, required: false, default: true },
   fromDate: { type: Date, required: false, default: null },
   toDate: { type: Date, required: false, default: null },
-  score: { type: Number, required: false, default: 0 },
+  popularity: { type: Number, required: false, default: 0 },
   hashTags: { type: Array.of(String), required: false, default: [] },
   images: {
     type: Array.of(new Schema({
@@ -65,7 +65,7 @@ export const QuestionSchema: Schema = new Schema({
   },
 });
 
-QuestionSchema.index({ recordStatus: -1, createdAt: -1 });
+QuestionSchema.index({ recordStatus: -1 });
 
 QuestionSchema.plugin(mongoose_fuzzy_searching,
   {
@@ -115,7 +115,7 @@ QuestionSchema.methods.minify = async function (
     isActive: this.isActive,
     fromDate: this.fromDate,
     toDate: this.toDate,
-    score: this.score,
+    popularity: this.popularity,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     recordDeletionDate: this.recordDeletionDate,

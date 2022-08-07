@@ -46,6 +46,7 @@ export class AnnouncementAccess {
 
     public static async getAnnouncements(acceptedLanguages: Array<string>, payload: AnnouncementGetMultipleDTO, currentUserId: string): Promise<Announcement[] | null> {
         let announcements: Announcement[] = [];
+        const user = await RedisService.acquireUser(currentUserId, ["blockedUserIds"]);
         let now = new Date();
         let announcementsQuery = AnnouncementEntity.find({
             isActive: true, $and: [
@@ -61,7 +62,8 @@ export class AnnouncementAccess {
                         { toDate: { $lte: now } },
                     ],
                 }
-            ]
+            ],
+            ownerId: { $nin: user.blockedUserIds },
         });
         if (payload.schoolIds && payload.schoolIds.length) {
             announcementsQuery = announcementsQuery.where({
@@ -102,7 +104,8 @@ export class AnnouncementAccess {
                             { toDate: { $lte: now } },
                         ],
                     }
-                ]
+                ],
+                ownerId: { $nin: user.blockedUserIds },
             })
                 .sort({ _id: -1 })
                 .limit(payload.take - announcements.length)

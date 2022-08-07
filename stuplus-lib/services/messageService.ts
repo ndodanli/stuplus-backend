@@ -1,5 +1,5 @@
 const OneSignal = require("@onesignal/node-onesignal");
-import { stringify } from "../utils/general";
+import { isImage, isVideo, stringify } from "../utils/general";
 import { GroupMessageEntity, MessageEntity } from "../entities/BaseEntity";
 import logger from "../config/logger";
 import { RedisGMOperationType, RedisKeyType, RedisPMOperationType } from "../enums/enums_socket";
@@ -8,6 +8,7 @@ import { groupChatName } from "../utils/namespaceCreators";
 import { io } from "../../stuplus.api/socket";
 import { User } from "../entities/UserEntity";
 import { MessageFiles } from "../entities/MessageEntity";
+import { MessageType } from "../enums/enums";
 export default class MessageService {
     public static async sendGroupMessage({ ownerId, text, groupChatId, fromUser, files, replyToId }: { ownerId: string; text: string; groupChatId: string; fromUser: User; files?: MessageFiles[], replyToId?: string }): Promise<any> {
         return new Promise(async (resolve, reject) => {
@@ -38,6 +39,7 @@ export default class MessageService {
                 };
                 if (files) {
                     chatData.e["files"] = files;
+                    chatData.e["type"] = isImage(files[0].mimeType ?? "") ? MessageType.Image : isVideo(files[0].mimeType ?? "") ? MessageType.Video : MessageType.File;
                     emitData["files"] = files;
                 }
                 if (replyToId) {
@@ -50,6 +52,7 @@ export default class MessageService {
                     username: fromUser.username
                 }
                 await RedisService.updateGroupChatLastMessage(chatData.e, chatData.e.groupChatId);
+                await RedisService.incrementGroupChatMessageCount(chatData.e.groupChatId);
                 io.in(groupChatName(chatData.e.groupChatId)).emit("cGmSend", emitData);
                 resolve(chatData.e);
             } catch (error: any) {
@@ -100,6 +103,7 @@ export default class MessageService {
                 };
                 if (files) {
                     chatData.e["files"] = files;
+                    chatData.e["type"] = isImage(files[0].mimeType ?? "") ? MessageType.Image : isVideo(files[0].mimeType ?? "") ? MessageType.Video : MessageType.File;
                     emitData["files"] = files;
                 }
                 if (replyToId) {

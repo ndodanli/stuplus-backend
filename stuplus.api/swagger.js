@@ -2363,6 +2363,38 @@ const doc = {
                 "mi": "62dd547f638e8ddf4e7f5712"
             },
         },
+        ChatDeleteSingleGMRequest: {
+            $chatId: "chatId",
+            $messageId: "messageId",
+            $deleteFor: {
+                type: "enum",
+                values: {
+                    Me: 0,
+                    Both: 1
+                }
+            }
+        },
+        ChatDeleteSinglePMRequest: {
+            $chatId: "chatId",
+            $messageId: "messageId",
+            $deleteFor: {
+                type: "enum",
+                values: {
+                    Me: 0,
+                    Both: 1
+                }
+            }
+        },
+        ChatClearPMChatHistoryRequest: {
+            $chatId: "chatId",
+            $deleteFor: {
+                type: "enum",
+                values: {
+                    Me: 0,
+                    Both: 1
+                }
+            }
+        },
         //#endregion
     }
 };

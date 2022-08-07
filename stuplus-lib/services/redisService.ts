@@ -10,12 +10,27 @@ import { Document } from "mongoose";
 import { RecordStatus, RedisAcquireEntityFilterOrder } from '../enums/enums';
 import userLimits from '../constants/userLimits';
 import { GroupChat } from '../entities/GroupChatEntity';
-import { chunk } from '../utils/general';
+import { chunk, generateRandomNumber } from '../utils/general';
 import { Chat } from '../entities/ChatEntity';
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 // const url = process.env.REDIS_URL
 let client = createClient({ url: process.env.REDIS_URL });
+
+const initializeRedis = async () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            await client.connect();
+            console.log("redis client created");
+            await RedisService.setGroupChatMessageCounts();
+            resolve(true);
+        } catch (error) {
+            logger.error({ err: error }, "An error occurred while connecting to redis.");
+            console.error({ err: error }, "An error occurred while connecting to redis.");
+            process.exit(1);
+        }
+    });
+};
 
 interface RedisAcquireEntityFilters {
     sort: { property: string, order: RedisAcquireEntityFilterOrder };
@@ -210,29 +225,32 @@ export default class RedisService {
         return documentList as unknown as T;
     }
 
-    // static async isUserInGroupChat(userId: string, groupChatId: string): Promise<boolean> {
-    //     if (!await this.client.exists(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId)) {
-    //         const totalGroupChatUserCount = await GroupChatUserEntity.countDocuments({ groupChatId: groupChatId });
-    //         const chunkSize = 5000;
-    //         const chunkCount = Math.ceil(totalGroupChatUserCount / chunkSize);
-    //         let lastOneCount = 0;
-    //         for (let i = 0; i < chunkCount; i++) {
-    //             const groupChatUserChunk = await GroupChatUserEntity.find({ groupChatId: groupChatId }, {},).sort({ _id: -1 }).skip(i * chunkSize).limit(chunkSize).lean(true);
-    //             if (i === chunkCount - 1)
-    //                 lastOneCount = groupChatUserChunk.length;
-    //             await this.client.sAdd(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId, groupChatUserChunk.map(x => x.userId));
-    //         }
-    //         const totalGroupChatUserCountAfter = await GroupChatUserEntity.countDocuments({ groupChatId: groupChatId });
-    //         if (totalGroupChatUserCountAfter !== totalGroupChatUserCount) {
-    //             const leftOverUsers = await GroupChatUserEntity.find({ groupChatId: groupChatId }, {},).sort({ _id: -1 }).skip(((chunkCount - 1) * chunkSize) + lastOneCount).lean(true);
-    //             await this.client.sAdd(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId, leftOverUsers.map(x => x.userId));
-    //         }
-    //         // await this.client.multi()
-    //         //     .sAdd(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId, groupChatUsers.map(x => x.userId))
-    //         //     .expire(RedisKeyType.GroupChat + RedisSubKeyType.GroupChatUsers + groupChatId, 60 * 60 * 24 * 7)
-    //         //     .exec();
-    //     }
-    // }
+    static async setGroupChatMessageCounts(): Promise<void> {
+        // if (!await this.client.hExists(RedisKeyType.AllGroupChats, "groupChatCountsSetted")) {
+        // const totalGroupChatCount = await GroupChatEntity.countDocuments({});
+        // const chunkSize = 500;
+        // const chunkCount = Math.ceil(totalGroupChatCount / chunkSize);
+        // for (let i = 0; i < chunkCount; i++) {
+        //     const ops = [];
+        //     const groupChatMessageCountQueries = [];
+        //     const groupChats = await GroupChatEntity.find({}, { _id: 1 }, { lean: true, skip: i * chunkSize, limit: chunkSize });
+        //     for (let j = 0; j < groupChats.length; j++) {
+        //         const groupChat = groupChats[j];
+        //         groupChatMessageCountQueries.push(GroupMessageEntity.countDocuments({ groupChatId: groupChat._id }));
+        //     }
+        //     if (groupChatMessageCountQueries.length > 0) {
+        //         const groupChatMessageCounts = await Promise.all(groupChatMessageCountQueries);
+        //         for (let j = 0; j < groupChats.length; j++) {
+        //             const groupChat = groupChats[j];
+        //             ops.push(this.client.hSet(RedisKeyType.AllGroupChats, groupChat._id.toString() + ":mc", groupChatMessageCounts[j]));
+        //         }
+        //         await Promise.all(ops);
+        //     }
+        // }
+        // await this.client.hSet(RedisKeyType.AllGroupChats, "groupChatCountsSetted", "true");
+        // }
+
+    }
 
     static async acquireUserPrivateChatIds(userId: string): Promise<string[]> {
         let ids = await this.client.sMembers(RedisKeyType.User + RedisSubKeyType.PrivateChatIds + userId);
@@ -305,103 +323,103 @@ export default class RedisService {
         }
     }
 
-    static async setGroupChats(): Promise<void> {
-        // if (!await this.client.exists(RedisKeyType.AllGroupChats)) {
-        //     const redisGMs: any = [];
-        //     let lastMessageUserIds: string[] = [];
-        //     const notFoundLastMessageChatIds: string[] = [];
-        //     const totalGroupChatCount = await GroupChatEntity.countDocuments({});
-        //     const chunkSize = 1000;
-        //     const chunkCount = Math.ceil(totalGroupChatCount / chunkSize);
-        //     for (let i = 0; i < chunkCount; i++) {
-        //         const groupChatChunkQuery = GroupChatEntity.find({}, { titlesch_fuzzy: 0, hashTags_fuzzy: 0, __t: 0, __v: 0, createdAt: 0, updatedAt: 0, recordStatus: 0 })
-        //             .sort({ _id: -1 }).skip(i * chunkSize).limit(chunkSize).lean(true).allowDiskUse(true);
-        //         const groupChatChunk = await groupChatChunkQuery;
-        //         for (let k = 0; k < groupChatChunk.length; k++) {
-        //             const groupChat = groupChatChunk[k];
-        //             const redisGMAll = await RedisService.client.hVals(RedisKeyType.DBGroupMessage + groupChat._id.toString());
-        //             for (let i = 0; i < redisGMAll.length; i++) {
-        //                 const chatData = JSON.parse(redisGMAll[i]);
-        //                 if (chatData.t == RedisGMOperationType.InsertMessage)
-        //                     redisGMs.push(chatData.e);
-        //             }
+    // static async setGroupChats(): Promise<void> {
+    // if (!await this.client.exists(RedisKeyType.AllGroupChats)) {
+    //     const redisGMs: any = [];
+    //     let lastMessageUserIds: string[] = [];
+    //     const notFoundLastMessageChatIds: string[] = [];
+    //     const totalGroupChatCount = await GroupChatEntity.countDocuments({});
+    //     const chunkSize = 1000;
+    //     const chunkCount = Math.ceil(totalGroupChatCount / chunkSize);
+    //     for (let i = 0; i < chunkCount; i++) {
+    //         const groupChatChunkQuery = GroupChatEntity.find({}, { titlesch_fuzzy: 0, hashTags_fuzzy: 0, __t: 0, __v: 0, createdAt: 0, updatedAt: 0, recordStatus: 0 })
+    //             .sort({ _id: -1 }).skip(i * chunkSize).limit(chunkSize).lean(true).allowDiskUse(true);
+    //         const groupChatChunk = await groupChatChunkQuery;
+    //         for (let k = 0; k < groupChatChunk.length; k++) {
+    //             const groupChat = groupChatChunk[k];
+    //             const redisGMAll = await RedisService.client.hVals(RedisKeyType.DBGroupMessage + groupChat._id.toString());
+    //             for (let i = 0; i < redisGMAll.length; i++) {
+    //                 const chatData = JSON.parse(redisGMAll[i]);
+    //                 if (chatData.t == RedisGMOperationType.InsertMessage)
+    //                     redisGMs.push(chatData.e);
+    //             }
 
-        //             const lastMessage = redisGMs.length ?
-        //                 redisGMs[redisGMs.length - 1] : null;
+    //             const lastMessage = redisGMs.length ?
+    //                 redisGMs[redisGMs.length - 1] : null;
 
-        //             if (lastMessage) {
-        //                 const owner = await UserEntity.findOne({ _id: lastMessage.ownerId }, { _id: 1, username: 1, avatarKey: 1, profilePhotoUrl: 1, firstName: 1, lastName: 1 }).lean(true);
-        //                 if (owner)
-        //                     lastMessage.owner = {
-        //                         _id: owner._id,
-        //                         username: owner.username,
-        //                         avatarKey: owner.avatarKey,
-        //                         profilePhotoUrl: owner.profilePhotoUrl,
-        //                         firstName: owner.firstName,
-        //                         lastName: owner.lastName
-        //                     }
-        //                 groupChat.lastMessage = lastMessage;
-        //                 await this.client.hSet(RedisKeyType.AllGroupChats, groupChat._id.toString() + ":lm", JSON.stringify(lastMessage));
-        //             }
-        //             else
-        //                 notFoundLastMessageChatIds.push(groupChat._id.toString());
+    //             if (lastMessage) {
+    //                 const owner = await UserEntity.findOne({ _id: lastMessage.ownerId }, { _id: 1, username: 1, avatarKey: 1, profilePhotoUrl: 1, firstName: 1, lastName: 1 }).lean(true);
+    //                 if (owner)
+    //                     lastMessage.owner = {
+    //                         _id: owner._id,
+    //                         username: owner.username,
+    //                         avatarKey: owner.avatarKey,
+    //                         profilePhotoUrl: owner.profilePhotoUrl,
+    //                         firstName: owner.firstName,
+    //                         lastName: owner.lastName
+    //                     }
+    //                 groupChat.lastMessage = lastMessage;
+    //                 await this.client.hSet(RedisKeyType.AllGroupChats, groupChat._id.toString() + ":lm", JSON.stringify(lastMessage));
+    //             }
+    //             else
+    //                 notFoundLastMessageChatIds.push(groupChat._id.toString());
 
-        //             await this.client.hSet(RedisKeyType.AllGroupChats, groupChat._id.toString(), JSON.stringify(groupChat));
-        //         }
-        //         const notFoundLastMessages: any = await GroupMessageEntity.aggregate([
-        //             { $match: { groupChatId: { $in: notFoundLastMessageChatIds }, recordStatus: RecordStatus.Active } },
-        //             { $sort: { createdAt: -1 } },
-        //             {
-        //                 $group: {
-        //                     _id: "$groupChatId",
-        //                     ownerId: { $first: "$ownerId" },
-        //                     text: { $first: "$text" },
-        //                     files: { $first: "$files" },
-        //                     replyToId: { $first: "$replyToId" },
-        //                     entityId: { $first: "$_id" },
-        //                 }
-        //             }
-        //         ]);
-        //         lastMessageUserIds = notFoundLastMessages.map((x: { ownerId: string; }) => x.ownerId);
+    //             await this.client.hSet(RedisKeyType.AllGroupChats, groupChat._id.toString(), JSON.stringify(groupChat));
+    //         }
+    //         const notFoundLastMessages: any = await GroupMessageEntity.aggregate([
+    //             { $match: { groupChatId: { $in: notFoundLastMessageChatIds }, recordStatus: RecordStatus.Active } },
+    //             { $sort: { createdAt: -1 } },
+    //             {
+    //                 $group: {
+    //                     _id: "$groupChatId",
+    //                     ownerId: { $first: "$ownerId" },
+    //                     text: { $first: "$text" },
+    //                     files: { $first: "$files" },
+    //                     replyToId: { $first: "$replyToId" },
+    //                     entityId: { $first: "$_id" },
+    //                 }
+    //             }
+    //         ]);
+    //         lastMessageUserIds = notFoundLastMessages.map((x: { ownerId: string; }) => x.ownerId);
 
-        //         const lastMessageUsers = await UserEntity.find({ _id: { $in: [...new Set(lastMessageUserIds)] } }, {
-        //             _id: 1, username: 1, firstName: 1, lastName: 1,
-        //             avatarKey: 1, profilePhotoUrl: 1
-        //         }).lean(true);
-        //         if (lastMessageUsers.length > 0) {
-        //             for (let j = 0; j < groupChatChunk.length; j++) {
-        //                 const gmChat = groupChatChunk[j];
-        //                 if (!gmChat.lastMessage) {
-        //                     const lastMessage = notFoundLastMessages.find((x: { _id: any; }) => x._id.toString() === gmChat._id.toString());
-        //                     if (lastMessage) {
-        //                         gmChat.lastMessage = {
-        //                             _id: lastMessage.entityId.toString(),
-        //                             ownerId: lastMessage.ownerId,
-        //                             text: lastMessage.text,
-        //                             files: lastMessage.files,
-        //                             replyToId: lastMessage.replyToId,
-        //                             groupChatId: lastMessage._id
-        //                         }
-        //                         const lastMessageUser = lastMessageUsers.find(x => x._id.toString() === gmChat.lastMessage?.ownerId.toString());
-        //                         if (gmChat.lastMessage) {
-        //                             if (lastMessageUser)
-        //                                 gmChat.lastMessage.owner = {
-        //                                     _id: lastMessageUser._id,
-        //                                     username: lastMessageUser.username,
-        //                                     avatarKey: lastMessageUser.avatarKey,
-        //                                     profilePhotoUrl: lastMessageUser.profilePhotoUrl,
-        //                                     firstName: lastMessageUser.firstName,
-        //                                     lastName: lastMessageUser.lastName
-        //                                 };
-        //                             await this.client.hSet(RedisKeyType.AllGroupChats, gmChat._id.toString() + ":lm", JSON.stringify(gmChat.lastMessage));
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-    }
+    //         const lastMessageUsers = await UserEntity.find({ _id: { $in: [...new Set(lastMessageUserIds)] } }, {
+    //             _id: 1, username: 1, firstName: 1, lastName: 1,
+    //             avatarKey: 1, profilePhotoUrl: 1
+    //         }).lean(true);
+    //         if (lastMessageUsers.length > 0) {
+    //             for (let j = 0; j < groupChatChunk.length; j++) {
+    //                 const gmChat = groupChatChunk[j];
+    //                 if (!gmChat.lastMessage) {
+    //                     const lastMessage = notFoundLastMessages.find((x: { _id: any; }) => x._id.toString() === gmChat._id.toString());
+    //                     if (lastMessage) {
+    //                         gmChat.lastMessage = {
+    //                             _id: lastMessage.entityId.toString(),
+    //                             ownerId: lastMessage.ownerId,
+    //                             text: lastMessage.text,
+    //                             files: lastMessage.files,
+    //                             replyToId: lastMessage.replyToId,
+    //                             groupChatId: lastMessage._id
+    //                         }
+    //                         const lastMessageUser = lastMessageUsers.find(x => x._id.toString() === gmChat.lastMessage?.ownerId.toString());
+    //                         if (gmChat.lastMessage) {
+    //                             if (lastMessageUser)
+    //                                 gmChat.lastMessage.owner = {
+    //                                     _id: lastMessageUser._id,
+    //                                     username: lastMessageUser.username,
+    //                                     avatarKey: lastMessageUser.avatarKey,
+    //                                     profilePhotoUrl: lastMessageUser.profilePhotoUrl,
+    //                                     firstName: lastMessageUser.firstName,
+    //                                     lastName: lastMessageUser.lastName
+    //                                 };
+    //                             await this.client.hSet(RedisKeyType.AllGroupChats, gmChat._id.toString() + ":lm", JSON.stringify(gmChat.lastMessage));
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    // }
 
     static async addPrivateChat(privateChat: Chat): Promise<void> {
         const privateChatId = privateChat._id.toString();
@@ -418,6 +436,7 @@ export default class RedisService {
                 _id: chatLM.owner._id,
                 username: chatLM.owner.username,
             },
+            createdAt: chatLM.createdAt,
         }))
     }
 
@@ -436,7 +455,12 @@ export default class RedisService {
                 _id: groupChatLM.owner._id,
                 username: groupChatLM.owner.username,
             },
+            createdAt: groupChatLM.createdAt
         }))
+    }
+
+    static async incrementGroupChatMessageCount(groupChatId: string): Promise<void> {
+        await this.client.hIncrBy(RedisKeyType.AllGroupChats, groupChatId + ":mc", 1);
     }
 
     static async isDailyLikeLimitExceeded(userId: string): Promise<boolean> {
@@ -470,4 +494,8 @@ export default class RedisService {
     static async incrementDailyFollowCount(userId: string): Promise<void> {
         await this.client.incr(RedisKeyType.DailyFollowLimit + userId);
     }
+}
+
+export {
+    initializeRedis
 }

@@ -1,4 +1,5 @@
 import { Document, Schema } from "mongoose";
+import { MessageType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 import { MessageFiles, ReplyToDTO } from "./MessageEntity";
 import { User } from "./UserEntity";
@@ -15,6 +16,7 @@ export interface GroupMessage extends BaseEntity {
   deletedForUserIds: string[];
   deletedForUserDate?: Date;
   groupChatId: string;
+  type: MessageType;
   //ignore
   owner?: LastMessageOwnerDTO | null; //ignore
   replyTo?: ReplyToDTO | null;
@@ -51,9 +53,10 @@ export const GroupMessageSchema: Schema = new Schema({
   deletedForUserIds: { type: Array.of(String), required: false, default: [] },
   deletedForUserDate: { type: Date, required: false, default: null },
   groupChatId: { type: String, required: true },
+  type: { type: Number, required: true },
 });
 
-GroupMessageSchema.index({ recordStatus: -1, groupChatId: -1, createdAt: -1 });
+GroupMessageSchema.index({ recordStatus: -1, groupChatId: -1, type: -1, deletedForUserIds: -1 });
 
 GroupMessageSchema.pre("save", function (next) {
   //
@@ -85,6 +88,7 @@ GroupMessageSchema.methods.minify = async function (
     recordDeletionDate: this.recordDeletionDate,
     deletedForUserIds: this.deletedForUserIds,
     deletedForUserDate: this.deletedForUserDate,
+    type: this.type,
     //ignore
     owner: null,
     replyTo: null

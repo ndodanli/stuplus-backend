@@ -879,7 +879,8 @@ function registerHooks(): void {
     next();
   });
   UserSchema.pre("find", function (next) {
-    this.where({ recordStatus: RecordStatus.Active, role: { $ne: Role.Admin } });
+    // this.where({ recordStatus: RecordStatus.Active, role: { $ne: Role.Admin } });
+    this.where({ recordStatus: RecordStatus.Active });
     // this.select({ __v: 0 });
     // this.select({ firstName_fuzzy: 0, lastName_fuzzy: 0, username_fuzzy: 0 });
     next();

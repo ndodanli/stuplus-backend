@@ -38,7 +38,7 @@ const axiosBackendInstance = axios.create({
 let cpus = require("os").cpus().length;
 config.FIXED_NUMBER_OF_THREADS_PARTITION = (cpus * 2) - 1;
 
-hostnames = ["stuplus-bucket.s3.eu-central-1.amazonaws.com"];
+hostnames = ["stuplus-bucket.s3.eu-central-1.amazonaws.com", "stuplus-bucket.s3.amazonaws.com"];
 
 setup();
 

@@ -17,7 +17,7 @@ export const GroupMessageReadSchema: Schema = new Schema({
   lastReadedAt: { type: Date, required: true }
 });
 
-GroupMessageReadSchema.index({ recordStatus: -1, readedBy: -1, groupChatId: -1, createdAt: -1 });
+GroupMessageReadSchema.index({ recordStatus: -1, readedBy: -1, groupChatId: -1 });
 
 GroupMessageReadSchema.pre("save", function (next) {
   //

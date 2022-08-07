@@ -13,6 +13,7 @@ $(document).ready(async function () {
     });
 
     const user = data.data;
+    console.log("userid: ", user._id)
     const BOT_IMG = "https://thumbs.dreamstime.com/b/closeup-photo-funny-excited-lady-raise-fists-screaming-loudly-celebrating-money-lottery-winning-wealthy-rich-person-wear-casual-172563278.jpg";
     const PERSON_IMG = "https://image.shutterstock.com/image-photo/image-serious-confident-dark-skinned-260nw-1417352750.jpg";
     const BOT_NAME = "deneme45";
@@ -95,6 +96,7 @@ $(document).ready(async function () {
         // });
     });
     socket.on("cPmSend", data => {
+        console.log("cPmSend: ", data);
         appendMessage(BOT_NAME, BOT_IMG, "left", data.t, data.mi);
     });
     socket.on("cPmForwarded", data => {

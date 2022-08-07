@@ -29,7 +29,7 @@ export const AnnouncementCommentSchema: Schema = new Schema({
   score: { type: Number, required: false, default: 0 },
 });
 
-AnnouncementCommentSchema.index({ recordStatus: -1, createdAt: -1 });
+AnnouncementCommentSchema.index({ recordStatus: -1 });
 
 AnnouncementCommentSchema.pre("save", function (next) {
   //

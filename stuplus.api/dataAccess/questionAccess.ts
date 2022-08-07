@@ -39,7 +39,10 @@ export class QuestionAccess {
 
     public static async getQuestions(acceptedLanguages: Array<string>, payload: QuestionGetMultipleDTO, currentUserId: string): Promise<Question[] | null> {
         let questions: Question[] = [];
-        let questionsQuery = QuestionEntity.find({});
+        const user = await RedisService.acquireUser(currentUserId, ["blockedUserIds"]);
+        let questionsQuery = QuestionEntity.find({
+            ownerId: { $nin: user.blockedUserIds },
+        });
 
         if (payload.schoolSearch) {
             questionsQuery = questionsQuery.where({ ownerSchoolId: payload.ownerSchoolId });
@@ -56,7 +59,10 @@ export class QuestionAccess {
             .lean(true);
 
         if (payload.schoolSearch && questions.length < payload.take) {
-            let questionsSecond = await QuestionEntity.find({ ownerSchoolId: { $ne: payload.ownerSchoolId } })
+            let questionsSecond = await QuestionEntity.find({
+                ownerSchoolId: { $ne: payload.ownerSchoolId },
+                ownerId: { $nin: user.blockedUserIds },
+            })
                 .sort({ _id: -1 })
                 .limit(payload.take - questions.length)
                 .lean(true);

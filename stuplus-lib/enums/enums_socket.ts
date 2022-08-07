@@ -36,11 +36,13 @@ export const RedisSubKeyType = {
    FollowerCount: "0:",
    FollowingCount: "1:",
    GroupChatIds: "2:",
-   DailyLikeCount: "3:",
-   DailyCommentCount: "4:",
-   DailyNewPMCount: "5:",
-   DailyFollowCount: "6:",
-   PrivateChatIds: "7:",
+   PrivateChatIds: "3:",
+   DailyLikeCount: "4:",
+   DailyCommentCount: "5:",
+   DailyNewPMCount: "6:",
+   DailyFollowCount: "7:",
+   GroupChatReadCounts: "8:",
+
 }
 export const RedisKeyType = {
    DBPrivateMessage: "d0:",

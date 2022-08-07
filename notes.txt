@@ -7,12 +7,5 @@
 *chat read olaylari degisecek
 *vakit kalirsa s3 sifreleme
 
-
-*kullanicinin private chati kaldirmasi(kaldirirsa redisten de silinmeli)
-*bloklanan user icerikleri duzenlenecek(bloklayan kisiye gosterilmeyecek)
-*chatler icin(group ve private) files ve images cekmek icin endpoint yazilacak
-***gc total messages => save and process this count for unread message count(group total message - user read until request = unread message count)
-
-
 -Mobile Notes-
 *interneti geri gelince sockete tekrar baglanmasi(mesajlar alinacak)

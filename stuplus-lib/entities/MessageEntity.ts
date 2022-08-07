@@ -1,4 +1,5 @@
 import { Document, Schema } from "mongoose";
+import { MessageType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 import { User } from "./UserEntity";
 
@@ -14,6 +15,7 @@ export interface Message extends BaseEntity {
   deletedForUserIds: string[];
   deletedForUserDate?: Date;
   chatId: string;
+  type: MessageType;
   //ignore
   owner?: User | null; //ignore
   replyTo?: ReplyToDTO | null; //ignore
@@ -21,15 +23,15 @@ export interface Message extends BaseEntity {
 
 
 export class ReplyToDTO {
-  messageId: string;
-  messageOwnerId: string;
-  messageOwner: User | undefined;
+  _id: string;
+  ownerId: string;
+  owner: User | undefined;
   text: string;
   files: MessageFiles[];
   constructor(messageId: string, messageOwnerId: string, messageOwner: User | undefined = undefined, text: string, files: MessageFiles[]) {
-    this.messageId = messageId;
-    this.messageOwnerId = messageOwnerId;
-    this.messageOwner = messageOwner;
+    this._id = messageId;
+    this.ownerId = messageOwnerId;
+    this.owner = messageOwner;
     this.text = text;
     this.files = files;
   }
@@ -66,9 +68,10 @@ export const MessageSchema: Schema = new Schema({
   replyToId: { type: String, required: false, default: null },
   deletedForUserIds: { type: Array.of(String), required: false, default: [] },
   deletedForUserDate: { type: Date, required: false, default: null },
+  type: { type: Number, required: true },
 });
 
-MessageSchema.index({ recordStatus: -1, createdAt: -1 });
+MessageSchema.index({ recordStatus: -1 });
 
 // MessageSchema.index({ text: "text", description: "text" });
 
@@ -102,6 +105,7 @@ MessageSchema.methods.minify = async function (
     deletedForUserIds: this.deletedForUserIds,
     deletedForUserDate: this.deletedForUserDate,
     recordDeletionDate: this.recordDeletionDate,
+    type: this.type,
     //ignore
     replyTo: null, //ignore
   };

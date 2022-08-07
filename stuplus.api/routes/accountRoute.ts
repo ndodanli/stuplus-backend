@@ -33,7 +33,12 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
 } */
   const response = new BaseResponse<User>();
   try {
-
+    // const gcu = await GroupChatUserEntity.find({}, { _id: 1 });
+    // const ids = []
+    // for (let i = 0; i < gcu.length - 100; i++) {
+    //   ids.push(gcu[i]._id);
+    // }
+    // await GroupChatUserEntity.deleteMany({ _id: { $in: ids } });
     response.data = await RedisService.acquireUser(res.locals.user._id, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
       "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
       "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings"]);

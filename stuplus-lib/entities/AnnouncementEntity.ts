@@ -52,7 +52,7 @@ export const AnnouncementSchema: Schema = new Schema({
   },
 });
 
-AnnouncementSchema.index({ recordStatus: -1, createdAt: -1 });
+AnnouncementSchema.index({ recordStatus: -1 });
 
 AnnouncementSchema.plugin(mongoose_fuzzy_searching,
   {

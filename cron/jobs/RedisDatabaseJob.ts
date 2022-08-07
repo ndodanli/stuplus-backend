@@ -280,7 +280,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         for (let i = 0; i < readedBatches.length; i++) {
                             for (let j = 0; j < readedBatches[i].length; j++) {
                                 // console.time("PM updateReaded Bulk operation time. order: " + i);
-                                await MessageEntity.updateMany({ chatId: forwardedBatches[i][j].chatId, ownerId: { $ne: forwardedBatches[i][j].ownerId }, readed: false, createdAt: { $lte: forwardedBatches[i][j].createdAt } }, { readed: true });
+                                await MessageEntity.updateMany({ chatId: readedBatches[i][j].chatId, ownerId: { $ne: readedBatches[i][j].ownerId }, readed: false, createdAt: { $lte: readedBatches[i][j].createdAt } }, { readed: true });
                                 // console.timeEnd("PM updateReaded Bulk operation time. order: " + i);
                             }
                         }

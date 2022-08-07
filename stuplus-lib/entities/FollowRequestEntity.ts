@@ -22,7 +22,7 @@ export const FollowRequestSchema: Schema = new Schema({
   status: { type: Number, required: false, default: FollowStatus.Pending },
 });
 
-FollowRequestSchema.index({ recordStatus: -1, createdAt: -1, ownerId: -1, requestedId: -1 });
+FollowRequestSchema.index({ recordStatus: -1, ownerId: -1, requestedId: -1 });
 
 FollowRequestSchema.pre("save", function (next) {
   //

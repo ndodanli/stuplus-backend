@@ -33,7 +33,7 @@ export const QuestionSubCommentSchema: Schema = new Schema({
   replyToId: { type: String, required: false, default: null },
 });
 
-QuestionSubCommentSchema.index({ recordStatus: -1, questionId: -1, commentId: -1, popularity: -1, createdAt: 1 });
+QuestionSubCommentSchema.index({ recordStatus: -1, questionId: -1, commentId: -1, popularity: -1 });
 
 QuestionSubCommentSchema.pre("save", function (next) {
   //

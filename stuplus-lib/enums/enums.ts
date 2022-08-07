@@ -104,3 +104,13 @@ export enum UserProfileStatus {
    Public = 0,
    Private = 1
 }
+
+export enum MessageType {
+   Text = 0,
+   Image = 1,
+   Video = 2,
+   Audio = 3,
+   File = 4,
+   Link = 5,
+   Location = 6,
+}

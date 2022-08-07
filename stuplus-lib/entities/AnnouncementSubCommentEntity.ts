@@ -33,7 +33,7 @@ export const AnnouncementSubCommentSchema: Schema = new Schema({
   replyToId: { type: String, required: false, default: null },
 });
 
-AnnouncementSubCommentSchema.index({ recordStatus: -1, announcementId: -1, commentId: -1, popularity: -1, createdAt: 1 });
+AnnouncementSubCommentSchema.index({ recordStatus: -1, announcementId: -1, commentId: -1, popularity: -1 });
 
 AnnouncementSubCommentSchema.pre("save", function (next) {
   //

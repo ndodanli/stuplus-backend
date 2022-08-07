@@ -191,3 +191,23 @@ export class LeaveGroupDTO {
         }
     }
 }
+
+export class GetGroupDataDTO extends BaseFilter {
+    groupChatId: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class RemovePrivateChatsDTO extends BaseFilter {
+    privateChatsIds: string[] = [];
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}

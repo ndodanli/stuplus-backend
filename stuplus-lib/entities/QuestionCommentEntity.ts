@@ -8,7 +8,7 @@ export interface QuestionComment extends BaseEntity {
   ownerId: string; //user id
   questionId: string;
   comment: string;
-  score: number;
+  popularity: number;
   //ignore
   owner?: User | null; // ignore
   ownerSchool?: School | null; //ignore
@@ -26,10 +26,10 @@ export const QuestionCommentSchema: Schema = new Schema({
   ownerId: { type: String, required: true },
   questionId: { type: String, required: true },
   comment: { type: String, required: true },
-  score: { type: Number, required: false, default: 0 },
+  popularity: { type: Number, required: false, default: 0 },
 });
 
-QuestionCommentSchema.index({ recordStatus: -1, questionId: -1, score: -1, createdAt: -1 });
+QuestionCommentSchema.index({ recordStatus: -1, questionId: -1, popularity: -1 });
 
 QuestionCommentSchema.pre("save", function (next) {
   //
@@ -50,7 +50,7 @@ QuestionCommentSchema.methods.minify = async function (
     ownerId: this.ownerId,
     questionId: this.questionId,
     comment: this.comment,
-    score: this.score,
+    popularity: this.popularity,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     recordDeletionDate: this.recordDeletionDate,
