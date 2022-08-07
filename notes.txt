@@ -4,7 +4,6 @@
 -gizlilik ayarlari profilimi gizle yazisi sadece takip ettiklerim yapilacak
 -gizlilik ayarlari guncellenirken bildirim ayarlari kapatiyor
 
-*chat read olaylari degisecek
 *vakit kalirsa s3 sifreleme
 
 -Mobile Notes-
