@@ -11,8 +11,12 @@ export class BaseFilter {
         if (filter.page && filter.pageSize) {
             this.skip = (filter.page - 1) * filter.pageSize;
             this.take = filter.pageSize;
+            if (this.take > 100)
+                this.take = 100;
         } else if (filter.pageSize) {
             this.take = filter.pageSize;
+            if (this.take > 100)
+                this.take = 100;
         }
 
         if (filter.lastRecordId) {

@@ -693,7 +693,8 @@ const doc = {
             announcementId: "62ab8a204166fd1eaebbb3fa",
             announcementText: "xxx",
             questionId: "62ab8a204166fd1eaebbb3fa",
-            questionText: "xxx"
+            questionText: "xxx",
+            imageUrls: ["https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/question/cover_images/1656787298322-1MFqZJCvcok.jpg", "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/question/cover_images/1656787298322-1MFqZJCvcok.jpg"]
         },
         GetNotificationHistoryResponse: {
             hasError: {

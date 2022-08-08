@@ -166,7 +166,6 @@ app.get("/http*", async (req, res) => {
     return res.status(404).send();
   }
 
-
   var mode = req.query.mode;
 
   if (mode == null || mode == undefined || mode == "null" || mode == "") {

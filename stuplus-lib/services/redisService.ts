@@ -22,7 +22,7 @@ const initializeRedis = async () => {
         try {
             await client.connect();
             console.log("redis client created");
-            await RedisService.setGroupChatMessageCounts();
+            await RedisService.setGroupChatMemberCounts();
             resolve(true);
         } catch (error) {
             logger.error({ err: error }, "An error occurred while connecting to redis.");
@@ -225,32 +225,31 @@ export default class RedisService {
         return documentList as unknown as T;
     }
 
-    static async setGroupChatMessageCounts(): Promise<void> {
-        // if (!await this.client.hExists(RedisKeyType.AllGroupChats, "groupChatCountsSetted")) {
-        // const totalGroupChatCount = await GroupChatEntity.countDocuments({});
-        // const chunkSize = 500;
-        // const chunkCount = Math.ceil(totalGroupChatCount / chunkSize);
-        // for (let i = 0; i < chunkCount; i++) {
-        //     const ops = [];
-        //     const groupChatMessageCountQueries = [];
-        //     const groupChats = await GroupChatEntity.find({}, { _id: 1 }, { lean: true, skip: i * chunkSize, limit: chunkSize });
-        //     for (let j = 0; j < groupChats.length; j++) {
-        //         const groupChat = groupChats[j];
-        //         groupChatMessageCountQueries.push(GroupMessageEntity.countDocuments({ groupChatId: groupChat._id }));
-        //     }
-        //     if (groupChatMessageCountQueries.length > 0) {
-        //         const groupChatMessageCounts = await Promise.all(groupChatMessageCountQueries);
-        //         for (let j = 0; j < groupChats.length; j++) {
-        //             const groupChat = groupChats[j];
-        //             ops.push(this.client.hSet(RedisKeyType.AllGroupChats, groupChat._id.toString() + ":mc", groupChatMessageCounts[j]));
-        //         }
-        //         await Promise.all(ops);
-        //     }
-        // }
-        // await this.client.hSet(RedisKeyType.AllGroupChats, "groupChatCountsSetted", "true");
-        // }
-
-    }
+    // static async setGroupChatMessageCounts(): Promise<void> {
+    // if (!await this.client.hExists(RedisKeyType.AllGroupChats, "groupChatCountsSetted")) {
+    // const totalGroupChatCount = await GroupChatEntity.countDocuments({});
+    // const chunkSize = 500;
+    // const chunkCount = Math.ceil(totalGroupChatCount / chunkSize);
+    // for (let i = 0; i < chunkCount; i++) {
+    //     const ops = [];
+    //     const groupChatMessageCountQueries = [];
+    //     const groupChats = await GroupChatEntity.find({}, { _id: 1 }, { lean: true, skip: i * chunkSize, limit: chunkSize });
+    //     for (let j = 0; j < groupChats.length; j++) {
+    //         const groupChat = groupChats[j];
+    //         groupChatMessageCountQueries.push(GroupMessageEntity.countDocuments({ groupChatId: groupChat._id }));
+    //     }
+    //     if (groupChatMessageCountQueries.length > 0) {
+    //         const groupChatMessageCounts = await Promise.all(groupChatMessageCountQueries);
+    //         for (let j = 0; j < groupChats.length; j++) {
+    //             const groupChat = groupChats[j];
+    //             ops.push(this.client.hSet(RedisKeyType.AllGroupChats, groupChat._id.toString() + ":mc", groupChatMessageCounts[j]));
+    //         }
+    //         await Promise.all(ops);
+    //     }
+    // }
+    // await this.client.hSet(RedisKeyType.AllGroupChats, "groupChatCountsSetted", "true");
+    // }
+    // }
 
     static async acquireUserPrivateChatIds(userId: string): Promise<string[]> {
         let ids = await this.client.sMembers(RedisKeyType.User + RedisSubKeyType.PrivateChatIds + userId);
@@ -463,6 +462,14 @@ export default class RedisService {
         await this.client.hIncrBy(RedisKeyType.AllGroupChats, groupChatId + ":mc", 1);
     }
 
+    static async incrementGroupMemberCount(groupChatId: string, count: number = 1): Promise<void> {
+        await this.client.hIncrBy(RedisKeyType.AllGroupChatMemberCounts, groupChatId, count);
+    }
+
+    static async decrementGroupMemberCount(groupChatId: string, count: number = 1): Promise<void> {
+        await this.client.hIncrBy(RedisKeyType.AllGroupChatMemberCounts, groupChatId, -1 * count);
+    }
+
     static async isDailyLikeLimitExceeded(userId: string): Promise<boolean> {
         return await this.client.get(RedisKeyType.DailyLikeLimit + userId).then(x => parseInt(x ?? "0")) >= userLimits.MAX_LIKE_PER_DAY;
     }
@@ -493,6 +500,73 @@ export default class RedisService {
 
     static async incrementDailyFollowCount(userId: string): Promise<void> {
         await this.client.incr(RedisKeyType.DailyFollowLimit + userId);
+    }
+
+    // static async acquireGroupsMemberCounts(groupIds: string[]): Promise<any> {
+    // const ops = [];
+    // const missingGroupChatIdsForMemberCounts = [];
+    // const results = await this.client.smIsMember(RedisKeyType.GroupChatMemberCountInfo, groupIds);
+    // for (let i = 0; i < results.length; i++) {
+    //     if (!results[i]) {
+    //         missingGroupChatIdsForMemberCounts.push(groupIds[i]);
+    //     }
+    // }
+    // if (missingGroupChatIdsForMemberCounts.length > 0) {
+    //     let groupChatMemberCounts: any = await GroupChatUserEntity.aggregate([
+    //         { "$match": { groupChatId: { $in: missingGroupChatIdsForMemberCounts } } },
+    //         { "$group": { _id: "$groupChatId", count: { $sum: 1 } } },
+    //     ]);
+    //     for (let i = 0; i < groupChatMemberCounts.length; i++) {
+    //         await this.incrementGroupMemberCount(groupChatMemberCounts[i]._id, groupChatMemberCounts[i].count);
+    //         await this.client.sAdd(RedisKeyType.GroupChatMemberCountInfo, groupChatMemberCounts[i]._id);
+    //     }
+    // }
+    // const groupChatMemberCounts = await this.client.hmGet(RedisKeyType.GroupChatMemberCountInfo, groupIds);
+    // }
+
+    static async setGroupChatMemberCounts() {
+        if (!await this.client.exists(RedisKeyType.AllGroupChatMemberCounts)) {
+            const totalGroupChatCount = await GroupChatEntity.countDocuments();
+            const chunkSize = 5000;
+            const chunkCount = Math.ceil(totalGroupChatCount / chunkSize);
+            for (let i = 0; i < chunkCount; i++) {
+                const groupChats = await GroupChatEntity.find({}, { _id: 1 }).skip(i * chunkSize).limit(chunkSize);
+                const groupChatIds: any = groupChats.map(x => x._id.toString());
+                let groupChatMemberCounts: any = await GroupChatUserEntity.aggregate([
+                    { "$match": { groupChatId: { $in: groupChatIds } } },
+                    { "$group": { _id: "$groupChatId", count: { $sum: 1 } } },
+                ]);
+                for (let i = 0; i < groupChatMemberCounts.length; i++) {
+                    await this.incrementGroupMemberCount(groupChatMemberCounts[i]._id, groupChatMemberCounts[i].count);
+                }
+            }
+        }
+    }
+
+    static async acquireGroupsMemberCounts(groupIds: string[]): Promise<any> {
+        const counts: any = await this.client.hmGet(RedisKeyType.AllGroupChatMemberCounts, groupIds);
+        const missingGroupChatIdsForMemberCounts = [];
+        for (let i = 0; i < counts.length; i++) {
+            if (!counts[i]) {
+                counts[i] = -1;
+                missingGroupChatIdsForMemberCounts.push({ groupId: groupIds[i], index: i });
+            } else {
+                counts[i] = parseInt(counts[i]);
+            }
+        }
+        if (missingGroupChatIdsForMemberCounts.length > 0) {
+            let groupChatMemberCounts: any = await GroupChatUserEntity.aggregate([
+                { "$match": { groupChatId: { $in: missingGroupChatIdsForMemberCounts.map(x => x.groupId) } } },
+                { "$group": { _id: "$groupChatId", count: { $sum: 1 } } },
+            ]);
+            for (let i = 0; i < groupChatMemberCounts.length; i++) {
+                await this.incrementGroupMemberCount(groupChatMemberCounts[i]._id, groupChatMemberCounts[i].count);
+                const index = missingGroupChatIdsForMemberCounts.find(x => x.groupId === groupChatMemberCounts[i]._id)?.index;
+                if (index)
+                    counts[index] = groupChatMemberCounts[i].count;
+            }
+        }
+        return counts;
     }
 }
 

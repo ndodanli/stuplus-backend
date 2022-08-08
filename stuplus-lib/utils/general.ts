@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import { ReportType } from "../enums/enums";
 
 export const mapToDTO = (oldObject: Record<string, any>, newObject: Record<string, any>) => {
     for (const oldKey in oldObject) {
@@ -146,3 +147,45 @@ export const sortByCreatedAtDesc = (arr: any[]): any[] => {
     }
     return arr;
 }
+
+export const isValidUrl = (url: string): Boolean => {
+    try {
+        return Boolean(new URL(url));
+    }
+    catch (e) {
+        return false;
+    }
+}
+
+export function getReportTypeFromValue(value: number): ReportType {
+    switch (value) {
+       case 0:
+          return ReportType.JustDontLike;
+       case 1:
+          return ReportType.BullyingOrHarassment;
+       case 2:
+          return ReportType.FalseInformation;
+       case 3:
+          return ReportType.Spam;
+       case 4:
+          return ReportType.NudityOrSexualActivity;
+       case 5:
+          return ReportType.HateSpeechOrSymbols;
+       case 6:
+          return ReportType.ViolanceOrDangerousOrganizations;
+       case 7:
+          return ReportType.ScamOrFraud;
+       case 8:
+          return ReportType.IntellectualPropertyViolation;
+       case 9:
+          return ReportType.SaleOfIllegalOrRegulatedGoods;
+       case 10:
+          return ReportType.SuicideOrSelfInjury;
+       case 11:
+          return ReportType.EatingDisorders;
+       case 12:
+          return ReportType.Other;
+       default:
+          return ReportType.Other;
+    }
+ }

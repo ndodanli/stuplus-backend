@@ -285,7 +285,7 @@ export default {
       },
       token: getToken(),
       uploadFilePath:
-        'http://212.98.224.208:25050/general/uploadFile?uploadPath=profile_images',
+        'https://api-panel.stuplus.app/general/uploadFile?uploadPath=profile_images',
       tableKey: 0,
       list: null,
       total: 0,

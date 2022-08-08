@@ -92,6 +92,7 @@ export const RedisKeyType = {
    AnnouncementSubCommentCount: "44:",
    AnnouncementSubCommentLikeCount: "45:",
    AllPrivateChats: "46:apc",
+   AllGroupChatMemberCounts: "47:agcmc",
 }
 
 export const SocketRoomTypes = {

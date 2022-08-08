@@ -3,7 +3,7 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { authorize } from "../middlewares/auth";
 import { UserAccess } from "../dataAccess/userAccess";
-import { GroupChatUserRole, Role } from "../../stuplus-lib/enums/enums";
+import { GroupChatUserRole, MessageType, ReportType, Role } from "../../stuplus-lib/enums/enums";
 import { validateChangeFollowStatus, validateEmailConfirmation, validateFollowUser, validateForgotPassword, validateForgotPasswordCode, validateNotifyReadNotifications, validateReport, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdatePrivacySettings, validateUpdateProfile, validateUpdateSchool } from "../middlewares/validation/account/validateAccountRoute";
 import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO, UpdateUserSchoolDTO, UpdatePrivacySettingsDTO } from "../dtos/UserDTOs";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
@@ -15,10 +15,13 @@ import RedisService from "../../stuplus-lib/services/redisService";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { isValidObjectId } from "mongoose";
 import { User } from "../../stuplus-lib/entities/UserEntity";
-import { FollowEntity, GroupChatEntity, GroupChatUserEntity, GroupMessageReadEntity, MessageEntity, NotificationEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { FollowEntity, GroupChatEntity, GroupChatUserEntity, GroupMessageEntity, GroupMessageReadEntity, MessageEntity, NotificationEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { RedisKeyType, RedisSubKeyType } from "../../stuplus-lib/enums/enums_socket";
 import redisTTL from "../../stuplus-lib/constants/redisTTL";
 import { SearchAccess } from "../dataAccess/searchAccess";
+import EmailService from "../../stuplus-lib/services/emailService";
+import TelegramService from "../../stuplus-lib/services/telegramService";
+import { getReportTypeFromValue } from "../../stuplus-lib/utils/general";
 
 const router = Router();
 
@@ -39,6 +42,14 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
     //   ids.push(gcu[i]._id);
     // }
     // await GroupChatUserEntity.deleteMany({ _id: { $in: ids } });
+    // const types = [MessageType.Text, MessageType.Image, MessageType.Video, MessageType.Link, MessageType.File];
+    // const messages = await GroupMessageEntity.find({});
+    // for (let i = 0; i < messages.length; i++) {
+    //   const element = messages[i];
+    //   element.type = types[Math.floor(Math.random() * types.length)];
+    //   await element.save();
+
+    // }
     response.data = await RedisService.acquireUser(res.locals.user._id, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
       "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
       "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings"]);

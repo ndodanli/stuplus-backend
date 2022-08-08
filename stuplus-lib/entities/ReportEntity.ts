@@ -14,6 +14,7 @@ export interface Report extends BaseEntity {
   questionText: string;
   announcementId: string;
   announcementText: string;
+  imageUrls: string[];
 }
 
 export interface ReportDocument extends Report, Document {
@@ -33,6 +34,7 @@ export const ReportSchema: Schema = new Schema({
   announcementText: { type: String, required: false, default: null },
   questionId: { type: String, required: false, default: null },
   questionText: { type: String, required: false, default: null },
+  imageUrls: { type: Array.of(String), required: false, default: null },
 });
 
 // ReportSchema.index({ recordStatus: -1 });
@@ -68,6 +70,7 @@ ReportSchema.methods.minify = async function (
     announcementId: this.announcementId,
     announcementText: this.announcementText,
     recordDeletionDate: this.recordDeletionDate,
+    imageUrls: this.imageUrls,
   };
   return response;
 };

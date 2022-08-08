@@ -1,4 +1,4 @@
-import { check, validationResult } from "express-validator"
+import { check, query, validationResult } from "express-validator"
 import { ObjectId } from "mongodb";
 import { isValidObjectId } from "mongoose";
 import { getMessage } from "../../../../stuplus-lib/localization/responseMessages";
@@ -378,7 +378,7 @@ export const validateAddToGroup = [
     },
 ];
 
-export const validateGetGroupData = [
+export const validateGetGroupChatData = [
     check('groupChatId')
         .custom(async (value, { req }) => {
             if (!isValidObjectId(value)) {
@@ -387,6 +387,23 @@ export const validateGetGroupData = [
         })
         .bail(),
     check('lastRecordId')
+        .if((value: any, { req }: any) => value)
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        })
+        .bail(),
+    (req: CustomRequest<object>, res: any, next: any) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+            return Ok(res, new BaseResponse(true, errors.array(), null, getMessage("fillInReqFields", req.selectedLangs())));
+        next();
+    },
+];
+
+export const validateGetPrivateChatData = [
+    check('chatId')
         .custom(async (value, { req }) => {
             if (!isValidObjectId(value)) {
                 throw new Error(getMessage("incorrectId", req.selectedLangs()));

@@ -126,6 +126,7 @@ const systemLangs: Record<string, Function> = {
             youAreNotInGroup: "Bu grubu mesaj göndermek için katılmamışsın.",
             mustBeBoolean: "Değerinin boolean olması gereklidir.",
             deletePrivateChatsLimit: "Çok fazla özel sohbet silmek istedin, bir sorun mu var? Varsa destek ekibine(o da biziz =) ) bildir lütfen. Bu arada en fazla 500 tanesini aynı anda silebilirsin.",
+            messageTooLong: "Ne yaptın be dostum roman mı yazıyorsun, parça parça gönder böyle uzun mesajları.",
         }
     },
     "en": function (args: string[] = []) {

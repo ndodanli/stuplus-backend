@@ -3,11 +3,11 @@ import { FollowEntity, FollowRequestEntity, GroupChatEntity, NotificationEntity,
 import { SchoolEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { ExternalLogin, User, UserDocument } from "../../stuplus-lib/entities/UserEntity";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
-import { FollowLimitation, FollowStatus, NotificationType, RecordStatus, Role } from "../../stuplus-lib/enums/enums";
+import { FollowLimitation, FollowStatus, NotificationType, RecordStatus, ReportType, Role } from "../../stuplus-lib/enums/enums";
 import { getNewToken } from "../utils/token";
 import EmailService from "../../stuplus-lib/services/emailService";
 import moment from "moment-timezone";
-import { checkIfStudentEmail, generateCode, searchable, searchables } from "../../stuplus-lib/utils/general";
+import { checkIfStudentEmail, generateCode, getReportTypeFromValue, searchable, searchables } from "../../stuplus-lib/utils/general";
 import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO, UpdateUserSchoolDTO, UpdatePrivacySettingsDTO } from "../dtos/UserDTOs";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { config } from "../config/config";
@@ -27,6 +27,7 @@ import { GroupAccess } from "./groupAccess";
 import { AddToGroupChatDTO } from "../socket/dtos/Chat";
 import { SearchAccess } from "./searchAccess";
 import OnlineUserService from "../../stuplus-lib/services/onlineUsersService";
+import TelegramService from "../../stuplus-lib/services/telegramService";
 export class UserAccess {
     public static async getUserProfile(acceptedLanguages: Array<string>, currentUserId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
         let response: any;
@@ -872,6 +873,47 @@ export class UserAccess {
 
     public static async report(acceptedLanguages: Array<string>, userId: string, payload: ReportDTO): Promise<boolean> {
         await ReportEntity.create({ ...payload, ownerId: userId });
+
+        const reportOwner = await RedisService.acquireUser(userId, ["username"]);
+        let reportText =
+            `Report Types: ${payload.reportType.map(x => ReportType[getReportTypeFromValue(x)]).join(", ")} \n` +
+            `Report owner Id: ${userId} \n` +
+            `Report First Name: ${reportOwner.firstName} \n` +
+            `Report Last Name: ${reportOwner.lastName} \n` +
+            `Report Username: ${reportOwner.username} \n`;
+
+        if (payload.userId) {
+            const reportUser = await UserEntity.findOne({ _id: payload.userId }, ["username", "firstName", "lastName"]);
+            reportText += `Reported user Id: ${payload.userId} \n` +
+                `Reported First Name: ${reportUser?.firstName} \n` +
+                `Reported Last Name: ${reportUser?.lastName} \n` +
+                `Reported Username: ${reportUser?.username} \n`;
+        }
+        if (payload.messageId) {
+            reportText += `Message Id: ${payload.messageId} \n` +
+                `Message Text: ${payload.messageText} \n`;
+        }
+        if (payload.commentId) {
+            reportText += `Comment Id: ${payload.commentId} \n` +
+                `Comment Text: ${payload.commentText} \n`;
+        }
+        if (payload.questionId) {
+            reportText += `Question Id: ${payload.questionId} \n` +
+                `Question Text: ${payload.questionText} \n`;
+        }
+        if (payload.announcementId) {
+            reportText += `Announcement Id: ${payload.announcementId} \n` +
+                `Announcement Text: ${payload.announcementText} \n`;
+        }
+        if (payload.details) {
+            reportText += `Details: ${payload.details} \n`;
+        }
+        if (payload.imageUrls) {
+            reportText += `Image Urls: ${payload.imageUrls.map(x => x).join(", ")} \n`;
+        }
+
+        await TelegramService.sendMessage(reportText);
+
         //TODO: send notification to admin and maybe to user
         return true;
     }

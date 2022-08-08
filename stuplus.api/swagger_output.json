@@ -3502,18 +3502,6 @@
         }
       }
     },
-    "/chat/getGroupUsers": {
-      "post": {
-        "description": "",
-        "parameters": [],
-        "responses": {},
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
     "/chat/sendGMFile": {
       "post": {
         "tags": [
@@ -3672,7 +3660,19 @@
         ]
       }
     },
-    "/chat/getGroupProfile/{groupChatId}": {
+    "/chat/leaveGroup": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/gc/getProfile/{groupChatId}": {
       "get": {
         "description": "",
         "parameters": [
@@ -3693,7 +3693,124 @@
         ]
       }
     },
-    "/chat/leaveGroup": {
+    "/chat/gc/getMoreMedia": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/gc/getMoreFile": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/gc/getMoreLink": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/pc/getProfile/{privateChatId}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "privateChatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/pc/getMoreMedia": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/pc/getMoreFile": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/pc/getMoreLink": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/pc/getAllCommonGroupChats": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/getGroupUsers": {
+      "post": {
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/chat/removePrivateChats": {
       "post": {
         "description": "",
         "parameters": [],
@@ -4800,6 +4917,16 @@
           "questionText": {
             "type": "string",
             "example": "xxx"
+          },
+          "imageUrls": {
+            "type": "array",
+            "example": [
+              "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/question/cover_images/1656787298322-1MFqZJCvcok.jpg",
+              "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/question/cover_images/1656787298322-1MFqZJCvcok.jpg"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [

@@ -109,15 +109,25 @@ export class SearchAccess {
             .limit(payload.pageSize)
             .lean(true) as GroupChat[];
 
-        const requiredDepartmentIds = groupChats.map(group => group.departmentId);
+        if (groupChats.length > 0) {
+            const requiredDepartmentIds = groupChats.map(group => group.departmentId);
 
-        const schools = await SchoolAccess.getAllSchools();
-        const departments = await DepartmentEntity.find({ _id: { $in: requiredDepartmentIds } }).lean(true);
+            const schools = await SchoolAccess.getAllSchools();
+            const departments = await DepartmentEntity.find({ _id: { $in: requiredDepartmentIds } }).lean(true);
 
-        for (let i = 0; i < groupChats.length; i++) {
-            const group = groupChats[i];
-            group.school = schools.find(school => school._id == group.schoolId);
-            group.department = departments.find(department => department._id == group.departmentId);
+            const groupChatIds: string[] = groupChats.map(group => group._id.toString());
+            const memberCounts = await RedisService.acquireGroupsMemberCounts(groupChatIds);
+            for (let i = 0; i < groupChatIds.length; i++) {
+                const groupChat = groupChats.find((x) => x._id.toString() == groupChatIds[i]);
+                if (groupChat)
+                    groupChat.memberCount = memberCounts[i]
+            }
+
+            for (let i = 0; i < groupChats.length; i++) {
+                const group = groupChats[i];
+                group.school = schools.find(school => school._id == group.schoolId);
+                group.department = departments.find(department => department._id == group.departmentId);
+            }
         }
 
         return groupChats;

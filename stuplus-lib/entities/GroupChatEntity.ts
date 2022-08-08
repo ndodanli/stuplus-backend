@@ -24,6 +24,7 @@ export interface GroupChat extends BaseEntity {
   school?: School | null;
   department?: Department | null;
   unreadMessageCount: number;
+  memberCount: number;
 }
 
 export interface GroupChatDocument extends GroupChat, Document {
@@ -100,7 +101,8 @@ GroupChatSchema.methods.minify = async function (
     lastMessage: null, //ignore
     school: null,
     department: null,
-    unreadMessageCount: 0
+    unreadMessageCount: 0,
+    memberCount: 0,
   };
   return response;
 };

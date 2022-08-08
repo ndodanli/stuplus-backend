@@ -199,8 +199,8 @@ export default {
     return {
       token: getToken(),
       uploadFilePath:
-        'http://212.98.224.208:25050/general/uploadFile?uploadPath=school_images',
-      uploadFilePathDepartment: 'http://212.98.224.208:25050/general/uploadFile?uploadPath=department_images',
+        'https://api-panel.stuplus.app/general/uploadFile?uploadPath=school_images',
+      uploadFilePathDepartment: 'https://api-panel.stuplus.app/general/uploadFile?uploadPath=department_images',
       tableKey: 0,
       list: null,
       total: 0,

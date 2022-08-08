@@ -192,8 +192,18 @@ export class LeaveGroupDTO {
     }
 }
 
-export class GetGroupDataDTO extends BaseFilter {
+export class GetGroupChatDataDTO extends BaseFilter {
     groupChatId: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}
+
+export class GetPrivateChatDataDTO extends BaseFilter {
+    chatId: string = "";
     constructor(obj: any) {
         super(obj);
         if (obj) {

@@ -132,6 +132,9 @@ export class ReportDTO {
     commentText: string = "";
     announcementId: string = "";
     announcementText: string = "";
+    questionId: string = "";
+    questionText: string = "";
+    imageUrls: string[] = [];
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);
