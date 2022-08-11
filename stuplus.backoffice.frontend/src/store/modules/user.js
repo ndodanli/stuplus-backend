@@ -12,19 +12,19 @@ const state = {
 
 const mutations = {
   SET_TOKEN: (state, token) => {
-    state.token = token
+    state.token = token;
   },
   SET_INTRODUCTION: (state, introduction) => {
-    state.introduction = introduction
+    state.introduction = introduction;
   },
   SET_NAME: (state, name) => {
-    state.name = name
+    state.name = name;
   },
   SET_AVATAR: (state, avatar) => {
-    state.avatar = avatar
+    state.avatar = avatar;
   },
   SET_ROLES: (state, roles) => {
-    state.roles = roles
+    state.roles = roles;
   }
 }
 
@@ -42,32 +42,33 @@ const actions = {
       }).catch(error => {
         reject(error)
       })
-    })
+    });
   },
 
   // get user info
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
       getInfo(state.token).then(response => {
-        const { data } = response
+        const { data } = response;
 
         if (!data) {
-          reject('Verification failed, please Login again.')
+          reject('Verification failed, please Login again.');
         }
         console.log('data', data)
 
-        const { role, firstName, lastName, profilePhotoUrl } = data
         if (!firstName) { data.firstName = 'None' }
         if (!lastName) { data.lastName = 'None' }
-        if (!profilePhotoUrl) { data.profilePhotoUrl = 'https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200' }
-        commit('SET_ROLES', [role])
-        commit('SET_NAME', firstName ?? 'None' + ' ' + lastName?.charAt(0) + '.')
-        commit('SET_AVATAR', profilePhotoUrl)
-        commit('SET_INTRODUCTION', `${firstName} ${lastName} info`)
-        console.log('before resolve')
-        resolve(data)
+        if (!profilePhotoUrl) { data.profilePhotoUrl = process.env.VUE_APP_BASE_WEBSITE_URL + 'favicon' }
+        const { role, firstName, lastName, profilePhotoUrl } = data;
+        console.log("profilePhotoUrl", profilePhotoUrl);
+        commit('SET_ROLES', [role]);
+        commit('SET_NAME', firstName ?? 'None' + ' ' + lastName?.charAt(0) + '.');
+        commit('SET_AVATAR', profilePhotoUrl);
+        commit('SET_INTRODUCTION', `${firstName} ${lastName} info`);
+        console.log('before resolve');
+        resolve(data);
       }).catch(error => {
-        reject(error)
+        reject(error);
       })
     })
   },

@@ -199,8 +199,8 @@ export default {
     return {
       token: getToken(),
       uploadFilePath:
-        'https://api-panel.stuplus.app/general/uploadFile?uploadPath=school_images',
-      uploadFilePathDepartment: 'https://api-panel.stuplus.app/general/uploadFile?uploadPath=department_images',
+        'process.env.VUE_APP_BASE_API/general/uploadFile?uploadPath=school_images',
+      uploadFilePathDepartment: 'process.env.VUE_APP_BASE_API/general/uploadFile?uploadPath=department_images',
       tableKey: 0,
       list: null,
       total: 0,

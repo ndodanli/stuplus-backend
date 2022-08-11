@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://212.98.224.208:25010/",
+      "url": "https://api.stuplus.app/",
       "description": "Canli API"
     },
     {

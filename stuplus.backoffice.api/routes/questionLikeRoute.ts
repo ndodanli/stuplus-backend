@@ -12,7 +12,7 @@ import RedisService from "../../stuplus-lib/services/redisService";
 
 const router = Router();
 
-router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<QuestionLikeListDTO>, res: any) => {
+router.get("/list", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<QuestionLikeListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     let limit = parseInt(req.query.pageSize as string);
@@ -51,7 +51,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<QuestionL
   return Ok(res, response)
 });
 
-router.post("/addUpdateQuestionLike", authorize([Role.Admin]), async (req: CustomRequest<AddUpdateQuestionLikeDTO>, res: any) => {
+router.post("/addUpdateQuestionLike", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<AddUpdateQuestionLikeDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     const questionLike = new AddUpdateQuestionLikeDTO(req.body);
@@ -82,7 +82,7 @@ router.post("/addUpdateQuestionLike", authorize([Role.Admin]), async (req: Custo
   return Ok(res, response)
 });
 
-router.delete("/deleteQuestionLike", authorize([Role.Admin]), async (req: CustomRequest<QuestionLikeListDTO>, res: any) => {
+router.delete("/deleteQuestionLike", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<QuestionLikeListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     const questionLike = await QuestionLikeEntity.findOne({ _id: req.body._id });

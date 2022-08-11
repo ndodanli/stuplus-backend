@@ -41,7 +41,8 @@ export const RedisSubKeyType = {
    DailyCommentCount: "5:",
    DailyNewPMCount: "6:",
    DailyFollowCount: "7:",
-   GroupChatReadCounts: "8:",
+   GroupChatReadCounts: ":8",
+   PrivateChatUnreadCounts: ":9",
 
 }
 export const RedisKeyType = {
@@ -93,6 +94,7 @@ export const RedisKeyType = {
    AnnouncementSubCommentLikeCount: "45:",
    AllPrivateChats: "46:apc",
    AllGroupChatMemberCounts: "47:agcmc",
+   MutedUsers: "48:",
 }
 
 export const SocketRoomTypes = {

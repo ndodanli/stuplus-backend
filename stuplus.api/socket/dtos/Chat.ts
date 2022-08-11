@@ -1,4 +1,5 @@
 import { BaseFilter } from "../../../stuplus-lib/dtos/baseFilter";
+import { GroupChatSettings } from "../../../stuplus-lib/entities/GroupChatEntity";
 import { DeleteChatForType } from "../../../stuplus-lib/enums/enums";
 import { GroupChatType } from "../../../stuplus-lib/enums/enums_socket";
 import { mapToDTO } from "../../../stuplus-lib/utils/general";
@@ -22,6 +23,7 @@ export class UpdateGroupInfoDTO {
     type: GroupChatType = GroupChatType.Private;
     avatarKey: string = "";
     hashTags: string[] = [];
+    settings: GroupChatSettings = new GroupChatSettings(true);
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

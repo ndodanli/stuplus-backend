@@ -24,6 +24,7 @@ export function filterAsyncRoutes(routes, roles) {
 
   routes.forEach(route => {
     const tmp = { ...route }
+
     if (hasPermission(roles, tmp)) {
       if (tmp.children) {
         tmp.children = filterAsyncRoutes(tmp.children, roles)
@@ -51,7 +52,6 @@ const actions = {
   generateRoutes({ commit }, roles) {
     return new Promise(resolve => {
       let accessedRoutes
-      console.log('roles.includes(Role.Admin): ', roles.includes(Role.Admin))
       if (roles.includes(Role.Admin)) {
         accessedRoutes = asyncRoutes || []
       } else {

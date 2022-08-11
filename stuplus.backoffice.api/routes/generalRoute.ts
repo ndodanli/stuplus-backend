@@ -14,7 +14,7 @@ import { AnnouncementCommentEntity, AnnouncementEntity, DepartmentEntity, Facult
 
 const router = Router();
 
-router.post("/uploadFile", authorize([Role.Admin]), uploadFileS3.single("file", [], null, 5242880), async (req: CustomRequest<object>, res: any) => {
+router.post("/uploadFile", authorize([Role.Admin, Role.Moderator]), uploadFileS3.single("file", [], null, 5242880), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     if (req.fileValidationErrors?.length) {
@@ -36,7 +36,7 @@ router.post("/uploadFile", authorize([Role.Admin]), uploadFileS3.single("file", 
   return Ok(res, response);
 })
 
-router.get("/getAllSchools", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getAllSchools", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     response.data = await RedisService.acquireAllSchools();
@@ -51,7 +51,7 @@ router.get("/getAllSchools", authorize([Role.Admin]), async (req: CustomRequest<
   return Ok(res, response);
 });
 
-router.get("/getAllFaculties", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getAllFaculties", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     response.data = await FacultyEntity.find({}, {}, { lean: true })
@@ -66,7 +66,7 @@ router.get("/getAllFaculties", authorize([Role.Admin]), async (req: CustomReques
   return Ok(res, response);
 });
 
-router.get("/getAllDepartments", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getAllDepartments", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     response.data = await DepartmentEntity.find({}, {}, { lean: true })
@@ -81,7 +81,7 @@ router.get("/getAllDepartments", authorize([Role.Admin]), async (req: CustomRequ
   return Ok(res, response);
 });
 
-router.get("/getAllInterests", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getAllInterests", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     response.data = await InterestEntity.find({}, {}, { lean: true })
@@ -122,7 +122,7 @@ router.get("/getUsers", authorize([Role.Admin]), async (req: CustomRequest<objec
   return Ok(res, response);
 });
 
-router.get("/getAnnouncements", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getAnnouncements", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     let search = req.query.search as string;
@@ -148,7 +148,7 @@ router.get("/getAnnouncements", authorize([Role.Admin]), async (req: CustomReque
   return Ok(res, response);
 });
 
-router.get("/getQuestions", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getQuestions", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     let search = req.query.search as string;
@@ -174,7 +174,7 @@ router.get("/getQuestions", authorize([Role.Admin]), async (req: CustomRequest<o
   return Ok(res, response);
 });
 
-router.get("/getSchools", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getSchools", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     let search = req.query.search as string;
@@ -200,7 +200,7 @@ router.get("/getSchools", authorize([Role.Admin]), async (req: CustomRequest<obj
   return Ok(res, response);
 });
 
-router.get("/getFaculties", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getFaculties", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     let search = req.query.search as string;
@@ -226,7 +226,7 @@ router.get("/getFaculties", authorize([Role.Admin]), async (req: CustomRequest<o
   return Ok(res, response);
 });
 
-router.get("/getQuestionComments", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getQuestionComments", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
 
@@ -242,7 +242,7 @@ router.get("/getQuestionComments", authorize([Role.Admin]), async (req: CustomRe
   return Ok(res, response);
 });
 
-router.get("/getAnnouncementComments", authorize([Role.Admin]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getAnnouncementComments", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   const response = new BaseResponse<object>();
   try {
 

@@ -12,7 +12,7 @@ import RedisService from "../../stuplus-lib/services/redisService";
 
 const router = Router();
 
-router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<AnnouncementLikeListDTO>, res: any) => {
+router.get("/list", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<AnnouncementLikeListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     let limit = parseInt(req.query.pageSize as string);
@@ -51,7 +51,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<Announcem
   return Ok(res, response)
 });
 
-router.post("/addUpdateAnnouncementLike", authorize([Role.Admin]), async (req: CustomRequest<AddUpdateAnnouncementLikeDTO>, res: any) => {
+router.post("/addUpdateAnnouncementLike", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<AddUpdateAnnouncementLikeDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     const announcementLike = new AddUpdateAnnouncementLikeDTO(req.body);
@@ -82,7 +82,7 @@ router.post("/addUpdateAnnouncementLike", authorize([Role.Admin]), async (req: C
   return Ok(res, response)
 });
 
-router.delete("/deleteAnnouncementLike", authorize([Role.Admin]), async (req: CustomRequest<AnnouncementLikeListDTO>, res: any) => {
+router.delete("/deleteAnnouncementLike", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<AnnouncementLikeListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     const announcementLike = await AnnouncementLikeEntity.findOne({ _id: req.body._id });

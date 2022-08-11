@@ -2,7 +2,7 @@ const OneSignal = require("@onesignal/node-onesignal");
 import { isImage, isVideo, stringify } from "../utils/general";
 import { GroupMessageEntity, MessageEntity } from "../entities/BaseEntity";
 import logger from "../config/logger";
-import { RedisGMOperationType, RedisKeyType, RedisPMOperationType } from "../enums/enums_socket";
+import { RedisGMOperationType, RedisKeyType, RedisPMOperationType, RedisSubKeyType } from "../enums/enums_socket";
 import RedisService from "./redisService";
 import { groupChatName } from "../utils/namespaceCreators";
 import { io } from "../../stuplus.api/socket";
@@ -41,6 +41,8 @@ export default class MessageService {
                     chatData.e["files"] = files;
                     chatData.e["type"] = isImage(files[0].mimeType ?? "") ? MessageType.Image : isVideo(files[0].mimeType ?? "") ? MessageType.Video : MessageType.File;
                     emitData["files"] = files;
+                } else {
+                    chatData.e["type"] = MessageType.Text;
                 }
                 if (replyToId) {
                     chatData.e["replyToId"] = replyToId;
@@ -52,7 +54,8 @@ export default class MessageService {
                     username: fromUser.username
                 }
                 await RedisService.updateGroupChatLastMessage(chatData.e, chatData.e.groupChatId);
-                await RedisService.incrementGroupChatMessageCount(chatData.e.groupChatId);
+                const groupMessageCount = await RedisService.incrementGroupChatMessageCount(chatData.e.groupChatId);
+                await RedisService.client.hSet(RedisKeyType.User + chatData.e.ownerId + RedisSubKeyType.GroupChatReadCounts, chatData.e.groupChatId, groupMessageCount);
                 io.in(groupChatName(chatData.e.groupChatId)).emit("cGmSend", emitData);
                 resolve(chatData.e);
             } catch (error: any) {
@@ -83,13 +86,13 @@ export default class MessageService {
                 const chatData: any = {
                     e: {
                         _id: messageEntity.id,
-                        ownerId: ownerId,
+                        ownerId: ownerId.toString(),
                         text: text,
-                        chatId: chatId,
+                        chatId: chatId.toString(),
                         createdAt: now,
                         updatedAt: now,
                     },
-                    t: RedisGMOperationType.InsertMessage
+                    t: RedisPMOperationType.InsertMessage
                 }
                 const emitData: any = {
                     t: chatData.e.text, mi: messageEntity.id, ci: chatData.e.chatId, f: {
@@ -105,7 +108,10 @@ export default class MessageService {
                     chatData.e["files"] = files;
                     chatData.e["type"] = isImage(files[0].mimeType ?? "") ? MessageType.Image : isVideo(files[0].mimeType ?? "") ? MessageType.Video : MessageType.File;
                     emitData["files"] = files;
+                } else {
+                    chatData.e["type"] = MessageType.Text;
                 }
+
                 if (replyToId) {
                     chatData.e["replyToId"] = replyToId;
                 }
@@ -114,7 +120,8 @@ export default class MessageService {
                     _id: chatData.e.ownerId,
                     username: fromUser.username
                 }
-                await RedisService.updateGroupChatLastMessage(chatData.e, chatData.e.groupChatId);
+                await RedisService.updatePrivateChatLastMessage(chatData.e, chatId);
+                await RedisService.incrementUnreadPCCountForUser(toUserId, chatId);
                 io.in(toUserId).emit("cPmSend", emitData);
                 resolve(chatData.e);
             } catch (error: any) {

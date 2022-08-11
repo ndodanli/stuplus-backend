@@ -51,8 +51,10 @@ export interface User extends BaseEntity {
 
 export class UserStatistics {
   groupCount: Number;
+  muteCount: Number;
   constructor() {
     this.groupCount = 0;
+    this.muteCount = 0;
   }
 }
 
@@ -174,10 +176,11 @@ export const UserSchema: Schema = new Schema({
   statistics: {
     type: new Schema({
       groupCount: { type: Number, required: false, default: 0 },
+      muteCount: { type: Number, required: false, default: 0 },
     },
       { _id: false }),
     required: false,
-    default: { groupCount: 0 }
+    default: { groupCount: 0, muteCount: 0 }
   },
 
   lastSeenDate: { type: Date, required: false, default: null },

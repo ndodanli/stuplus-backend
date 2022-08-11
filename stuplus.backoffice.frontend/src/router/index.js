@@ -85,6 +85,27 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/profile',
+    component: Layout,
+    redirect: '/profile/index',
+    hidden: true,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/profile/index'),
+        name: 'Profile',
+        meta: { title: 'Profile', icon: 'user', noCache: true }
+      }
+    ]
+  }
+]
+
+/**
+ * asyncRoutes
+ * the routes that need to be dynamically loaded based on user roles
+ */
+export const asyncRoutes = [
+  {
     path: '/users',
     component: Layout,
     children: [
@@ -94,7 +115,10 @@ export const constantRoutes = [
         name: 'Users',
         meta: { title: 'Users', icon: 'el-icon-user', affix: true }
       }
-    ]
+    ],
+    meta: {
+      roles: [Role.Admin]
+    }
   },
   {
     path: '/schools',
@@ -106,7 +130,10 @@ export const constantRoutes = [
         name: 'Schools',
         meta: { title: 'Schools', icon: 'el-icon-school', affix: true }
       }
-    ]
+    ],
+    meta: {
+      roles: [Role.Admin]
+    }
   },
   {
     path: '/faculties',
@@ -118,7 +145,10 @@ export const constantRoutes = [
         name: 'Faculties',
         meta: { title: 'Faculties', icon: 'el-icon-school', affix: true }
       }
-    ]
+    ],
+    meta: {
+      roles: [Role.Admin]
+    }
   },
   {
     path: '/departments',
@@ -130,7 +160,10 @@ export const constantRoutes = [
         name: 'Departments',
         meta: { title: 'Departments', icon: 'el-icon-school', affix: true }
       }
-    ]
+    ],
+    meta: {
+      roles: [Role.Admin]
+    }
   },
   {
     path: '/interests',
@@ -142,7 +175,10 @@ export const constantRoutes = [
         name: 'Interests',
         meta: { title: 'Interest', icon: 'el-icon-football', affix: true }
       }
-    ]
+    ],
+    meta: {
+      roles: [Role.Admin]
+    }
   },
   {
     path: '/announcements',
@@ -240,79 +276,6 @@ export const constantRoutes = [
       }
     ]
   },
-
-  {
-    path: '/profile',
-    component: Layout,
-    redirect: '/profile/index',
-    hidden: true,
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/profile/index'),
-        name: 'Profile',
-        meta: { title: 'Profile', icon: 'user', noCache: true }
-      }
-    ]
-  }
-]
-
-/**
- * asyncRoutes
- * the routes that need to be dynamically loaded based on user roles
- */
-export const asyncRoutes = [
-  // {
-  //   path: '/icon',
-  //   component: Layout,
-  //   children: [
-  //     {
-  //       path: 'index',
-  //       component: () => import('@/views/icons/index'),
-  //       name: 'Icons',
-  //       meta: { title: 'Icons', icon: 'icon', noCache: true }
-  //     }
-  //   ]
-  // },
-
-  /** when your routing map is too long, you can split it into small modules **/
-  // componentsRouter,
-  // chartsRouter,
-  // nestedRouter,
-  // tableRouter,
-
-  // {
-  //   path: '/example',
-  //   component: Layout,
-  //   redirect: '/example/list',
-  //   name: 'Example',
-  //   meta: {
-  //     title: 'Example',
-  //     icon: 'el-icon-s-help'
-  //   },
-  //   children: [
-  //     {
-  //       path: 'create',
-  //       component: () => import('@/views/example/create'),
-  //       name: 'CreateArticle',
-  //       meta: { title: 'Create Article', icon: 'edit' }
-  //     },
-  //     {
-  //       path: 'edit/:id(\\d+)',
-  //       component: () => import('@/views/example/edit'),
-  //       name: 'EditArticle',
-  //       meta: { title: 'Edit Article', noCache: true, activeMenu: '/example/list' },
-  //       hidden: true
-  //     },
-  //     {
-  //       path: 'list',
-  //       component: () => import('@/views/example/list'),
-  //       name: 'ArticleList',
-  //       meta: { title: 'Article List', icon: 'list' }
-  //     }
-  //   ]
-  // },
-
   // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }
 ]

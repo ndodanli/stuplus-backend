@@ -285,7 +285,7 @@ export default {
       },
       token: getToken(),
       uploadFilePath:
-        'https://api-panel.stuplus.app/general/uploadFile?uploadPath=profile_images',
+        'process.env.VUE_APP_BASE_API/general/uploadFile?uploadPath=profile_images',
       tableKey: 0,
       list: null,
       total: 0,
@@ -372,6 +372,7 @@ export default {
         { key: "User", value: 1 },
         { key: "ContentCreator", value: 2 },
         { key: "GroupGuard", value: 3 },
+        { key: "Moderator", value: 4 },
       ],
       genders: [
         { key: "NotSpecified", value: 0 },

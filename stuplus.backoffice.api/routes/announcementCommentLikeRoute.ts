@@ -11,7 +11,7 @@ import { SortOrder } from "mongoose";
 
 const router = Router();
 
-router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<AnnouncementCommentLikeListDTO>, res: any) => {
+router.get("/list", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<AnnouncementCommentLikeListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     let limit = parseInt(req.query.pageSize as string);
@@ -52,7 +52,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<Announcem
   return Ok(res, response)
 });
 
-router.post("/addUpdateAnnouncementCommentLike", authorize([Role.Admin]), async (req: CustomRequest<AddUpdateAnnouncementCommentLikeDTO>, res: any) => {
+router.post("/addUpdateAnnouncementCommentLike", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<AddUpdateAnnouncementCommentLikeDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     const announcementCommentLike = new AddUpdateAnnouncementCommentLikeDTO(req.body);
@@ -83,7 +83,7 @@ router.post("/addUpdateAnnouncementCommentLike", authorize([Role.Admin]), async 
   return Ok(res, response)
 });
 
-router.delete("/deleteAnnouncementCommentLike", authorize([Role.Admin]), async (req: CustomRequest<AnnouncementCommentLikeListDTO>, res: any) => {
+router.delete("/deleteAnnouncementCommentLike", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<AnnouncementCommentLikeListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     const announcementCommentLike = await AnnouncementCommentLikeEntity.findOne({ _id: req.body._id });

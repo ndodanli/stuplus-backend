@@ -19,12 +19,21 @@ export interface GroupChat extends BaseEntity {
   grade: number;
   secondaryEducation: boolean;
   popularity: number;
+  settings: GroupChatSettings;
   //ignore
   lastMessage?: any | null; //ignore
   school?: School | null;
   department?: Department | null;
   unreadMessageCount: number;
   memberCount: number;
+}
+
+export class GroupChatSettings {
+  checkBadWords: boolean;
+  
+  constructor(checkBadWords: boolean) {
+    this.checkBadWords = checkBadWords;
+  }
 }
 
 export interface GroupChatDocument extends GroupChat, Document {
@@ -45,6 +54,11 @@ export const GroupChatSchema: Schema = new Schema({
   grade: { type: Number, required: false, default: null },
   secondaryEducation: { type: Boolean, required: false, default: null },
   popularity: { type: Number, required: false, default: 0 },
+  settings: {
+    type: new Schema({
+      checkBadWords: { type: Boolean, required: false, default: true },
+    }, { _id: false }), required: false, default: { checkBadWords: true }
+  },
 });
 
 GroupChatSchema.index({ recordStatus: -1, popularity: -1 });
@@ -97,6 +111,7 @@ GroupChatSchema.methods.minify = async function (
     grade: this.grade,
     secondaryEducation: this.secondaryEducation,
     popularity: this.popularity,
+    settings: this.settings,
     //ignore
     lastMessage: null, //ignore
     school: null,

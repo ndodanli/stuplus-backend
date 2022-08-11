@@ -8,11 +8,10 @@ import { AddUpdateAnnouncementDTO, AnnouncementListDTO } from "../dtos/announcem
 import { authorize } from "../middlewares/auth";
 import { RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { SortOrder } from "mongoose";
-import RedisService from "../../stuplus-lib/services/redisService";
 
 const router = Router();
 
-router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<AnnouncementListDTO>, res: any) => {
+router.get("/list", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<AnnouncementListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     let limit = parseInt(req.query.pageSize as string);
@@ -51,7 +50,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<Announcem
   return Ok(res, response)
 });
 
-router.post("/addUpdateAnnouncement", authorize([Role.Admin]), async (req: CustomRequest<AddUpdateAnnouncementDTO>, res: any) => {
+router.post("/addUpdateAnnouncement", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<AddUpdateAnnouncementDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     const Announcement = new AddUpdateAnnouncementDTO(req.body);
@@ -85,7 +84,7 @@ router.post("/addUpdateAnnouncement", authorize([Role.Admin]), async (req: Custo
   return Ok(res, response)
 });
 
-router.delete("/deleteAnnouncement", authorize([Role.Admin]), async (req: CustomRequest<AnnouncementListDTO>, res: any) => {
+router.delete("/deleteAnnouncement", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<AnnouncementListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     const announcement = await AnnouncementEntity.findOne({ _id: req.body._id });

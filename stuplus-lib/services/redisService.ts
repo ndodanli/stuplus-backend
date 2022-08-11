@@ -12,6 +12,8 @@ import userLimits from '../constants/userLimits';
 import { GroupChat } from '../entities/GroupChatEntity';
 import { chunk, generateRandomNumber } from '../utils/general';
 import { Chat } from '../entities/ChatEntity';
+import { relativeTimeRounding } from 'moment';
+import { NumberAttributeValue } from 'aws-sdk/clients/dynamodb';
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 // const url = process.env.REDIS_URL
@@ -144,7 +146,7 @@ export default class RedisService {
             if (!["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
                 "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
                 "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings",
-                "blockedUserIds"].includes(key))
+                "blockedUserIds", "settings"].includes(key))
                 delete user[key];
         }
         const ops: any = [this.client.hSet(RedisKeyType.User + userId, user)]
@@ -439,10 +441,14 @@ export default class RedisService {
         }))
     }
 
+    static async incrementUnreadPCCountForUser(userId: string, chatId: string, count = 1): Promise<void> {
+        await RedisService.client.hIncrBy(RedisKeyType.User + userId + RedisSubKeyType.PrivateChatUnreadCounts, chatId, count);
+    }
+
     static async addGroupChat(groupChat: GroupChat): Promise<void> {
         const groupChatId = groupChat._id.toString();
-        this.client.hSet(RedisKeyType.AllGroupChats, groupChatId, JSON.stringify(
-            { _id: groupChatId, title: groupChat.title, coverImageUrl: groupChat.coverImageUrl }
+        await this.client.hSet(RedisKeyType.AllGroupChats, groupChatId, JSON.stringify(
+            { _id: groupChatId, title: groupChat.title, coverImageUrl: groupChat.coverImageUrl, settings: groupChat.settings }
         ));
     }
 
@@ -458,8 +464,8 @@ export default class RedisService {
         }))
     }
 
-    static async incrementGroupChatMessageCount(groupChatId: string): Promise<void> {
-        await this.client.hIncrBy(RedisKeyType.AllGroupChats, groupChatId + ":mc", 1);
+    static async incrementGroupChatMessageCount(groupChatId: string): Promise<number> {
+        return await this.client.hIncrBy(RedisKeyType.AllGroupChats, groupChatId + ":mc", 1);
     }
 
     static async incrementGroupMemberCount(groupChatId: string, count: number = 1): Promise<void> {
@@ -568,6 +574,40 @@ export default class RedisService {
         }
         return counts;
     }
+
+    static async acquireGroupChat(groupChatId: string): Promise<GroupChat | undefined> {
+        const groupChatRedis: any = await this.client.hGet(RedisKeyType.AllGroupChats, groupChatId);
+        if (groupChatRedis) {
+            return JSON.parse(groupChatRedis);
+        } else {
+            const groupChatDb = await GroupChatEntity.findOne({ _id: groupChatId }, { _id: 1, title: 1, coverImageUrl: 1, settings: 1 });
+            if (groupChatDb) {
+                await this.client.hSet(RedisKeyType.AllGroupChats, groupChatId, JSON.stringify(groupChatDb));
+                return groupChatDb;
+            }
+        }
+    }
+
+    static async isUserMuted(userId: string): Promise<Date | null> {
+        const date: number | null = await RedisService.client.zScore(RedisKeyType.MutedUsers, userId);
+        const nowTimestamp = Date.now();
+        if (date) {
+            if (date > nowTimestamp) {
+                return new Date(date);
+            } else {
+                await RedisService.client.zRem(RedisKeyType.MutedUsers, userId);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    static async muteUser(userId: string, durationInMinutes: number): Promise<void> {
+        let now = new Date();
+        now.setMinutes(now.getMinutes() + durationInMinutes);
+        await RedisService.client.zAdd(RedisKeyType.MutedUsers, { score: now.getTime(), value: userId });
+    }
+
 }
 
 export {

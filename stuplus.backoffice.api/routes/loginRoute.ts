@@ -17,7 +17,12 @@ const router = Router();
 router.post("/", validateLogin, async (req: CustomRequest<LoginUserDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
-    const user = await UserEntity.findOne({ role: Role.Admin, $or: [{ email: req.body.email }, { username: req.body.email }] });
+    const user = await UserEntity.findOne({
+      $and: [
+        { $or: [{ email: req.body.email }, { username: req.body.email }] },
+        { $or: [{ role: Role.Admin }, { role: Role.Moderator }] }
+      ]
+    });
 
     if (!user || !(await bcrypt.compare(req.body.password, user.password)))
       throw new NotValidError(getMessage("userNotFoundWithEnteredInfo", ["tr"]));

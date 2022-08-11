@@ -34,7 +34,8 @@ export default class RedisDatabaseJob implements IBaseCronJob {
         try {
             console.time("scan")
             do {
-                const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { MATCH: "d*", COUNT: 200 });
+                // const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { MATCH: "d*", COUNT: 200 });
+                const { keys, cursor } = await RedisService.client.scan(RedisDatabaseJob.currentCursor, { COUNT: 200 });
                 RedisDatabaseJob.currentCursor = cursor;
                 if (keys.length > 0) {
                     currentKeySize += keys.length;
@@ -218,7 +219,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
             return new Promise(async (resolve, reject) => {
                 try {
                     const data = await RedisService.client.hVals(currentKey);
-                    const keysToDelete = new Array<string>();
+                    const keysToDelete: {
+                        privateMessageBatches: string[][], readedBatches: string[][], forwardedBatches: string[][], updateSendFileBatches: string[][]
+                    } = { privateMessageBatches: [], readedBatches: [], forwardedBatches: [], updateSendFileBatches: [] };
                     const privateMessageBatches: Array<Array<object>> = [];
                     const readedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
                     const forwardedBatches: Array<Array<RedisMessageReceiptUpdateDTO>> = [];
@@ -231,24 +234,28 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         readedBatches[iterator] = new Array<RedisMessageReceiptUpdateDTO>();
                         forwardedBatches[iterator] = new Array<RedisMessageReceiptUpdateDTO>();
                         updateSendFileBatches[iterator] = new Array<RedisFileMessageUpdateDTO>();
+                        keysToDelete.privateMessageBatches[iterator] = new Array<string>();
+                        keysToDelete.readedBatches[iterator] = new Array<string>();
+                        keysToDelete.forwardedBatches[iterator] = new Array<string>();
+                        keysToDelete.updateSendFileBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             switch (query.t) {
                                 case RedisPMOperationType.InsertMessage:
                                     privateMessageBatches[iterator].push(query.e);
-                                    keysToDelete.push(query.e._id + query.t);
+                                    keysToDelete.privateMessageBatches[iterator].push(query.e._id + query.t);
                                     break;
                                 case RedisPMOperationType.UpdateReaded:
                                     readedBatches[iterator].push(query.e);
-                                    keysToDelete.push(query.e.ownerId + query.t);
+                                    keysToDelete.readedBatches[iterator].push(query.e.ownerId + query.t);
                                     break;
                                 case RedisPMOperationType.UpdateForwarded:
                                     forwardedBatches[iterator].push(query.e);
-                                    keysToDelete.push(query.e.ownerId + query.t);
+                                    keysToDelete.forwardedBatches[iterator].push(query.e.ownerId + query.t);
                                     break;
                                 case RedisPMOperationType.UpdateSendFileMessage:
                                     updateSendFileBatches[iterator].push(query.e);
-                                    keysToDelete.push(query.e._id + query.t);
+                                    keysToDelete.updateSendFileBatches[iterator].push(query.e.mi + query.t);
                                     break;
                                 default:
                                     break;
@@ -261,6 +268,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                             if (privateMessageBatches[i].length > 0) {
                                 // console.time("PM insertMessage Bulk operation time. order: " + i);
                                 await MessageEntity.insertMany(privateMessageBatches[i]);
+                                await RedisService.client.hDel(currentKey, keysToDelete.privateMessageBatches[i]);
                                 // console.timeEnd("PM insertMessage Bulk operation time. order: " + i);
                             }
                         }
@@ -271,6 +279,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                             for (let j = 0; j < forwardedBatches[i].length; j++) {
                                 // console.time("PM updateForwarded Bulk operation time. order: " + i);
                                 await MessageEntity.updateMany({ chatId: forwardedBatches[i][j].chatId, ownerId: { $ne: forwardedBatches[i][j].ownerId }, forwarded: false, createdAt: { $lte: forwardedBatches[i][j].createdAt } }, { forwarded: true });
+                                await RedisService.client.hDel(currentKey, keysToDelete.forwardedBatches[i]);
                                 // console.timeEnd("PM updateForwarded Bulk operation time. order: " + i);
                             }
                         }
@@ -281,6 +290,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                             for (let j = 0; j < readedBatches[i].length; j++) {
                                 // console.time("PM updateReaded Bulk operation time. order: " + i);
                                 await MessageEntity.updateMany({ chatId: readedBatches[i][j].chatId, ownerId: { $ne: readedBatches[i][j].ownerId }, readed: false, createdAt: { $lte: readedBatches[i][j].createdAt } }, { readed: true });
+                                await RedisService.client.hDel(currentKey, keysToDelete.readedBatches[i]);
                                 // console.timeEnd("PM updateReaded Bulk operation time. order: " + i);
                             }
                         }
@@ -306,12 +316,11 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                     }
                                 });
                                 await MessageEntity.bulkWrite(bulkForwardUpdateOp);
+                                await RedisService.client.hDel(currentKey, keysToDelete.updateSendFileBatches[i]);
                                 // console.timeEnd("PM updateSendFile Bulk operation time. order: " + i);
-
                             }
                         }
                     }
-                    await RedisService.client.hDel(currentKey, keysToDelete);
 
                     resolve(true);
 
@@ -326,7 +335,9 @@ export default class RedisDatabaseJob implements IBaseCronJob {
             return new Promise(async (resolve, reject) => {
                 try {
                     const data = await RedisService.client.hVals(currentKey);
-                    const keysToDelete = new Array<string>();
+                    const keysToDelete: {
+                        groupMessageBatches: string[][], readedBatches: string[][], forwardedBatches: string[][], updateSendFileBatches: string[][]
+                    } = { groupMessageBatches: [], readedBatches: [], forwardedBatches: [], updateSendFileBatches: [] };
                     const groupMessageBatches: Array<Array<object>> = [];
                     const readedBatches: Array<Array<any>> = [];
                     const forwardedBatches: Array<Array<any>> = [];
@@ -339,24 +350,28 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                         readedBatches[iterator] = new Array<any>();
                         forwardedBatches[iterator] = new Array<any>();
                         updateSendFileBatches[iterator] = new Array<RedisFileMessageUpdateDTO>();
+                        keysToDelete.groupMessageBatches[iterator] = new Array<string>();
+                        keysToDelete.readedBatches[iterator] = new Array<string>();
+                        keysToDelete.forwardedBatches[iterator] = new Array<string>();
+                        keysToDelete.updateSendFileBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             switch (query.t) {
                                 case RedisGMOperationType.InsertMessage:
                                     groupMessageBatches[iterator].push(query.e);
-                                    keysToDelete.push(query.e._id + query.t);
+                                    keysToDelete.groupMessageBatches[iterator].push(query.e._id + query.t);
                                     break;
                                 case RedisGMOperationType.UpdateReaded:
                                     readedBatches[iterator].push(query.e);
-                                    keysToDelete.push(query.e.readedBy + query.t);
+                                    keysToDelete.readedBatches[iterator].push(query.e.readedBy + query.t);
                                     break;
                                 case RedisGMOperationType.UpdateForwarded:
                                     forwardedBatches[iterator].push(query.e);
-                                    keysToDelete.push(query.e.forwardedTo + query.t);
+                                    keysToDelete.forwardedBatches[iterator].push(query.e.forwardedTo + query.t);
                                     break;
                                 case RedisGMOperationType.UpdateSendFileMessage:
                                     updateSendFileBatches[iterator].push(query.e);
-                                    keysToDelete.push(query.e._id + query.t);
+                                    keysToDelete.updateSendFileBatches[iterator].push(query.e.mi + query.t);
                                     break;
                                 default:
                                     break;
@@ -369,6 +384,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                             if (groupMessageBatches[i].length > 0) {
                                 // console.time("GM insertMessage Bulk operation time. order: " + i);
                                 await GroupMessageEntity.insertMany(groupMessageBatches[i]);
+                                await RedisService.client.hDel(currentKey, keysToDelete.groupMessageBatches[i]);
                                 // console.timeEnd("GM insertMessage Bulk operation time. order: " + i);
                             }
                         }
@@ -393,6 +409,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                     }
                                 });
                                 await GroupMessageForwardEntity.bulkWrite(bulkForwardedOp);
+                                await RedisService.client.hDel(currentKey, keysToDelete.forwardedBatches[i]);
                                 // console.timeEnd("GM insertForwarded Bulk operation time. order: " + i);
                             }
                         }
@@ -417,6 +434,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                     }
                                 });
                                 await GroupMessageReadEntity.bulkWrite(bulkReadedOp);
+                                await RedisService.client.hDel(currentKey, keysToDelete.readedBatches[i]);
                                 // console.timeEnd("GM insertReaded Bulk operation time. order: " + i);
                             }
                         }
@@ -442,11 +460,11 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                     }
                                 });
                                 await GroupMessageEntity.bulkWrite(bulkUpdateSendFileOp);
+                                await RedisService.client.hDel(currentKey, keysToDelete.updateSendFileBatches[i]);
                                 // console.timeEnd("GM updateSendFile Bulk operation time. order: " + i);
                             }
                         }
                     }
-                    await RedisService.client.hDel(currentKey, keysToDelete);
                     resolve(true);
                 } catch (err: any) {
                     logger.error({ err: err }, `handleGroupMessageOperations failed. {Data}`, stringify({ CurrentKey: currentKey, ErorMessage: err.message }));

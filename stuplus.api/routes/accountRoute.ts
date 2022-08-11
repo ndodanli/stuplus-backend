@@ -48,8 +48,11 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
     //   const element = messages[i];
     //   element.type = types[Math.floor(Math.random() * types.length)];
     //   await element.save();
-
     // }
+    console.time("time")
+    // const a = await RedisService.client.zRemRangeByScore("myzset", "-inf", Date.now().toString());
+
+    console.timeEnd("time")
     response.data = await RedisService.acquireUser(res.locals.user._id, ["_id", "firstName", "lastName", "email", "phoneNumber", "profilePhotoUrl",
       "role", "grade", "schoolId", "facultyId", "departmentId", "isAccEmailConfirmed",
       "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings"]);

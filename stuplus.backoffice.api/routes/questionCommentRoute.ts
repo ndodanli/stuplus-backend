@@ -11,7 +11,7 @@ import { SortOrder } from "mongoose";
 
 const router = Router();
 
-router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<QuestionCommentListDTO>, res: any) => {
+router.get("/list", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<QuestionCommentListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     let limit = parseInt(req.query.pageSize as string);
@@ -50,7 +50,7 @@ router.get("/list", authorize([Role.Admin]), async (req: CustomRequest<QuestionC
   return Ok(res, response)
 });
 
-router.post("/addUpdateQuestionComment", authorize([Role.Admin]), async (req: CustomRequest<AddUpdateQuestionCommentDTO>, res: any) => {
+router.post("/addUpdateQuestionComment", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<AddUpdateQuestionCommentDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     const questionComment = new AddUpdateQuestionCommentDTO(req.body);
@@ -79,7 +79,7 @@ router.post("/addUpdateQuestionComment", authorize([Role.Admin]), async (req: Cu
   return Ok(res, response)
 });
 
-router.delete("/deleteQuestionComment", authorize([Role.Admin]), async (req: CustomRequest<QuestionCommentListDTO>, res: any) => {
+router.delete("/deleteQuestionComment", authorize([Role.Admin, Role.Moderator]), async (req: CustomRequest<QuestionCommentListDTO>, res: any) => {
   const response = new BaseResponse<object>();
   try {
     const questionComment = await QuestionCommentEntity.findOne({ _id: req.body._id });

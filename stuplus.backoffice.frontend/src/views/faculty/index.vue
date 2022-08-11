@@ -159,7 +159,7 @@ export default {
     return {
       token: getToken(),
       uploadFilePath:
-        'https://api-panel.stuplus.app/general/uploadFile?uploadPath=faculty_images',
+        'process.env.VUE_APP_BASE_API/general/uploadFile?uploadPath=faculty_images',
       tableKey: 0,
       list: null,
       total: 0,

@@ -12,7 +12,7 @@ import { AddToGroupChatDTO, ClearPMChatHistoryDTO, CreateGroupDTO, DeleteSingleG
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { groupChatName, userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 import RedisService from "../../stuplus-lib/services/redisService";
-import { searchable, stringify, searchableWithSpaces, chunk, sortByCreatedAtDesc, isValidUrl } from "../../stuplus-lib/utils/general";
+import { searchable, stringify, searchableWithSpaces, chunk, sortByCreatedAtDesc, isValidUrl, isIncludingBadWord } from "../../stuplus-lib/utils/general";
 import { MessageDocument, MessageFiles, ReplyToDTO } from "../../stuplus-lib/entities/MessageEntity";
 import { DeleteChatForType, GroupChatUserRole, MessageLimitation, MessageType, RecordStatus, RedisMessagesNotFoundType } from "../../stuplus-lib/enums/enums";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
@@ -31,6 +31,8 @@ import OneSignalService from "../../stuplus-lib/services/oneSignalService";
 import { User } from "../../stuplus-lib/entities/UserEntity";
 import MessageService from "../../stuplus-lib/services/messageService";
 import userLimits from "../../stuplus-lib/constants/userLimits";
+import moment from "moment-timezone";
+
 const router = Router();
 
 const io = require("socket.io")(3000, {
@@ -113,7 +115,7 @@ io.on("connection", async (socket: ISocket) => {
                 return;
             }
 
-            if (data.t.length > 1200)
+            if (data.t.length > 5000)
                 cb({ success: false, message: getMessage("messageTooLong", ["tr"]) });
 
             const toUser = await RedisService.acquireUser(data.to, [
@@ -185,6 +187,8 @@ io.on("connection", async (socket: ISocket) => {
                 username: socket.data.user.username,
             }
             await RedisService.updatePrivateChatLastMessage(chatData.e, chatData.e.chatId);
+            if (data.ci)
+                await RedisService.incrementUnreadPCCountForUser(data.to, data.ci);
             const emitData = { t: data.t, mi: messageEntity.id, ci: data.ci, f: null };
 
             if (!data.ci)
@@ -202,6 +206,7 @@ io.on("connection", async (socket: ISocket) => {
             }
 
             cb(responseData);
+
         } catch (error: any) {
             cb({ success: false, message: error?.message });
         }
@@ -251,6 +256,8 @@ io.on("connection", async (socket: ISocket) => {
 
             await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + data.ci, socket.data.user._id + RedisPMOperationType.UpdateReaded, stringify(chatData));
 
+            await RedisService.client.hDel(RedisKeyType.User + socket.data.user._id + RedisSubKeyType.PrivateChatUnreadCounts, data.ci);
+
             io.to(data.to).emit("cPmReaded", { ci: data.ci });
 
             cb({ success: true });
@@ -267,13 +274,21 @@ io.on("connection", async (socket: ISocket) => {
                 return;
             }
 
-            if (data.t.length > 1200)
+            if (data.t.length > 5000)
                 cb({ success: false, message: getMessage("messageTooLong", ["tr"]) });
 
             if (!await RedisService.isUserInGroupChat(socket.data.user._id, data.gCi)) {
                 cb({ success: false, message: getMessage("youAreNotInGroup", ["tr"]) });
                 return;
             }
+
+            const mutedDate = await RedisService.isUserMuted(socket.data.user._id);
+            if (mutedDate) {
+                const message = `${moment(mutedDate).tz("Europe/Istanbul").format("YYYY-MM-DD HH:mm:ss")}`
+                cb({ success: false, message: getMessage("userMuted", ["tr"], [message]) });
+                return;
+            }
+
             const now = new Date();
             const gMessageEntity = new GroupMessageEntity({});
             const chatData: { e: any, t: number } = {
@@ -296,24 +311,43 @@ io.on("connection", async (socket: ISocket) => {
                 username: socket.data.user.username,
             }
             await RedisService.updateGroupChatLastMessage(chatData.e, chatData.e.groupChatId);
-            await RedisService.incrementGroupChatMessageCount(chatData.e.groupChatId);
+            const groupMessageCount = await RedisService.incrementGroupChatMessageCount(chatData.e.groupChatId);
+            await RedisService.client.hSet(RedisKeyType.User + socket.data.user._id + RedisSubKeyType.GroupChatReadCounts, data.gCi, groupMessageCount);
+
             const gcName = groupChatName(data.gCi);
             socket.to(gcName).emit("cGmSend", { t: data.t, mi: gMessageEntity.id, gCi: data.gCi, f: socket.data.user });
             cb({ success: true, mi: gMessageEntity.id });
 
-            // const online
-            const clients = io.sockets.adapter.rooms.get('chatId');
-            for (const clientId of clients) {
 
-                //this is the socket of each client in the room.
-                const clientSocket = io.sockets.sockets.get(clientId);
-                clientSocket.connected
-                //you can do whatever you need with this
-
-            }
-
+            //#region After callback
             //TODO: send notification to offline users
+            // const clients = io.sockets.adapter.rooms.get('chatId');
+            // for (const clientId of clients) {
 
+            //     //this is the socket of each client in the room.
+            //     const clientSocket = io.sockets.sockets.get(clientId);
+            //     clientSocket.connected
+            //     //you can do whatever you need with this
+
+            // }
+            const groupChat = await RedisService.acquireGroupChat(data.gCi);
+            if (groupChat) {
+                if (groupChat.settings?.checkBadWords) {
+                    const isMutable: boolean = isIncludingBadWord(data.t);
+                    if (isMutable) {
+                        await RedisService.muteUser(socket.data.user._id, 10);
+                        const groupGuard = await RedisService.acquireGroupGuard();
+                        await MessageService.sendGroupMessage({
+                            groupChatId: data.gCi,
+                            ownerId: groupGuard._id,
+                            fromUser: groupGuard,
+                            text: `${socket.data.user.username} kullanıcısını 10 dakika susturdum, yaptığını düşünsün biraz.`
+                        })
+                        await UserEntity.findOneAndUpdate({ _id: socket.data.user._id }, { $inc: { "statistics.muteCount": 1 } });
+                    }
+                }
+            }
+            //#endregion
         } catch (error: any) {
             cb({ success: false, message: error?.message });
         }
@@ -359,7 +393,8 @@ io.on("connection", async (socket: ISocket) => {
                     lastReadedAt: now,
                 },
                 t: RedisGMOperationType.UpdateReaded
-            }
+            };
+
             await RedisService.client.hSet(RedisKeyType.DBGroupMessage + data.gCi, socket.data.user._id + RedisGMOperationType.UpdateReaded, stringify(chatData));
 
             const groupMessageCount = await RedisService.client.hGet(RedisKeyType.AllGroupChats, data.gCi + ":mc").then(res => parseInt(res ?? "0"));
@@ -793,13 +828,15 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
         for (let i = 0; i < userPrivateChatIds.length; i++) {
             getPMChatOps.push(RedisService.client.hGet(RedisKeyType.AllPrivateChats, userPrivateChatIds[i]));
             getPMChatOps.push(RedisService.client.hGet(RedisKeyType.AllPrivateChats, userPrivateChatIds[i] + ":lm"));
+            getPMChatOps.push(RedisService.client.hGet(RedisKeyType.User + res.locals.user._id + RedisSubKeyType.PrivateChatUnreadCounts, userPrivateChatIds[i]));
         }
         const redisPrivateChats = await Promise.all(getPMChatOps);
         const userPrivateChats: Chat[] = [];
         const missingPrivateChatIds = [];
         const missingPrivateChatLMIds = [];
+        const userUnreadCounts: Map<string, number | undefined> = new Map<string, number | undefined>();
         let indexCounter = 0;
-        for (let i = 0; i < redisPrivateChats.length; i += 2) {
+        for (let i = 0; i < redisPrivateChats.length; i += 3) {
             let privateChat: any = null;
             if (!redisPrivateChats[i]) {
                 missingPrivateChatIds.push(userPrivateChatIds[indexCounter]);
@@ -814,6 +851,8 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
                 }
                 userPrivateChats.push(privateChat);
             }
+            if (redisPrivateChats[i + 2])
+                userUnreadCounts.set(userPrivateChatIds[indexCounter], parseInt(redisPrivateChats[i + 2] ?? "NaN"));
             indexCounter++;
         }
         if (missingPrivateChatIds.length > 0) {
@@ -882,31 +921,37 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator]
         for (let i = 0; i < userPrivateChats.length; i++) {
             const userPMChat = userPrivateChats[i];
             userPMChat.unreadMessageCount = 0;
-            const redisPMAll = await RedisService.client.hVals(RedisKeyType.DBPrivateMessage + userPMChat._id.toString());
-            for (let i = 0; i < redisPMAll.length; i++) {
-                const chatData = JSON.parse(redisPMAll[i]);
-                if (chatData.t == RedisPMOperationType.UpdateReaded && chatData.e.ownerId == res.locals.user._id)
-                    redisPMReadLastReadedAt = chatData.e?.createdAt;
-                else if (chatData.t == RedisPMOperationType.InsertMessage)
-                    redisPMs.push(chatData.e);
+            const userUnreadCount = userUnreadCounts.get(userPMChat._id.toString());
+            if (userUnreadCount == undefined || userUnreadCount == null || userUnreadCount == NaN) {
+                const redisPMAll = await RedisService.client.hVals(RedisKeyType.DBPrivateMessage + userPMChat._id.toString());
+                for (let i = 0; i < redisPMAll.length; i++) {
+                    const chatData = JSON.parse(redisPMAll[i]);
+                    if (chatData.t == RedisPMOperationType.UpdateReaded && chatData.e.ownerId == res.locals.user._id)
+                        redisPMReadLastReadedAt = chatData.e?.createdAt;
+                    else if (chatData.t == RedisPMOperationType.InsertMessage)
+                        redisPMs.push(chatData.e);
 
-            }
-            if (redisPMReadLastReadedAt) {
-                for (let i = 0; i < redisPMs.length; i++) {
-                    if (new Date(redisPMReadLastReadedAt) <= new Date(redisPMs[i].createdAt) && redisPMs[i].ownerId != res.locals.user._id)
-                        userPMChat.unreadMessageCount++
                 }
-                userPMChat.unreadMessageCount += await MessageEntity.find({
-                    chatId: userPMChat._id,
-                    createdAt: { $gt: redisPMReadLastReadedAt }
-                }).limit(100).count();
+                if (redisPMReadLastReadedAt) {
+                    for (let i = 0; i < redisPMs.length; i++) {
+                        if (new Date(redisPMReadLastReadedAt) <= new Date(redisPMs[i].createdAt) && redisPMs[i].ownerId != res.locals.user._id)
+                            userPMChat.unreadMessageCount++
+                    }
+                    userPMChat.unreadMessageCount += await MessageEntity.find({
+                        chatId: userPMChat._id,
+                        createdAt: { $gt: redisPMReadLastReadedAt }
+                    }).limit(100).count();
+                } else {
+                    userPMChat.unreadMessageCount += redisPMs.filter((x: { ownerId: string; }) => x.ownerId != res.locals.user._id).length;
+                    userPMChat.unreadMessageCount += await MessageEntity.find({
+                        chatId: userPMChat._id,
+                        readed: false,
+                        ownerId: { $ne: res.locals.user._id }
+                    }).limit(100).count();
+                }
+                await RedisService.client.hSet(RedisKeyType.User + res.locals.user._id + RedisSubKeyType.PrivateChatUnreadCounts, userPrivateChatIds[i], userPrivateChats[i].unreadMessageCount);
             } else {
-                userPMChat.unreadMessageCount += redisPMs.filter((x: { ownerId: string; }) => x.ownerId != res.locals.user._id).length;
-                userPMChat.unreadMessageCount += await MessageEntity.find({
-                    chatId: userPMChat._id,
-                    readed: false,
-                    ownerId: { $ne: res.locals.user._id }
-                }).limit(100).count();
+                userPMChat.unreadMessageCount = userUnreadCount;
             }
 
             let chatUserId: string;
@@ -1414,6 +1459,7 @@ router.post("/updateGroupInfo", authorize([Role.User, Role.Admin, Role.ContentCr
         groupChat.title = payload.title;
         groupChat.type = payload.type;
         groupChat.avatarKey = payload.avatarKey;
+        groupChat.settings = payload.settings;
         const redisOps: Promise<any>[] = [];
         if (payload.hashTags) {
             payload.hashTags.forEach((x, index, arr) => {
@@ -1938,7 +1984,7 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
             message.files.push(new MessageFiles(req.file?.location, req.file.mimetype, req.file.size));
             message.markModified("files");
-            await message?.save();
+            await message.save();
         } else {
             if (message.ownerId != res.locals.user._id)
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));

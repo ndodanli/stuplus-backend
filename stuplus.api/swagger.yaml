@@ -4,7 +4,7 @@ info:
   description: Fakultem uygulaması api.
   version: 0.1.9
 servers:
-  - url: http://212.98.224.208:25010/
+  - url: https://api.stuplus.app/
     description: Canlı api
   - url: http://127.0.0.1:25010/
     description: Local test için.
