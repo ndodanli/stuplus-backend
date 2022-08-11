@@ -202,7 +202,7 @@ schema: { $ref: "#/definitions/AnnouncementCommentLikeDislikeRequest" }
   return Ok(res, response)
 });
 
-router.post("/getSubComments", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateGetSubCommentsAnnouncement, async (req: CustomRequest<AnnouncementGetSubCommentsDTO>, res: any) => {
+router.post("/getSubComments", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateGetSubCommentsAnnouncement, async (req: CustomRequest<AnnouncementGetSubCommentsDTO>, res: any) => {
   /* #swagger.tags = ['Announcement']
       #swagger.description = 'Get sub comments of a comment.' */
   /*	#swagger.requestBody = {
@@ -228,7 +228,7 @@ schema: { $ref: "#/definitions/AnnouncementGetSubCommentsRequest" }
   return Ok(res, response)
 });
 
-router.post("/subComment", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateSubCommentAnnouncement, async (req: CustomRequest<AnnouncementSubCommentDTO>, res: any) => {
+router.post("/subComment", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateSubCommentAnnouncement, async (req: CustomRequest<AnnouncementSubCommentDTO>, res: any) => {
   /* #swagger.tags = ['Announcement']
 #swagger.description = 'Comment to a comment.' */
   /*	#swagger.requestBody = {
@@ -254,7 +254,7 @@ schema: { $ref: "#/definitions/AnnouncementSubCommentRequest" }
   return Ok(res, response)
 });
 
-router.post("/subCommentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator]), validateSubCommentLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementSubCommenLikeDisliketDTO>, res: any) => {
+router.post("/subCommentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateSubCommentLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementSubCommenLikeDisliketDTO>, res: any) => {
   /* #swagger.tags = ['Announcement']
 #swagger.description = 'Like or dislike a announcement's sub comment.' */
   /*	#swagger.requestBody = {

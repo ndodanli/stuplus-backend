@@ -3,17 +3,17 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { authorize } from "../../stuplus.backoffice.api/middlewares/auth";
-import { NotificationType, Role, SearchedEntityType } from "../../stuplus-lib/enums/enums";
+import { Role, SearchedEntityType } from "../../stuplus-lib/enums/enums";
 import { validateSearch } from "../middlewares/validation/search/validateSearchRoute";
 import { SearchGroupChatDTO, SearchHashTagDTO, SearchPeopleAndGroupChatDTO, SearchPeopleDTO, SearchQuestionDTO } from "../dtos/SearchDTOs";
 import { SearchAccess } from "../dataAccess/searchAccess";
-import { NotificationEntity, SearchHistoryEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { SearchHistoryEntity } from "../../stuplus-lib/entities/BaseEntity";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
 import { stringify } from "../../stuplus-lib/utils/general";
 const router = Router();
 
-router.post("/people", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchPeopleDTO>, res: any) => {
+router.post("/people", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateSearch, async (req: CustomRequest<SearchPeopleDTO>, res: any) => {
     /* #swagger.tags = ['Search']
         #swagger.description = 'Get searched results(only users).' */
     /*	#swagger.requestBody = {
@@ -46,7 +46,7 @@ router.post("/people", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
             }
         }
 
-        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
+        await RedisService.client.hSet(RedisKeyType.DBSearchHistory, res.locals.user._id, stringify(sData));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -57,7 +57,7 @@ router.post("/people", authorize([Role.User, Role.Admin, Role.ContentCreator]), 
     return Ok(res, response);
 });
 
-router.post("/groupChats", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchGroupChatDTO>, res: any) => {
+router.post("/groupChats", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateSearch, async (req: CustomRequest<SearchGroupChatDTO>, res: any) => {
     /* #swagger.tags = ['Search']
        #swagger.description = 'Get searched results(only group chats).' */
     /*	#swagger.requestBody = {
@@ -90,7 +90,7 @@ router.post("/groupChats", authorize([Role.User, Role.Admin, Role.ContentCreator
             }
         }
 
-        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
+        await RedisService.client.hSet(RedisKeyType.DBSearchHistory, res.locals.user._id, stringify(sData));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -101,7 +101,7 @@ router.post("/groupChats", authorize([Role.User, Role.Admin, Role.ContentCreator
     return Ok(res, response);
 });
 
-router.post("/peopleAndGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchPeopleAndGroupChatDTO>, res: any) => {
+router.post("/peopleAndGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateSearch, async (req: CustomRequest<SearchPeopleAndGroupChatDTO>, res: any) => {
     /* #swagger.tags = ['Search']
      #swagger.description = 'Get searched results(people and group chats).' */
     /*	#swagger.requestBody = {
@@ -148,7 +148,7 @@ router.post("/peopleAndGroupChats", authorize([Role.User, Role.Admin, Role.Conte
             }
         }
 
-        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
+        await RedisService.client.hSet(RedisKeyType.DBSearchHistory, res.locals.user._id, stringify(sData));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -159,7 +159,7 @@ router.post("/peopleAndGroupChats", authorize([Role.User, Role.Admin, Role.Conte
     return Ok(res, response);
 });
 
-router.post("/hashtag", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchHashTagDTO>, res: any) => {
+router.post("/hashtag", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateSearch, async (req: CustomRequest<SearchHashTagDTO>, res: any) => {
     /* #swagger.tags = ['Search']
         #swagger.description = 'Get hashtags by search term.' */
     /*	#swagger.requestBody = {
@@ -192,7 +192,7 @@ router.post("/hashtag", authorize([Role.User, Role.Admin, Role.ContentCreator]),
             }
         }
 
-        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
+        await RedisService.client.hSet(RedisKeyType.DBSearchHistory, res.locals.user._id, stringify(sData));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -203,7 +203,7 @@ router.post("/hashtag", authorize([Role.User, Role.Admin, Role.ContentCreator]),
     return Ok(res, response);
 });
 
-router.post("/question", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchQuestionDTO>, res: any) => {
+router.post("/question", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateSearch, async (req: CustomRequest<SearchQuestionDTO>, res: any) => {
     /* #swagger.tags = ['Search']
         #swagger.description = 'Get searched questions.' */
     /*	#swagger.requestBody = {
@@ -236,7 +236,7 @@ router.post("/question", authorize([Role.User, Role.Admin, Role.ContentCreator])
             }
         }
 
-        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
+        await RedisService.client.hSet(RedisKeyType.DBSearchHistory, res.locals.user._id, stringify(sData));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -247,7 +247,7 @@ router.post("/question", authorize([Role.User, Role.Admin, Role.ContentCreator])
     return Ok(res, response);
 });
 
-router.post("/announcement", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateSearch, async (req: CustomRequest<SearchQuestionDTO>, res: any) => {
+router.post("/announcement", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateSearch, async (req: CustomRequest<SearchQuestionDTO>, res: any) => {
     /* #swagger.tags = ['Search']
         #swagger.description = 'Get searched questions.' */
     /*	#swagger.requestBody = {
@@ -280,7 +280,7 @@ router.post("/announcement", authorize([Role.User, Role.Admin, Role.ContentCreat
             }
         }
 
-        await RedisService.client.rPush(RedisKeyType.DBSearchHistory + res.locals.user._id, stringify(sData));
+        await RedisService.client.hSet(RedisKeyType.DBSearchHistory, res.locals.user._id, stringify(sData));
     } catch (err: any) {
         response.setErrorMessage(err.message);
 

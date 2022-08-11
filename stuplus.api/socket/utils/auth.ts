@@ -1,4 +1,4 @@
-import { Role } from "../../../stuplus-lib/enums/enums_socket";
+import { Role } from "../../../stuplus-lib/enums/enums";
 import jwt from "jsonwebtoken";
 import { CustomRequest } from "../../../stuplus-lib/utils/base/baseOrganizers";
 import BaseResponse from "../../../stuplus-lib/utils/base/BaseResponse";

@@ -1,13 +1,7 @@
 import AsyncLock from "async-lock";
-import { RedisFileMessageUpdateDTO, RedisMessageReceiptUpdateDTO } from "../../stuplus.api/socket/dtos/RedisChat";
-import { config } from "../../stuplus-lib/config/config";
-import { AnnouncementCommentEntity, AnnouncementCommentLikeEntity, AnnouncementLikeEntity, DailyUserStatisticEntity, GroupMessageEntity, GroupMessageForwardEntity, GroupMessageReadEntity, HashtagEntity, MessageEntity, QuestionCommentEntity, QuestionCommentLikeEntity, QuestionLikeEntity, SearchHistoryEntity } from "../../stuplus-lib/entities/BaseEntity";
-import { LikeType } from "../../stuplus-lib/enums/enums";
-import { RedisGMOperationType, RedisKeyType, RedisPMOperationType } from "../../stuplus-lib/enums/enums_socket";
+import { DailyUserStatisticEntity } from "../../stuplus-lib/entities/BaseEntity";
 import RedisService from "../../stuplus-lib/services/redisService";
 import IBaseCronJob from "./IBaseCronJob";
-import { chunk, stringify } from "../../stuplus-lib/utils/general";
-import logger from "../../stuplus-lib/config/logger";
 
 export default class UserLimitsJob implements IBaseCronJob {
     cronExpression: string;

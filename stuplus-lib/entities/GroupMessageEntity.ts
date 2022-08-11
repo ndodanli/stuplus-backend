@@ -2,7 +2,6 @@ import { Document, Schema } from "mongoose";
 import { MessageType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 import { MessageFiles, ReplyToDTO } from "./MessageEntity";
-import { User } from "./UserEntity";
 
 export interface GroupMessage extends BaseEntity {
   ownerId: string; //user id

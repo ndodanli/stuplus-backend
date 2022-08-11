@@ -25,7 +25,7 @@ import { getReportTypeFromValue } from "../../stuplus-lib/utils/general";
 
 const router = Router();
 
-router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<object>, res: any) => {
+router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
           #swagger.description = 'Get user info.' */
   /* #swagger.responses[200] = {
@@ -77,7 +77,7 @@ router.get("/user", authorize([Role.User, Role.Admin, Role.ContentCreator]), asy
   return Ok(res, response);
 });
 
-router.get("/getUserProfile/:userId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getUserProfile/:userId", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
           #swagger.description = 'Get user's profile info.' */
   /* #swagger.responses[200] = {
@@ -101,7 +101,7 @@ router.get("/getUserProfile/:userId", authorize([Role.User, Role.Admin, Role.Con
   return Ok(res, response);
 });
 
-router.get("/getAccountSuggestions/:userId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<object>, res: any) => {
+router.get("/getAccountSuggestions/:userId", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
           #swagger.description = 'Get account suggestions(limit set to 25 by server) based on user's id.' */
   /* #swagger.responses[200] = {
@@ -124,7 +124,7 @@ router.get("/getAccountSuggestions/:userId", authorize([Role.User, Role.Admin, R
   return Ok(res, response);
 });
 
-router.get("/updatePlayerId/:playerId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<any>, res: any) => {
+router.get("/updatePlayerId/:playerId", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<any>, res: any) => {
   const response = new BaseResponse<any>();
   try {
     const playerId = req.params.playerId;
@@ -144,7 +144,7 @@ router.get("/updatePlayerId/:playerId", authorize([Role.User, Role.Admin, Role.C
   return Ok(res, response);
 });
 
-router.post("/updateProfile", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateUpdateProfile, async (req: CustomRequest<UpdateUserProfileDTO>, res: any) => {
+router.post("/updateProfile", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateUpdateProfile, async (req: CustomRequest<UpdateUserProfileDTO>, res: any) => {
   /* #swagger.tags = ['Account']
          #swagger.description = 'Update user's profile.' */
   /*	#swagger.requestBody = {
@@ -172,7 +172,7 @@ router.post("/updateProfile", authorize([Role.User, Role.Admin, Role.ContentCrea
   return Ok(res, response);
 });
 
-router.post("/updatePrivacySettings", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateUpdatePrivacySettings, async (req: CustomRequest<UpdatePrivacySettingsDTO>, res: any) => {
+router.post("/updatePrivacySettings", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateUpdatePrivacySettings, async (req: CustomRequest<UpdatePrivacySettingsDTO>, res: any) => {
   /* #swagger.tags = ['Account']
          #swagger.description = 'Update user's profile.' */
   /*	#swagger.requestBody = {
@@ -200,7 +200,7 @@ router.post("/updatePrivacySettings", authorize([Role.User, Role.Admin, Role.Con
   return Ok(res, response);
 });
 
-router.post("/updateSchool", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateUpdateSchool, async (req: CustomRequest<UpdateUserSchoolDTO>, res: any) => {
+router.post("/updateSchool", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateUpdateSchool, async (req: CustomRequest<UpdateUserSchoolDTO>, res: any) => {
   /* #swagger.tags = ['Account']
          #swagger.description = 'Update user's school.' */
   /*	#swagger.requestBody = {
@@ -228,7 +228,7 @@ router.post("/updateSchool", authorize([Role.User, Role.Admin, Role.ContentCreat
   return Ok(res, response);
 });
 
-router.post("/updateInterests", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateUpdateInterests, async (req: CustomRequest<UpdateUserInterestsDTO>, res: any) => {
+router.post("/updateInterests", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateUpdateInterests, async (req: CustomRequest<UpdateUserInterestsDTO>, res: any) => {
   /* #swagger.tags = ['Account']
          #swagger.description = 'Update user's interests.' */
   /*	#swagger.requestBody = {
@@ -257,7 +257,7 @@ schema: { $ref: "#/definitions/AccountUpdateInterestsRequest" }
   return Ok(res, response);
 });
 
-router.post("/updatePassword", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateUpdatePassword, async (req: CustomRequest<object>, res: any) => {
+router.post("/updatePassword", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateUpdatePassword, async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
          #swagger.description = 'Update user password.' */
   /*	#swagger.requestBody = {
@@ -400,7 +400,7 @@ router.post("/emailConfirmation", validateEmailConfirmation, async (req: CustomR
   return Ok(res, response);
 });
 
-router.post("/sendConfirmationEmail", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<object>, res: any) => {
+router.post("/sendConfirmationEmail", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
      #swagger.description = 'This is only for user to send email confirmation after logged in if email confirmation some way failed(e.g. mail send failed, confirmation code expired).' */
   /*	#swagger.requestBody = {
@@ -429,7 +429,7 @@ schema: { $ref: "#/definitions/AccountSendConfirmationEmailRequest" }
   return Ok(res, response);
 });
 
-router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin, Role.ContentCreator]), uploadFileS3.single("profilePhoto", [".png", ".jpg", ".jpeg", ".svg"], "profile_images/", 5242880), async (req: CustomRequest<object>, res: any) => {
+router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), uploadFileS3.single("profilePhoto", [".png", ".jpg", ".jpeg", ".svg"], "profile_images/", 5242880), async (req: CustomRequest<object>, res: any) => {
   /* #swagger.tags = ['Account']
          #swagger.description = 'Update user's profile photo(accepts only with one of ".png", ".jpg", ".jpeg", ".svg" extensions and 5MB size limit).' */
   /*	#swagger.requestBody = {
@@ -478,7 +478,7 @@ router.post("/updateProfilePhoto", authorize([Role.User, Role.Admin, Role.Conten
   return Ok(res, response);
 })
 
-router.post("/followUser", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateFollowUser, async (req: CustomRequest<UserFollowUserRequestDTO>, res: any) => {
+router.post("/followUser", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateFollowUser, async (req: CustomRequest<UserFollowUserRequestDTO>, res: any) => {
   /* #swagger.tags = ['Account']
         #swagger.description = 'Follow user without privacy limitations.' */
   /*	#swagger.requestBody = {
@@ -504,7 +504,7 @@ schema: { $ref: "#/definitions/AccountFollowUserRequest" }
   return Ok(res, response); ``
 });
 
-router.post("/unfollowUser", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateChangeFollowStatus, async (req: CustomRequest<UserUnfollowDTO>, res: any) => {
+router.post("/unfollowUser", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateChangeFollowStatus, async (req: CustomRequest<UserUnfollowDTO>, res: any) => {
   /* #swagger.tags = ['Account']
         #swagger.description = 'Send following request to user(if privacy limitations = ByRequest).' */
   /*	#swagger.requestBody = {
@@ -530,7 +530,7 @@ schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
   return Ok(res, response);
 });
 
-router.post("/cancelFollowUserRequest", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
+router.post("/cancelFollowUserRequest", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
   /* #swagger.tags = ['Account']
         #swagger.description = 'Cancel the request that sent to the user for following.' */
   /*	#swagger.requestBody = {
@@ -556,7 +556,7 @@ schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
   return Ok(res, response);
 });
 
-router.post("/acceptFollowUserRequest", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
+router.post("/acceptFollowUserRequest", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
   /* #swagger.tags = ['Account']
         #swagger.description = 'Accept follow request.' */
   /*	#swagger.requestBody = {
@@ -582,7 +582,7 @@ schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
   return Ok(res, response);
 });
 
-router.post("/rejectFollowUserRequest", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
+router.post("/rejectFollowUserRequest", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
   /* #swagger.tags = ['Account']
         #swagger.description = 'Reject follow request' */
   /*	#swagger.requestBody = {
@@ -608,7 +608,7 @@ schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
   return Ok(res, response);
 });
 
-router.post("/removeFollower", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
+router.post("/removeFollower", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateChangeFollowStatus, async (req: CustomRequest<UserFollowReqDTO>, res: any) => {
   /* #swagger.tags = ['Account']
         #swagger.description = 'Remove user from followers.' */
   /*	#swagger.requestBody = {
@@ -634,7 +634,7 @@ schema: { $ref: "#/definitions/AccountChangeFollowStatusRequest" }
   return Ok(res, response);
 });
 
-router.post("/getFollowRequestsFromMe", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+router.post("/getFollowRequestsFromMe", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<BaseFilter>, res: any) => {
   /* #swagger.tags = ['Account']
           #swagger.description = 'Get user info.' */
   /*	#swagger.requestBody = {
@@ -660,7 +660,7 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
   return Ok(res, response);
 });
 
-router.post("/getFollowRequestsToMe", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+router.post("/getFollowRequestsToMe", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<BaseFilter>, res: any) => {
   /* #swagger.tags = ['Account']
           #swagger.description = 'Get user info.' */
   /*	#swagger.requestBody = {
@@ -686,7 +686,7 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
   return Ok(res, response);
 });
 
-router.post("/getFollowers", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+router.post("/getFollowers", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<BaseFilter>, res: any) => {
   /* #swagger.tags = ['Account']
           #swagger.description = 'Get user info.' */
   /*	#swagger.requestBody = {
@@ -712,7 +712,7 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
   return Ok(res, response);
 });
 
-router.post("/getFollowing", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+router.post("/getFollowing", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<BaseFilter>, res: any) => {
   /* #swagger.tags = ['Account']
           #swagger.description = 'Get user info.' */
   /*	#swagger.requestBody = {
@@ -738,7 +738,7 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
   return Ok(res, response);
 });
 
-router.post("/report", authorize([Role.User, Role.Admin, Role.ContentCreator]), validateReport, async (req: CustomRequest<ReportDTO>, res: any) => {
+router.post("/report", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateReport, async (req: CustomRequest<ReportDTO>, res: any) => {
   /* #swagger.tags = ['Account']
     #swagger.description = 'Report something(user, comment, announcement, message' */
   /*	#swagger.requestBody = {
@@ -766,7 +766,7 @@ schema: { $ref: "#/definitions/AccountReportRequest" }
   return Ok(res, response);
 });
 
-router.post("/getNotificationHistory", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+router.post("/getNotificationHistory", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<BaseFilter>, res: any) => {
   /* #swagger.tags = ['Account']
   #swagger.description = 'Get notification history' */
   /*	#swagger.requestBody = {
@@ -792,7 +792,7 @@ schema: { $ref: "#/definitions/BasePaginationRequest" }
   return Ok(res, response);
 });
 
-router.get("/removeNotification/:notificationId", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<BaseFilter>, res: any) => {
+router.get("/removeNotification/:notificationId", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<BaseFilter>, res: any) => {
   /* #swagger.tags = ['Account']
 #swagger.description = 'Remove notification by id.' */
   /* #swagger.responses[200] = {
@@ -818,7 +818,7 @@ router.get("/removeNotification/:notificationId", authorize([Role.User, Role.Adm
   return Ok(res, response);
 });
 
-router.get("/notifyReadNotifications", authorize([Role.User, Role.Admin, Role.ContentCreator]), async (req: CustomRequest<any>, res: any) => {
+router.get("/notifyReadNotifications", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<any>, res: any) => {
   /* #swagger.tags = ['Account']
 #swagger.description = 'Notify readed notifications.' */
   /* #swagger.responses[200] = {
