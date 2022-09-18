@@ -8,6 +8,7 @@ import { AddUpdateAnnouncementDTO, AnnouncementListDTO } from "../dtos/announcem
 import { authorize } from "../middlewares/auth";
 import { RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { SortOrder } from "mongoose";
+import { searchableWithSpaces } from "../../stuplus-lib/utils/general";
 
 const router = Router();
 
@@ -62,6 +63,7 @@ router.post("/addUpdateAnnouncement", authorize([Role.Admin, Role.Moderator]), a
       }
       announcementToUpdate.ownerId = Announcement.ownerId;
       announcementToUpdate.title = Announcement.title;
+      announcementToUpdate.titlesch = searchableWithSpaces(Announcement.title);
       announcementToUpdate.coverImageUrl = Announcement.coverImageUrl;
       announcementToUpdate.relatedSchoolIds = Announcement.relatedSchoolIds;
       announcementToUpdate.text = Announcement.text;
@@ -72,6 +74,7 @@ router.post("/addUpdateAnnouncement", authorize([Role.Admin, Role.Moderator]), a
     }
     else {
       const newAnnouncement = new AnnouncementEntity(Announcement);
+      newAnnouncement.titlesch = searchableWithSpaces(Announcement.title);
       await newAnnouncement.save();
     }
   } catch (err: any) {

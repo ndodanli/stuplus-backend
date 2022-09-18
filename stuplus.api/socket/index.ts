@@ -24,7 +24,7 @@ import { GroupChatUserDocument } from "../../stuplus-lib/entities/GroupChatUserE
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { Chat } from "../../stuplus-lib/entities/ChatEntity";
 import { GroupChat } from "../../stuplus-lib/entities/GroupChatEntity";
-import { isValidObjectId } from "mongoose";
+import mongoose, { isValidObjectId, mongo } from "mongoose";
 import { GroupAccess } from "../dataAccess/groupAccess";
 import OnlineUserService from "../../stuplus-lib/services/onlineUsersService";
 import OneSignalService from "../../stuplus-lib/services/oneSignalService";
@@ -189,10 +189,16 @@ io.on("connection", async (socket: ISocket) => {
             await RedisService.updatePrivateChatLastMessage(chatData.e, chatData.e.chatId);
             if (data.ci)
                 await RedisService.incrementUnreadPCCountForUser(data.to, data.ci);
-            const emitData = { t: data.t, mi: messageEntity.id, ci: data.ci, f: null };
-
-            if (!data.ci)
-                emitData["f"] = socket.data.user;
+            const emitData = {
+                t: data.t, mi: messageEntity.id, ci: data.ci, f: {
+                    _id: socket.data.user._id,
+                    username: socket.data.user.username,
+                    firstName: socket.data.user.firstName,
+                    lastName: socket.data.user.lastName,
+                    profilePhotoUrl: socket.data.user.profilePhotoUrl,
+                    avatarKey: socket.data.user.avatarKey,
+                }
+            };
 
             if (await OnlineUserService.isOnline(data.to)) {
                 socket.to(data.to).emit("cPmSend", emitData);
@@ -315,7 +321,16 @@ io.on("connection", async (socket: ISocket) => {
             await RedisService.client.hSet(RedisKeyType.User + socket.data.user._id + RedisSubKeyType.GroupChatReadCounts, data.gCi, groupMessageCount);
 
             const gcName = groupChatName(data.gCi);
-            socket.to(gcName).emit("cGmSend", { t: data.t, mi: gMessageEntity.id, gCi: data.gCi, f: socket.data.user });
+            socket.to(gcName).emit("cGmSend", {
+                t: data.t, mi: gMessageEntity.id, gCi: data.gCi, f: {
+                    _id: socket.data.user._id,
+                    username: socket.data.user.username,
+                    firstName: socket.data.user.firstName,
+                    lastName: socket.data.user.lastName,
+                    profilePhotoUrl: socket.data.user.profilePhotoUrl,
+                    avatarKey: socket.data.user.avatarKey,
+                }
+            });
             cb({ success: true, mi: gMessageEntity.id });
 
 
@@ -705,7 +720,7 @@ router.post("/deleteSinglePM", authorize([Role.User, Role.Admin, Role.ContentCre
             const chat = await ChatEntity.findOne({ _id: payload.chatId }).lean(true);
             const toId = chat?.ownerId == res.locals.user._id ? chat?.participantId : chat?.ownerId;
             io.to(toId).emit("singlePMDeleted", { mi: payload.messageId, ci: payload.chatId });
-            response.setMessage(getMessage("singleMessageDeletedMeSuccess", req.selectedLangs()));
+            response.setMessage(getMessage("singleMessageDeletedBothSuccess", req.selectedLangs()));
         } else {
             if (message) {
                 const newMessageEntity = new MessageEntity({}); //for duplications with clearing history, assing a new id
@@ -726,7 +741,7 @@ router.post("/deleteSinglePM", authorize([Role.User, Role.Admin, Role.ContentCre
                     }
                 );
             }
-            response.setMessage(getMessage("singleMessageDeletedBothSuccess", req.selectedLangs()));
+            response.setMessage(getMessage("singleMessageDeletedMeSuccess", req.selectedLangs()));
         }
 
         // if (!deleted)
@@ -801,7 +816,7 @@ router.post("/clearPMChatHistory", authorize([Role.User, Role.Admin, Role.Conten
                 recordStatus: RecordStatus.Deleted,
                 recordDeletionDate: now
             });
-            response.setMessage(getMessage("clearPMChatHistoryMeSuccess", res.selectedLangs()));
+            response.setMessage(getMessage("clearPMChatHistoryBothSuccess", res.selectedLangs()));
         }
         else {
             for (let i = redisMessages.length - 1; i >= 0; i--) {
@@ -822,9 +837,8 @@ router.post("/clearPMChatHistory", authorize([Role.User, Role.Admin, Role.Conten
                 },
                 deletedForUserDate: now
             });
-            response.setMessage(getMessage("clearPMChatHistoryBothSuccess", res.selectedLangs()));
+            response.setMessage(getMessage("clearPMChatHistoryMeSuccess", res.selectedLangs()));
         }
-
 
     } catch (err: any) {
         response.setErrorMessage(err.message);
@@ -894,6 +908,7 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator,
                         _id: "$chatId",
                         ownerId: { $first: "$ownerId" },
                         text: { $first: "$text" },
+                        type: { $first: "$type" },
                         files: { $first: "$files" },
                         createdAt: { $first: "$createdAt" },
                     }
@@ -906,6 +921,7 @@ router.get("/getPMChats", authorize([Role.User, Role.Admin, Role.ContentCreator,
                     privateChat.lastMessage = {
                         ownerId: notFoundLastMessages[i].ownerId,
                         text: notFoundLastMessages[i].text,
+                        type: notFoundLastMessages[i].type,
                         files: notFoundLastMessages[i].files,
                         createdAt: notFoundLastMessages[i].createdAt,
                     };
@@ -1138,6 +1154,7 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator,
                         _id: "$groupChatId",
                         ownerId: { $first: "$ownerId" },
                         text: { $first: "$text" },
+                        type: { $first: "$type" },
                         files: { $first: "$files" },
                         createdAt: { $first: "$createdAt" },
                     }
@@ -1151,6 +1168,7 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator,
                     groupChat.lastMessage = {
                         ownerId: notFoundLastMessages[i].ownerId,
                         text: notFoundLastMessages[i].text,
+                        type: notFoundLastMessages[i].type,
                         files: notFoundLastMessages[i].files,
                         createdAt: notFoundLastMessages[i].createdAt,
                     };
@@ -1338,8 +1356,9 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
         if (payload.userIds.length != filteredUserIds.length)
             anyUserReachedLimit = true;
         payload.userIds = filteredUserIds.map(x => x._id.toString());
+        const usernames = await UserEntity.find({ _id: { $in: payload.userIds } }, { _id: 1, username: 1 }).lean(true);
         let chatUsers = payload.userIds.map((userId: string) => {
-            return new GroupChatUserEntity({ userId: userId, groupChatId: groupChatId, groupRole: GroupChatUserRole.Member });
+            return new GroupChatUserEntity({ userId: userId, username: usernames.find(x => x._id.toString() == userId)?.username, groupChatId: groupChatId, groupRole: GroupChatUserRole.Member });
         });
         chatUsers.push(new GroupChatUserEntity({ userId: res.locals.user._id, groupChatId: groupChatId, groupRole: GroupChatUserRole.Owner }));
         await GroupChatUserEntity.insertMany(chatUsers);
@@ -1463,6 +1482,55 @@ router.get("/removeGroup/:groupChatId", authorize([Role.User, Role.Admin, Role.C
 
 //PASSED:true(not chat)
 router.post("/updateGroupInfo", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), uploadFileS3.single("coverImage", [".png", ".jpg", ".jpeg", ".svg"], "chat/group_images/", 5242880), async (req: CustomRequest<UpdateGroupInfoDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+     #swagger.description = 'Update group info.' */
+    /*	#swagger.requestBody = {
+    required: true,
+   "@content": {
+                  "multipart/form-data": {
+                      schema: {
+                          type: "object",
+                          properties: {
+                              groupChatId: {
+                                    type: "string",
+                              },
+                              coverImage: {
+                                  type: "string",
+                                  format: "binary"
+                              },
+                              hashTags: {
+                                    type: "array",
+                                    items: {
+                                        type: "string"
+                                    }
+                              },
+                              title: {
+                                    type: "string",
+                              },
+                              type: {
+                                    type: "number",
+                                    description: "Public: 0, Private: 1",
+                              },
+                              settings: {
+                                    type: "object",
+                                    properties: {
+                                        checkBadWords: {
+                                            type: "boolean",
+                                        }
+                                    }
+                              }
+                          },
+                          required: ["groupChatId"]
+                      }
+                  }
+              } 
+  } */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/ChatUpdateGroupInfoResponse"
+     }
+   } */
     const response = new BaseResponse<object>();
     try {
         if (req.fileValidationErrors?.length) {
@@ -1483,8 +1551,6 @@ router.post("/updateGroupInfo", authorize([Role.User, Role.Admin, Role.ContentCr
             groupChat.title = payload.title;
         if (payload.type)
             groupChat.type = payload.type;
-        if (payload.avatarKey)
-            groupChat.avatarKey = payload.avatarKey;
         if (payload.settings)
             groupChat.settings = payload.settings;
         const redisOps: Promise<any>[] = [];
@@ -1504,21 +1570,12 @@ router.post("/updateGroupInfo", authorize([Role.User, Role.Admin, Role.ContentCr
         }
         if (req.file) {
             groupChat.coverImageUrl = req.file.location;
+            response.data = {
+                coverImageUrl: groupChat.coverImage,
+            };
         }
         await groupChat.save();
         await RedisService.addGroupChat(groupChat);
-        const groupChatUsers = await GroupChatUserEntity.find({ groupChatId: groupChat._id.toString() }, { "userId": 1 }).lean(true);
-        const groupChatUserIds: string[] = groupChatUsers.map((groupChatUser: GroupChatUserDocument) => groupChatUser.userId);
-        const offlineUserIds: string[] = [];
-        for (let i = 0; i < groupChatUserIds.length; i++) {
-            const userId = groupChatUserIds[i];
-            const socketId = OnlineUserService.onlineUsers.get(userId);
-            if (!socketId) {
-                offlineUserIds.push(userId);
-                //TODO:offline send notification
-
-            }
-        }
         io.in(groupChatName(groupChat._id.toString())).emit("cGroupInfoUpdated",
             {
                 t: groupChat.title,
@@ -1526,13 +1583,6 @@ router.post("/updateGroupInfo", authorize([Role.User, Role.Admin, Role.ContentCr
                 gAvKey: groupChat.avatarKey,
                 gCi: groupChat._id.toString(),
             });
-
-        response.data = {
-            t: groupChat.title,
-            gCoIm: groupChat.coverImage,
-            gAvKey: groupChat.avatarKey,
-            gCi: groupChat._id.toString(),
-        };
 
         response.setMessage(getMessage("groupUpdatedSuccess", req.selectedLangs()));
 
@@ -1923,7 +1973,7 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
             await RedisService.incrementDailyNewPMCount(res.locals.user._id);
         }
 
-        const files = [new MessageFiles(req.file.location, req.file.mimetype, req.file.size)];
+        const files = [new MessageFiles(req.file.location, req.file.mimetype, req.file.size, new mongoose.Types.ObjectId())];
         const messageEntity = await MessageService.sendPrivateMessage({
             toUserId: payload.to,
             ownerId: res.locals.user._id,
@@ -1999,7 +2049,9 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
 
         const payload = new RedisUpdateFileMessageDTO(req.body);
 
-        const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size)];
+        const newFileId = new mongoose.Types.ObjectId();
+
+        const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size, newFileId)];
 
         let message = await RedisService.client.hGet(RedisKeyType.DBPrivateMessage + payload.ci, payload.mi + RedisPMOperationType.InsertMessage)
             .then(x => x ? JSON.parse(x)?.e : null);
@@ -2009,7 +2061,7 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
                 throw new NotValidError(getMessage("messageNotFound", req.selectedLangs()));
             if (message.ownerId != res.locals.user._id)
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
-            message.files.push(new MessageFiles(req.file?.location, req.file.mimetype, req.file.size));
+            message.files.push(new MessageFiles(req.file?.location, req.file.mimetype, req.file.size, newFileId));
             message.markModified("files");
             await message.save();
         } else {
@@ -2017,13 +2069,14 @@ router.post("/updatePMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
             const chatData: object = {
                 e: {
+                    _id: newFileId,
                     mi: payload.mi,
                     file: files[0],
                     type: message.type
                 }, t: RedisPMOperationType.UpdateSendFileMessage
             }
 
-            await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + payload.ci, payload.mi + RedisPMOperationType.UpdateSendFileMessage, stringify(chatData));
+            await RedisService.client.hSet(RedisKeyType.DBPrivateMessage + payload.ci, newFileId.toString() + RedisPMOperationType.UpdateSendFileMessage, stringify(chatData));
         }
 
         //TODO: offline durumu
@@ -2099,9 +2152,13 @@ router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator, Ro
             messages = messages.concat(redisMessages).concat(newMessages);
 
             const messagesNotFound: any[] = [];
-
+            const messageUserIds: any[] = messages.map(x => x.ownerId);
+            const messageUsers = await UserEntity.find({ _id: { $in: messageUserIds } }, {
+                _id: 1, username: 1, firstName: 1, lastName: 1, profilePhotoUrl: 1, avatarKey: 1, lastSeenDate: 1
+            }).lean(true);
             for (let i = messages.length - 1; i >= 0; i--) {
                 const message = messages[i];
+                message.owner = messageUsers.find(x => x._id.toString() == message.ownerId);
                 if (message.files?.length > 0) {
                     redisFileMessageUpdates.filter(x => x.mi == message._id.toString())
                         .forEach(x => message.files.push(x.file));
@@ -2138,8 +2195,13 @@ router.post("/getGMs", authorize([Role.User, Role.Admin, Role.ContentCreator, Ro
                 },
                 _id: { $lt: payload.lastRecordId }
             }).sort({ _id: -1 }).limit(payload.take).lean(true);
+            const messageUserIds: any[] = messages.map(x => x.ownerId);
+            const messageUsers = await UserEntity.find({ _id: { $in: messageUserIds } }, {
+                _id: 1, username: 1, firstName: 1, lastName: 1, profilePhotoUrl: 1, avatarKey: 1, lastSeenDate: 1
+            }).lean(true);
             for (let i = 0; i < messages.length; i++) {
                 const message = messages[i];
+                message.owner = messageUsers.find(x => x._id.toString() == message.ownerId);
                 if (message.replyToId) {
                     const repliedMessage = messages.find(x => x._id.toString() == message.replyToId);
                     if (repliedMessage) {
@@ -2250,7 +2312,7 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
 
         const senderUser = await RedisService.acquireUser(res.locals.user._id, ["_id", "username", "firstName", "lastName", "profilePhotoUrl", "avatarKey"]);
 
-        const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size)];
+        const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size, new mongoose.Types.ObjectId())];
         const groupMessageEntity = await MessageService.sendGroupMessage({
             ownerId: res.locals.user._id,
             text: payload.m,
@@ -2318,7 +2380,9 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
 
         const payload = new RedisGroupUpdateFileMessageDTO(req.body);
 
-        const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size)];
+        const newFileId = new mongoose.Types.ObjectId();
+
+        const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size, newFileId)];
 
         let message = await RedisService.client.hGet(RedisKeyType.DBGroupMessage + payload.gCi, payload.mi + RedisGMOperationType.InsertMessage)
             .then(x => x ? JSON.parse(x)?.e : null);
@@ -2329,7 +2393,7 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
             if (message.ownerId != res.locals.user._id)
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
 
-            message.files.push(new MessageFiles(req.file?.location, req.file.mimetype, req.file.size));
+            message.files.push(new MessageFiles(req.file?.location, req.file.mimetype, req.file.size, newFileId));
             message.markModified("files");
             await message?.save();
         } else {
@@ -2337,13 +2401,14 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
                 throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
             const chatData: object = {
                 e: {
+                    _id: newFileId,
                     mi: payload.mi,
                     file: files[0],
                     type: message.type,
                 }, t: RedisGMOperationType.UpdateSendFileMessage
             }
 
-            await RedisService.client.hSet(RedisKeyType.DBGroupMessage + payload.gCi, payload.mi + RedisGMOperationType.UpdateSendFileMessage, stringify(chatData));
+            await RedisService.client.hSet(RedisKeyType.DBGroupMessage + payload.gCi, newFileId.toString() + RedisGMOperationType.UpdateSendFileMessage, stringify(chatData));
         }
 
         //TODO: offline durumu
@@ -2743,6 +2808,14 @@ router.post("/leaveGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
 });
 
 router.get("/gc/getProfile/:groupChatId", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<any>, res: any) => {
+    /* #swagger.tags = ['Chat']
+     #swagger.description = 'Get group's profile.' */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/ChatGetGroupProfileResponse"
+     }
+   } */
     const response = new BaseResponse<any>();
     try {
         const groupChatId = req.params.groupChatId;
@@ -2827,6 +2900,12 @@ router.get("/gc/getProfile/:groupChatId", authorize([Role.User, Role.Admin, Role
 });
 
 router.post("/gc/getMoreMedia", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateGetGroupChatData, async (req: CustomRequest<GetGroupChatDataDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+      #swagger.description = 'Get more group's media(images and videos).' */
+    /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
+} */
     const response = new BaseResponse<any>();
     try {
         const payload = new GetGroupChatDataDTO(req.body);
@@ -2889,6 +2968,12 @@ router.post("/gc/getMoreMedia", authorize([Role.User, Role.Admin, Role.ContentCr
 });
 
 router.post("/gc/getMoreFile", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateGetGroupChatData, async (req: CustomRequest<GetGroupChatDataDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+  #swagger.description = 'Get more group's file.' */
+    /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
+} */
     const response = new BaseResponse<any>();
     try {
         const payload = new GetGroupChatDataDTO(req.body);
@@ -2948,6 +3033,12 @@ router.post("/gc/getMoreFile", authorize([Role.User, Role.Admin, Role.ContentCre
 });
 
 router.post("/gc/getMoreLink", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateGetGroupChatData, async (req: CustomRequest<GetGroupChatDataDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+#swagger.description = 'Get more group's link.' */
+    /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
+} */
     const response = new BaseResponse<any>();
     try {
         const payload = new GetGroupChatDataDTO(req.body);
@@ -2993,6 +3084,14 @@ router.post("/gc/getMoreLink", authorize([Role.User, Role.Admin, Role.ContentCre
 });
 
 router.get("/pc/getProfile/:privateChatId", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<any>, res: any) => {
+    /* #swagger.tags = ['Chat']
+  #swagger.description = 'Get private chat's profile.' */
+    /* #swagger.responses[200] = {
+     "description": "Success",
+     "schema": {
+       "$ref": "#/definitions/ChatGetPrivateChatProfileResponse"
+     }
+   } */
     const response = new BaseResponse<any>();
     try {
         const privateChatId = req.params.privateChatId;
@@ -3045,7 +3144,7 @@ router.get("/pc/getProfile/:privateChatId", authorize([Role.User, Role.Admin, Ro
             deletedForUserIds: { $ne: res.locals.user._id },
         }, { files: 1, text: 1, type: 1 }).sort({ _id: -1 }).limit(20).lean(true);
 
-        response.data["media"] = redisMessages.concat(chatDataDb);
+        response.data = { media: redisMessages.concat(chatDataDb) }
     } catch (err: any) {
         response.setErrorMessage(err.message);
 
@@ -3057,6 +3156,12 @@ router.get("/pc/getProfile/:privateChatId", authorize([Role.User, Role.Admin, Ro
 });
 
 router.post("/pc/getMoreMedia", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateGetPrivateChatData, async (req: CustomRequest<GetPrivateChatDataDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+#swagger.description = 'Get more private chat's media(images and videos).' */
+    /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
+} */
     const response = new BaseResponse<any>();
     try {
         const payload = new GetPrivateChatDataDTO(req.body);
@@ -3125,6 +3230,12 @@ router.post("/pc/getMoreMedia", authorize([Role.User, Role.Admin, Role.ContentCr
 });
 
 router.post("/pc/getMoreFile", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateGetPrivateChatData, async (req: CustomRequest<GetPrivateChatDataDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+#swagger.description = 'Get more private chat's file.' */
+    /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
+} */
     const response = new BaseResponse<any>();
     try {
         const payload = new GetPrivateChatDataDTO(req.body);
@@ -3190,6 +3301,12 @@ router.post("/pc/getMoreFile", authorize([Role.User, Role.Admin, Role.ContentCre
 });
 
 router.post("/pc/getMoreLink", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateGetPrivateChatData, async (req: CustomRequest<GetPrivateChatDataDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+#swagger.description = 'Get more private chat's link.' */
+    /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
+} */
     const response = new BaseResponse<any>();
     try {
         const payload = new GetPrivateChatDataDTO(req.body);
@@ -3240,13 +3357,15 @@ router.post("/pc/getMoreLink", authorize([Role.User, Role.Admin, Role.ContentCre
     return Ok(res, response);
 });
 
-router.post("/pc/getAllCommonGroupChats", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateGetPrivateChatData, async (req: CustomRequest<GetPrivateChatDataDTO>, res: any) => {
+router.get("/pc/getAllCommonGroupChats/:chatId", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<any>, res: any) => {
+    /* #swagger.tags = ['Chat']
+#swagger.description = 'Get all common group chats' */
     const response = new BaseResponse<any>();
     try {
-        const payload = new GetPrivateChatDataDTO(req.body);
+        const chatId = req.params.chatId;
 
         const chat = await ChatEntity.findOne({
-            _id: payload.chatId,
+            _id: chatId,
             $or: [
                 { ownerId: res.locals.user._id },
                 { participantId: res.locals.user._id }
@@ -3285,6 +3404,12 @@ router.post("/pc/getAllCommonGroupChats", authorize([Role.User, Role.Admin, Role
 });
 
 router.post("/getGroupUsers", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<GetGroupUsersDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+#swagger.description = 'Get group users.' */
+    /*	#swagger.requestBody = {
+required: true,
+schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
+} */
     const response = new BaseResponse<object>();
     try {
         const payload = new GetGroupUsersDTO(req.body);

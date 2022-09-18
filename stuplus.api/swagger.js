@@ -246,6 +246,12 @@ const doc = {
                 },
             ],
         },
+        SearchGroupUsersRequest: {
+            $searchTerm: "test",
+            $groupChatId: "62c09acb63c9dc82f6bcf9b9",
+            $page: 1,
+            $pageSize: 20,
+        },
         SearchPeopleRequest: {
             $searchTerm: "test",
             $page: 1,
@@ -2394,6 +2400,146 @@ const doc = {
                     Me: 0,
                     Both: 1
                 }
+            }
+        },
+        ChatUpdateGroupInfoResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Message describing the error."
+            },
+            data: {
+                type: "object",
+                description: "coverImageUrl sadece grubun fotoğrafı değiştirilirse döner, bunun dışında her zaman null dönecektir.",
+                properties: {
+                    coverImageUrl: "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/announcement/cover_images/1657734350307-9055-duyuru.PNG",
+                }
+            }
+        },
+        ChatGetGroupProfileResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: "Not: \"media\" sadece grup üyesi olanlar için dönecektir."
+            },
+            data: {
+                "groupChat": {
+                    "_id": "62efafbb4a210d4ef6887be7",
+                    "ownerId": "62ab8a204166fd1eaebbb3fa",
+                    "title": "Fizyoterapi",
+                    "type": 0,
+                    "coverImageUrl": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1659874226393-5374-fizyoterapi2.png",
+                    "about": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün.",
+                    "schoolId": "62efafb74a210d4ef6887774",
+                    "departmentId": "62efafbb4a210d4ef6887be5",
+                    "grade": null,
+                    "secondaryEducation": null,
+                    "popularity": 0,
+                    "recordStatus": 1,
+                    "__t": "GroupChat",
+                    "createdAt": "2022-08-07T12:27:39.824Z",
+                    "updatedAt": "2022-08-07T12:27:39.824Z",
+                    "__v": 0
+                },
+                "last10User": [
+                    {
+                        "_id": "62ab8a204166fd1eaebbb3fa",
+                        "username": "test100561",
+                        "profilePhotoUrl": "https://stuplus-bucket.s3.amazonaws.com/public/profile_images/1659364395160-707-1658003218004-4737-hac%C3%83%C2%84%C3%82%C2%B1bayr",
+                        "__t": "User",
+                        "firstName": "firstNameTest",
+                        "lastName": "lastNameTest",
+                        "avatarKey": "avatarKeyTest",
+                        "lastSeenDate": "2022-08-11T08:22:00.987Z"
+                    },
+                    {
+                        "_id": "62e9605a6ec3c40eb09baeb3",
+                        "username": "testt",
+                        "firstName": "Tom",
+                        "lastName": "Taylor",
+                        "profilePhotoUrl": null,
+                        "avatarKey": "FQJ+oUNs+j=e",
+                        "lastSeenDate": "2022-08-09T16:20:03.987Z",
+                        "__t": "User"
+                    }
+                ],
+                "totalMemberCount": 2,
+                "media": []
+            }
+        },
+        ChatGetMoreMediaRequest: {
+            $chatId: "chatId",
+            lastRecordId: "62ee7233490026ff5d31726b",
+            $pageSize: 20,
+        },
+        ChatGetPrivateChatProfileResponse: {
+            hasError: {
+                type: "boolean",
+                description: "Indicates whether the operation was successful or not."
+            },
+            validationErrors: {
+                type: "array",
+                description: "List of validation errors.",
+            },
+            message: {
+                type: "string",
+                description: ""
+            },
+            data: {
+                "media": [
+                    {
+                        "_id": "62f41f4a93d208ac36654e91",
+                        "text": "Hello",
+                        "files": [
+                            {
+                                "url": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/chat/message_files/1660165962572-3448-1659638700808-5388-scaled_imag",
+                                "mimeType": "image/png",
+                                "size": 12489,
+                                "_id": "62f41f4d93d208ac36654e93"
+                            },
+                            {
+                                "url": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/chat/message_files/1660166005212-3075-1659638700808-5388-scaled_imag",
+                                "mimeType": "image/png",
+                                "size": 12489,
+                                "_id": "62f41f7593d208ac36654ed4"
+                            },
+                            {
+                                "url": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/chat/message_files/1660166011198-8353-1659638700808-5388-scaled_imag",
+                                "mimeType": "image/png",
+                                "size": 12489,
+                                "_id": "62f41f7b93d208ac36654eed"
+                            },
+                            {
+                                "url": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/chat/message_files/1660166112305-4659-1659638700808-5388-scaled_imag",
+                                "mimeType": "image/png",
+                                "size": 12489,
+                                "_id": "62f41fe093d208ac36654f70"
+                            },
+                            {
+                                "url": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/chat/message_files/1660166417764-5328-1659638700808-5388-scaled_imag",
+                                "mimeType": "image/png",
+                                "size": 12489,
+                                "_id": "62f4211293d208ac36655131"
+                            }
+                        ],
+                        "type": 1,
+                        "__t": "Message"
+                    }
+                ]
             }
         },
         //#endregion

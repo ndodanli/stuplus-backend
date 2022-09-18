@@ -43,8 +43,9 @@ export class GroupAccess {
             anyUserReachedLimit = true;
         payload.userIds = filteredUserIds.map(x => x._id.toString());
 
+        const usernames = await UserEntity.find({ _id: { $in: payload.userIds } }, { _id: 1, username: 1 }).lean(true);
         let chatUsers = payload.userIds.map((userId: string) => {
-            return new GroupChatUserEntity({ userId: userId, groupChatId: groupChat._id.toString(), groupRole: GroupChatUserRole.Member });
+            return new GroupChatUserEntity({ userId: userId, username: usernames.find(x => x._id.toString() == userId)?.username, groupChatId: groupChat._id.toString(), groupRole: GroupChatUserRole.Member });
         });
 
         await GroupChatUserEntity.insertMany(chatUsers);

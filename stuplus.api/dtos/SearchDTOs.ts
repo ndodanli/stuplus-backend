@@ -50,3 +50,14 @@ export class SearchHashTagDTO extends BaseFilter {
         }
     }
 }
+
+export class SearchGroupUsersDTO extends BaseFilter {
+    searchTerm: string = "";
+    groupChatId: string = "";
+    constructor(obj: any) {
+        super(obj);
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}

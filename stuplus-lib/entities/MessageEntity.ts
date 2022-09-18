@@ -1,4 +1,4 @@
-import { Document, Schema } from "mongoose";
+import mongoose, { Document, ObjectId, Schema } from "mongoose";
 import { MessageType } from "../enums/enums";
 import BaseEntity from "./BaseEntity";
 import { User } from "./UserEntity";
@@ -37,10 +37,12 @@ export class ReplyToDTO {
   }
 }
 export class MessageFiles {
+  _id: mongoose.Types.ObjectId | null;
   url: string | null;
   mimeType: string | null;
   size: number | null;
-  constructor(url: string, mimeType: string, size: number) {
+  constructor(url: string, mimeType: string, size: number, _id: mongoose.Types.ObjectId) {
+    this._id = _id;
     this.url = url;
     this.mimeType = mimeType;
     this.size = size;

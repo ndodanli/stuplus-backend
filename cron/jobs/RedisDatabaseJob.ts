@@ -259,7 +259,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                     break;
                                 case RedisPMOperationType.UpdateSendFileMessage:
                                     updateSendFileBatches[iterator].push(query.e);
-                                    keysToDelete.updateSendFileBatches[iterator].push(query.e.mi + query.t);
+                                    keysToDelete.updateSendFileBatches[iterator].push(query.e._id + query.t);
                                     break;
                                 default:
                                     break;
@@ -375,7 +375,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                                     break;
                                 case RedisGMOperationType.UpdateSendFileMessage:
                                     updateSendFileBatches[iterator].push(query.e);
-                                    keysToDelete.updateSendFileBatches[iterator].push(query.e.mi + query.t);
+                                    keysToDelete.updateSendFileBatches[iterator].push(query.e._id + query.t);
                                     break;
                                 default:
                                     break;

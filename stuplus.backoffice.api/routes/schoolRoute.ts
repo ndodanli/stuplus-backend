@@ -102,6 +102,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
       await GroupChatUserEntity.create({
         groupChatId: groupChatEntity._id.toString(),
         userId: groupGuard._id.toString(),
+        username: groupGuard.username,
         groupRole: GroupChatUserRole.Guard
       });
 
@@ -137,6 +138,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
           await GroupChatUserEntity.create({
             groupChatId: departmentGroupChatEntity._id.toString(),
             userId: groupGuard._id.toString(),
+            username: groupGuard.username,
             groupRole: GroupChatUserRole.Guard
           });
 
@@ -170,6 +172,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
             await GroupChatUserEntity.create({
               groupChatId: departmentGradeGroupChatEntity._id.toString(),
               userId: groupGuard._id.toString(),
+              username: groupGuard.username,
               groupRole: GroupChatUserRole.Guard
             });
             if (department.secondaryEducation) {
@@ -199,6 +202,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
               await GroupChatUserEntity.create({
                 groupChatId: depSecondaryEducationGroupChatEntity._id.toString(),
                 userId: groupGuard._id.toString(),
+                username: groupGuard.username,
                 groupRole: GroupChatUserRole.Guard
               });
             }
@@ -229,6 +233,7 @@ router.post("/addUpdateSchool", authorize([Role.Admin]), async (req: CustomReque
             await GroupChatUserEntity.create({
               groupChatId: departmentGradeGroupChatEntity._id.toString(),
               userId: groupGuard._id.toString(),
+              username: groupGuard.username,
               groupRole: GroupChatUserRole.Guard
             });
           }

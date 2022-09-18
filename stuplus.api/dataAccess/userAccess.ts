@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs"
-import { FollowEntity, FollowRequestEntity, GroupChatEntity, NotificationEntity, ReportEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { FollowEntity, FollowRequestEntity, GroupChatEntity, GroupChatUserEntity, NotificationEntity, ReportEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { SchoolEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { ExternalLogin, User, UserDocument } from "../../stuplus-lib/entities/UserEntity";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
@@ -224,8 +224,11 @@ export class UserAccess {
             }
         });
 
-        if (fnChanged || lnChanged || unChanged)
+        if (fnChanged || lnChanged || unChanged) {
             await FollowEntity.updateMany({ followingId: user.id }, { username: user.username, firstName: user.firstName, lastName: user.lastName });
+            if (unChanged)
+                await GroupChatUserEntity.updateMany({ userId: user.id }, { username: user.username });
+        }
 
         return user;
     }

@@ -1,6 +1,6 @@
 import { _LeanDocument } from "mongoose";
 import { Announcement } from "../../stuplus-lib/entities/AnnouncementEntity";
-import { AnnouncementEntity, DepartmentEntity, GroupChatEntity, HashtagEntity, QuestionEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { AnnouncementEntity, DepartmentEntity, GroupChatEntity, GroupChatUserEntity, HashtagEntity, QuestionEntity, SchoolEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { GroupChat } from "../../stuplus-lib/entities/GroupChatEntity";
 import { Hashtag } from "../../stuplus-lib/entities/HashtagEntity";
 import { Question } from "../../stuplus-lib/entities/QuestionEntity";
@@ -9,7 +9,7 @@ import { UserProfileStatus } from "../../stuplus-lib/enums/enums";
 import { GroupChatType, RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { searchable, searchableWithSpaces } from "../../stuplus-lib/utils/general";
-import { SearchGroupChatDTO } from "../dtos/SearchDTOs";
+import { SearchGroupChatDTO, SearchGroupUsersDTO } from "../dtos/SearchDTOs";
 import { SchoolAccess } from "./schoolAccess";
 
 export class SearchAccess {
@@ -143,6 +143,19 @@ export class SearchAccess {
             .lean(true) as Hashtag[];
 
         return hashTags;
+    }
+
+    public static async getSearchedGroupUsers(userId: any, payload: SearchGroupUsersDTO): Promise<object[]> {
+        let groupChatUsersQuery = GroupChatUserEntity.find({ groupChatId: payload.groupChatId, username: { $regex: searchable(payload.searchTerm), $options: "i" } },
+            { userId: 1, username: 1 });
+        //TODO: add school relation to sort(schoolId)
+        const groupChatUsers = await groupChatUsersQuery
+            .sort({ _id: -1 })
+            .skip(payload.skip)
+            .limit(payload.pageSize)
+            .lean(true);
+
+        return groupChatUsers;
     }
 
     public static async getAccountSuggestions(currentUserId: string, relatedUserId?: string | null, relatedUser?: User | null): Promise<User[]> {

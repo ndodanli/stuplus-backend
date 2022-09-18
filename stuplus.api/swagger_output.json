@@ -2737,6 +2737,36 @@
         }
       }
     },
+    "/search/groupUsers": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "description": "Get group users by search term.",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchGroupUsersRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchGroupUsersRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/general/updateImageStats": {
       "post": {
         "description": "",
@@ -3217,14 +3247,76 @@
     },
     "/chat/updateGroupInfo": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Update group info.",
         "parameters": [],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatUpdateGroupInfoResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatUpdateGroupInfoResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "groupChatId": {
+                    "type": "string"
+                  },
+                  "coverImage": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "hashTags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "number",
+                    "description": "Public: 0, Private: 1"
+                  },
+                  "settings": {
+                    "type": "object",
+                    "properties": {
+                      "checkBadWords": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "groupChatId"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     "/chat/getPMs": {
@@ -3674,7 +3766,10 @@
     },
     "/chat/gc/getProfile/{groupChatId}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get group",
         "parameters": [
           {
             "name": "groupChatId",
@@ -3685,7 +3780,23 @@
             }
           }
         ],
-        "responses": {},
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatGetGroupProfileResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatGetGroupProfileResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
@@ -3695,33 +3806,127 @@
     },
     "/chat/gc/getMoreMedia": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get more group",
         "parameters": [],
         "responses": {},
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/gc/getMoreFile": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get more group",
         "parameters": [],
         "responses": {},
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/gc/getMoreLink": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get more group",
         "parameters": [],
         "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/pc/getProfile/{privateChatId}": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get private chat",
+        "parameters": [
+          {
+            "name": "privateChatId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatGetPrivateChatProfileResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatGetPrivateChatProfileResponse"
+                }
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
@@ -3729,12 +3934,105 @@
         ]
       }
     },
-    "/chat/pc/getProfile/{privateChatId}": {
+    "/chat/pc/getMoreMedia": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get more private chat",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/pc/getMoreFile": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get more private chat",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/pc/getMoreLink": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get more private chat",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/pc/getAllCommonGroupChats/{chatId}": {
       "get": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get all common group chats",
         "parameters": [
           {
-            "name": "privateChatId",
+            "name": "chatId",
             "in": "path",
             "required": true,
             "schema": {
@@ -3750,64 +4048,34 @@
         ]
       }
     },
-    "/chat/pc/getMoreMedia": {
-      "post": {
-        "description": "",
-        "parameters": [],
-        "responses": {},
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/chat/pc/getMoreFile": {
-      "post": {
-        "description": "",
-        "parameters": [],
-        "responses": {},
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/chat/pc/getMoreLink": {
-      "post": {
-        "description": "",
-        "parameters": [],
-        "responses": {},
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/chat/pc/getAllCommonGroupChats": {
-      "post": {
-        "description": "",
-        "parameters": [],
-        "responses": {},
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
     "/chat/getGroupUsers": {
       "post": {
-        "description": "",
+        "tags": [
+          "Chat"
+        ],
+        "description": "Get group users.",
         "parameters": [],
         "responses": {},
         "security": [
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatGetMoreMediaRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/removePrivateChats": {
@@ -4250,6 +4518,36 @@
         },
         "xml": {
           "name": "SearchHashtagResponse"
+        }
+      },
+      "SearchGroupUsersRequest": {
+        "type": "object",
+        "properties": {
+          "searchTerm": {
+            "type": "string",
+            "example": "test"
+          },
+          "groupChatId": {
+            "type": "string",
+            "example": "62c09acb63c9dc82f6bcf9b9"
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "searchTerm",
+          "groupChatId",
+          "page",
+          "pageSize"
+        ],
+        "xml": {
+          "name": "SearchGroupUsersRequest"
         }
       },
       "SearchPeopleRequest": {
@@ -9613,6 +9911,360 @@
         ],
         "xml": {
           "name": "ChatClearPMChatHistoryRequest"
+        }
+      },
+      "ChatUpdateGroupInfoResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Message describing the error."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "object"
+              },
+              "description": {
+                "type": "string",
+                "example": "coverImageUrl sadece grubun fotoğrafı değiştirilirse döner, bunun dışında her zaman null dönecektir."
+              },
+              "properties": {
+                "type": "object",
+                "properties": {
+                  "coverImageUrl": {
+                    "type": "string",
+                    "example": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/announcement/cover_images/1657734350307-9055-duyuru.PNG"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "ChatUpdateGroupInfoResponse"
+        }
+      },
+      "ChatGetGroupProfileResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": "Not: \"media\" sadece grup üyesi olanlar için dönecektir."
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "groupChat": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string",
+                    "example": "62efafbb4a210d4ef6887be7"
+                  },
+                  "ownerId": {
+                    "type": "string",
+                    "example": "62ab8a204166fd1eaebbb3fa"
+                  },
+                  "title": {
+                    "type": "string",
+                    "example": "Fizyoterapi"
+                  },
+                  "type": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "coverImageUrl": {
+                    "type": "string",
+                    "example": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/department_images/1659874226393-5374-fizyoterapi2.png"
+                  },
+                  "about": {
+                    "type": "string",
+                    "example": "Bu grubu sizin için biz(stuplus) oluşturduk. Tepe tepe kullanıp hayrını görün."
+                  },
+                  "schoolId": {
+                    "type": "string",
+                    "example": "62efafb74a210d4ef6887774"
+                  },
+                  "departmentId": {
+                    "type": "string",
+                    "example": "62efafbb4a210d4ef6887be5"
+                  },
+                  "grade": {},
+                  "secondaryEducation": {},
+                  "popularity": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "recordStatus": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "__t": {
+                    "type": "string",
+                    "example": "GroupChat"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "example": "2022-08-07T12:27:39.824Z"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "example": "2022-08-07T12:27:39.824Z"
+                  },
+                  "__v": {
+                    "type": "number",
+                    "example": 0
+                  }
+                }
+              },
+              "last10User": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62e9605a6ec3c40eb09baeb3"
+                    },
+                    "username": {
+                      "type": "string",
+                      "example": "testt"
+                    },
+                    "firstName": {
+                      "type": "string",
+                      "example": "Tom"
+                    },
+                    "lastName": {
+                      "type": "string",
+                      "example": "Taylor"
+                    },
+                    "profilePhotoUrl": {},
+                    "avatarKey": {
+                      "type": "string",
+                      "example": "FQJ+oUNs+j=e"
+                    },
+                    "lastSeenDate": {
+                      "type": "string",
+                      "example": "2022-08-09T16:20:03.987Z"
+                    },
+                    "__t": {
+                      "type": "string",
+                      "example": "User"
+                    }
+                  }
+                }
+              },
+              "totalMemberCount": {
+                "type": "number",
+                "example": 2
+              },
+              "media": {
+                "type": "array",
+                "example": [],
+                "items": {}
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "ChatGetGroupProfileResponse"
+        }
+      },
+      "ChatGetMoreMediaRequest": {
+        "type": "object",
+        "properties": {
+          "chatId": {
+            "type": "string",
+            "example": "chatId"
+          },
+          "lastRecordId": {
+            "type": "string",
+            "example": "62ee7233490026ff5d31726b"
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "chatId",
+          "pageSize"
+        ],
+        "xml": {
+          "name": "ChatGetMoreMediaRequest"
+        }
+      },
+      "ChatGetPrivateChatProfileResponse": {
+        "type": "object",
+        "properties": {
+          "hasError": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "boolean"
+              },
+              "description": {
+                "type": "string",
+                "example": "Indicates whether the operation was successful or not."
+              }
+            }
+          },
+          "validationErrors": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "array"
+              },
+              "description": {
+                "type": "string",
+                "example": "List of validation errors."
+              }
+            }
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "string"
+              },
+              "description": {
+                "type": "string",
+                "example": ""
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "media": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "62f41f4a93d208ac36654e91"
+                    },
+                    "text": {
+                      "type": "string",
+                      "example": "Hello"
+                    },
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "example": "https://stuplus-bucket.s3.eu-central-1.amazonaws.com/public/chat/message_files/1660166417764-5328-1659638700808-5388-scaled_imag"
+                          },
+                          "mimeType": {
+                            "type": "string",
+                            "example": "image/png"
+                          },
+                          "size": {
+                            "type": "number",
+                            "example": 12489
+                          },
+                          "_id": {
+                            "type": "string",
+                            "example": "62f4211293d208ac36655131"
+                          }
+                        }
+                      }
+                    },
+                    "type": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "__t": {
+                      "type": "string",
+                      "example": "Message"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "xml": {
+          "name": "ChatGetPrivateChatProfileResponse"
         }
       }
     },

@@ -68,7 +68,7 @@ export default class RedisService {
             }
             return result;
         } else {
-            let obj: { [key: string]: any } = {} as T;
+            let obj: { [key: string]: any } = {} as T as { [key: string]: any };
             for (let i = 0; i < project.length; i++) {
                 obj[project[i]] = JSON.parse(value[i]);
             }
@@ -437,6 +437,7 @@ export default class RedisService {
                 _id: chatLM.owner._id,
                 username: chatLM.owner.username,
             },
+            type: chatLM.type,
             createdAt: chatLM.createdAt,
         }))
     }
@@ -455,6 +456,7 @@ export default class RedisService {
     static async updateGroupChatLastMessage(groupChatLM: any, groupChatId: string): Promise<void> {
         this.client.hSet(RedisKeyType.AllGroupChats, groupChatId + ":lm", JSON.stringify({
             text: groupChatLM.text,
+            type: groupChatLM.type,
             files: groupChatLM.files,
             owner: {
                 _id: groupChatLM.owner._id,

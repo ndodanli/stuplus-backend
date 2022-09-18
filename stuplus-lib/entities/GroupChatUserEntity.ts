@@ -4,6 +4,7 @@ import BaseEntity from "./BaseEntity";
 
 export interface GroupChatUser extends BaseEntity {
   userId: string; //user id
+  username: string;
   groupChatId: string; //chat id
   groupRole: GroupChatUserRole;
 }
@@ -14,6 +15,7 @@ export interface GroupChatUserDocument extends GroupChatUser, Document {
 
 export const GroupChatUserSchema: Schema = new Schema({
   userId: { type: String, required: true },
+  username: { type: String, required: true },
   groupChatId: { type: String, required: true },
   groupRole: { type: String, required: true },
 });
@@ -40,6 +42,7 @@ GroupChatUserSchema.methods.minify = async function (
     updatedAt: this.updatedAt,
     recordDeletionDate: this.recordDeletionDate,
     userId: this.userId,
+    username: this.username,
     groupChatId: this.groupChatId,
     groupRole: this.groupRole,
   };

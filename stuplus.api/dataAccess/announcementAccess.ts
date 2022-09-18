@@ -5,7 +5,7 @@ import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
-import { searchable, searchableWithSpaces, stringify } from "../../stuplus-lib/utils/general";
+import { searchable, searchableWithSpaces, sortByCreatedAtDesc, stringify } from "../../stuplus-lib/utils/general";
 import { LikeType, RecordStatus } from "../../stuplus-lib/enums/enums";
 import { AnnouncementCommentDocument } from "../../stuplus-lib/entities/AnnouncementCommentEntity";
 import sanitizeHtml from 'sanitize-html';
@@ -175,6 +175,8 @@ export class AnnouncementAccess {
 
             const redisComments = await RedisService.client
                 .hVals(RedisKeyType.DBAnnouncementComment + payload.announcementId).then(x => x.map(y => JSON.parse(y).e));
+
+            sortByCreatedAtDesc(redisComments);
 
             payload.take -= redisComments.length
             let newComments: AnnouncementCommentDocument[] = [];
@@ -414,6 +416,8 @@ export class AnnouncementAccess {
         if (isFirstPage) {
             const redisSubComments = await RedisService.client
                 .hVals(RedisKeyType.DBAnnouncementSubComment + payload.commentId).then(x => x.map(y => JSON.parse(y).e));
+
+            sortByCreatedAtDesc(redisSubComments);
 
             payload.take -= redisSubComments.length
             let newSubComments: AnnouncementSubCommentDocument[] = [];

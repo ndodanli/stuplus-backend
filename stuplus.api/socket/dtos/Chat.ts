@@ -21,7 +21,6 @@ export class UpdateGroupInfoDTO {
     groupChatId: string = "";
     title: string = "";
     type: GroupChatType = GroupChatType.Private;
-    avatarKey: string = "";
     hashTags: string[] = [];
     settings: GroupChatSettings = new GroupChatSettings(true);
     constructor(obj: any) {

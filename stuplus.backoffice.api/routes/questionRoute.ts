@@ -9,6 +9,7 @@ import { authorize } from "../middlewares/auth";
 import { RecordStatus, Role } from "../../stuplus-lib/enums/enums";
 import { SortOrder } from "mongoose";
 import RedisService from "../../stuplus-lib/services/redisService";
+import { searchableWithSpaces } from "../../stuplus-lib/utils/general";
 
 const router = Router();
 
@@ -63,6 +64,7 @@ router.post("/addUpdatequestion", authorize([Role.Admin, Role.Moderator]), async
       }
       questionToUpdate.ownerId = question.ownerId;
       questionToUpdate.title = question.title;
+      questionToUpdate.titlesch = searchableWithSpaces(question.title);
       questionToUpdate.coverImageUrl = question.coverImageUrl;
       questionToUpdate.relatedSchoolIds = question.relatedSchoolIds;
       questionToUpdate.text = question.text;
@@ -73,6 +75,7 @@ router.post("/addUpdatequestion", authorize([Role.Admin, Role.Moderator]), async
     }
     else {
       const newquestion = new QuestionEntity(question);
+      newquestion.titlesch = searchableWithSpaces(question.title);
       await newquestion.save();
     }
   } catch (err: any) {

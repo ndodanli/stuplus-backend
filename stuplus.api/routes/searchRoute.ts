@@ -5,7 +5,7 @@ import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { authorize } from "../../stuplus.backoffice.api/middlewares/auth";
 import { Role, SearchedEntityType } from "../../stuplus-lib/enums/enums";
 import { validateSearch } from "../middlewares/validation/search/validateSearchRoute";
-import { SearchGroupChatDTO, SearchHashTagDTO, SearchPeopleAndGroupChatDTO, SearchPeopleDTO, SearchQuestionDTO } from "../dtos/SearchDTOs";
+import { SearchGroupChatDTO, SearchGroupUsersDTO, SearchHashTagDTO, SearchPeopleAndGroupChatDTO, SearchPeopleDTO, SearchQuestionDTO } from "../dtos/SearchDTOs";
 import { SearchAccess } from "../dataAccess/searchAccess";
 import { SearchHistoryEntity } from "../../stuplus-lib/entities/BaseEntity";
 import RedisService from "../../stuplus-lib/services/redisService";
@@ -281,6 +281,29 @@ router.post("/announcement", authorize([Role.User, Role.Admin, Role.ContentCreat
         }
 
         await RedisService.client.hSet(RedisKeyType.DBSearchHistory, res.locals.user._id, stringify(sData));
+    } catch (err: any) {
+        response.setErrorMessage(err.message);
+
+        if (err.status != 200)
+            return InternalError(res, response, err);
+    }
+
+    return Ok(res, response);
+});
+
+router.post("/groupUsers", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateSearch, async (req: CustomRequest<SearchGroupUsersDTO>, res: any) => {
+    /* #swagger.tags = ['Search']
+        #swagger.description = 'Get group users by search term.' */
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/SearchGroupUsersRequest" }
+  } */
+    const response = new BaseResponse<any>();
+    try {
+        const payload = new SearchGroupUsersDTO(req.body);
+
+        response.data = await SearchAccess.getSearchedGroupUsers(res.locals.user._id, payload);
+
     } catch (err: any) {
         response.setErrorMessage(err.message);
 

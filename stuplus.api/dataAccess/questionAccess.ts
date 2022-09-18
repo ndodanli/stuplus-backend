@@ -5,7 +5,7 @@ import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { RedisKeyType } from "../../stuplus-lib/enums/enums_socket";
-import { searchable, searchableWithSpaces, stringify } from "../../stuplus-lib/utils/general";
+import { searchable, searchableWithSpaces, sortByCreatedAtDesc, stringify } from "../../stuplus-lib/utils/general";
 import { LikeType, RecordStatus } from "../../stuplus-lib/enums/enums";
 import { QuestionCommentDocument } from "../../stuplus-lib/entities/QuestionCommentEntity";
 import sanitizeHtml from 'sanitize-html';
@@ -133,6 +133,8 @@ export class QuestionAccess {
             const redisComments = await RedisService.client
                 .hVals(RedisKeyType.DBQuestionComment + payload.questionId).then(x => x.map(y => JSON.parse(y).e));
 
+            sortByCreatedAtDesc(redisComments);
+
             payload.take -= redisComments.length
             let newComments: QuestionCommentDocument[] = [];
             if (payload.take > 0) {
@@ -207,6 +209,8 @@ export class QuestionAccess {
         if (isFirstPage) {
             const redisSubComments = await RedisService.client
                 .hVals(RedisKeyType.DBQuestionSubComment + payload.commentId).then(x => x.map(y => JSON.parse(y).e));
+
+            sortByCreatedAtDesc(redisSubComments);
 
             payload.take -= redisSubComments.length
             let newSubComments: QuestionSubCommentDocument[] = [];
