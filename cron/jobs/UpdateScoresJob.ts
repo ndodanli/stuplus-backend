@@ -30,13 +30,13 @@ export default class UpdateScoresJob implements IBaseCronJob {
                 {
                     $or: [
                         { fromDate: null },
-                        { fromDate: { $gte: now } },
+                        { fromDate: { $lte: now } },
                     ]
                 },
                 {
                     $or: [
                         { toDate: null },
-                        { toDate: { $lte: now } },
+                        { toDate: { $gte: now } },
                     ],
                 }
             ]
@@ -98,13 +98,13 @@ export default class UpdateScoresJob implements IBaseCronJob {
                 {
                     $or: [
                         { fromDate: null },
-                        { fromDate: { $gte: now } },
+                        { fromDate: { $lte: now } },
                     ]
                 },
                 {
                     $or: [
                         { toDate: null },
-                        { toDate: { $lte: now } },
+                        { toDate: { $gte: now } },
                     ],
                 }
             ]

@@ -462,6 +462,7 @@ export default class RedisService {
                 _id: groupChatLM.owner._id,
                 username: groupChatLM.owner.username,
             },
+            mentionedUsers: groupChatLM.mentionedUsers,
             createdAt: groupChatLM.createdAt
         }))
     }

@@ -10,7 +10,7 @@ import { User } from "../entities/UserEntity";
 import { MessageFiles } from "../entities/MessageEntity";
 import { MessageType } from "../enums/enums";
 export default class MessageService {
-    public static async sendGroupMessage({ ownerId, text, groupChatId, fromUser, files, replyToId }: { ownerId: string; text: string; groupChatId: string; fromUser: User; files?: MessageFiles[], replyToId?: string }): Promise<any> {
+    public static async sendGroupMessage({ ownerId, text, groupChatId, fromUser, files, replyToId, type, mentionedUsers }: { ownerId: string; text: string; groupChatId: string; fromUser: User; files?: MessageFiles[], replyToId?: string, type?: MessageType, mentionedUsers?: [] }): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
                 const now = new Date();
@@ -37,9 +37,13 @@ export default class MessageService {
                         avKey: fromUser.avatarKey, //avatar key
                     }
                 };
+                if (mentionedUsers) {
+                    chatData.e["mentionedUsers"] = mentionedUsers;
+                    emitData["mentionedUsers"] = mentionedUsers;
+                }
                 if (files) {
                     chatData.e["files"] = files;
-                    chatData.e["type"] = isImage(files[0].mimeType ?? "") ? MessageType.Image : isVideo(files[0].mimeType ?? "") ? MessageType.Video : MessageType.File;
+                    chatData.e["type"] = type;
                     emitData["files"] = files;
                 } else {
                     chatData.e["type"] = MessageType.Text;
@@ -78,7 +82,7 @@ export default class MessageService {
         });
     }
 
-    public static async sendPrivateMessage({ toUserId, ownerId, text, chatId, fromUser, files, replyToId }: { toUserId: string, ownerId: string; text: string; chatId: string; fromUser: User; files?: MessageFiles[], replyToId?: string }): Promise<any> {
+    public static async sendPrivateMessage({ toUserId, ownerId, text, chatId, fromUser, files, replyToId, type }: { toUserId: string, ownerId: string; text: string; chatId: string; fromUser: User; files?: MessageFiles[], replyToId?: string, type?: MessageType }): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
                 const now = new Date();
@@ -106,7 +110,7 @@ export default class MessageService {
                 };
                 if (files) {
                     chatData.e["files"] = files;
-                    chatData.e["type"] = isImage(files[0].mimeType ?? "") ? MessageType.Image : isVideo(files[0].mimeType ?? "") ? MessageType.Video : MessageType.File;
+                    chatData.e["type"] = type;
                     emitData["files"] = files;
                 } else {
                     chatData.e["type"] = MessageType.Text;

@@ -3470,6 +3470,11 @@
                   "replyToId": {
                     "type": "string",
                     "description": "Reply to message ID"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Message type",
+                    "example": "1"
                   }
                 },
                 "required": [
@@ -3646,6 +3651,14 @@
                   "replyToId": {
                     "type": "string",
                     "description": "Reply to message ID"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Message type",
+                    "example": "1"
+                  },
+                  "mentionedUsers": {
+                    "type": "string"
                   }
                 },
                 "required": [
@@ -3708,7 +3721,9 @@
                   }
                 },
                 "required": [
-                  "files"
+                  "files",
+                  "mi",
+                  "gCi"
                 ]
               }
             }

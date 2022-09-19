@@ -17,6 +17,7 @@ export class RedisGroupMessageDTO {
     t?: string;
     gCi?: string;
     rToId?: string;
+    mentionedUsers?: string[];
 
     constructor(obj: any) {
         if (obj) {
@@ -65,6 +66,7 @@ export class RedisSendFileMessageDTO {
     t: string = "";
     ci: string = "";
     to: string = "";
+    type: string = "";
     replyToId: string = "";
     constructor(obj: any) {
         if (obj) {
@@ -88,6 +90,8 @@ export class RedisGroupSendFileMessageDTO {
     m: string = "";
     gCi: string = "";
     replyToId: string = "";
+    type: string = "";
+    mentionedUsers: string = "";
     constructor(obj: any) {
         if (obj) {
             mapToDTO(this, obj);

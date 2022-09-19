@@ -304,6 +304,7 @@ io.on("connection", async (socket: ISocket) => {
                     text: data.t,
                     groupChatId: data.gCi,
                     replyToId: data.rToId,
+                    mentionedUsers: data.mentionedUsers,
                     createdAt: now,
                 },
                 t: RedisGMOperationType.InsertMessage
@@ -322,7 +323,7 @@ io.on("connection", async (socket: ISocket) => {
 
             const gcName = groupChatName(data.gCi);
             socket.to(gcName).emit("cGmSend", {
-                t: data.t, mi: gMessageEntity.id, gCi: data.gCi, f: {
+                t: data.t, mi: gMessageEntity.id, gCi: data.gCi, mentionedUsers: data.mentionedUsers, f: {
                     _id: socket.data.user._id,
                     username: socket.data.user.username,
                     firstName: socket.data.user.firstName,
@@ -1156,6 +1157,7 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator,
                         text: { $first: "$text" },
                         type: { $first: "$type" },
                         files: { $first: "$files" },
+                        mentionedUsers: { $first: "$mentionedUsers" },
                         createdAt: { $first: "$createdAt" },
                     }
                 }
@@ -1170,6 +1172,7 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator,
                         text: notFoundLastMessages[i].text,
                         type: notFoundLastMessages[i].type,
                         files: notFoundLastMessages[i].files,
+                        mentionedUsers: notFoundLastMessages[i].mentionedUsers,
                         createdAt: notFoundLastMessages[i].createdAt,
                     };
                     notFoundUserIds.push(notFoundLastMessages[i].ownerId);
@@ -1935,7 +1938,12 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
                             replyToId: {
                                 type: "string",
                                 description: "Reply to message ID",
-                            }
+                            },
+                            type: {
+                                type: "string",
+                                description: "Message type",
+                                example: "1"
+                            },
                          },
                          required: ["files", "to"]
                      }
@@ -1981,7 +1989,8 @@ router.post("/sendPMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
             chatId: payload.ci,
             files: files,
             replyToId: payload.replyToId,
-            fromUser: await RedisService.acquireUser(res.locals.user._id, ["_id", "username", "firstName", "lastName", "profilePhotoUrl", "avatarKey"])
+            fromUser: await RedisService.acquireUser(res.locals.user._id, ["_id", "username", "firstName", "lastName", "profilePhotoUrl", "avatarKey"]),
+            type: parseInt(payload.type)
         });
 
         response.data["mi"] = messageEntity._id;
@@ -2281,6 +2290,14 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
                             replyToId: {
                                 type: "string",
                                 description: "Reply to message ID",
+                            },
+                            type: {
+                                type: "string",
+                                description: "Message type",
+                                example: "1"
+                            },
+                            mentionedUsers: {
+                                type: "string"
                             }
                          },
                          required: ["files", "gCi"]
@@ -2319,7 +2336,9 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
             groupChatId: payload.gCi,
             files: files,
             replyToId: payload.replyToId,
-            fromUser: senderUser
+            fromUser: senderUser,
+            type: parseInt(payload.type),
+            mentionedUsers: JSON.parse(payload.mentionedUsers)
         });
         response.data["gCi"] = payload.gCi;
         response.data["mi"] = groupMessageEntity._id;
@@ -2359,7 +2378,7 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
                                 format: "binary"
                             }
                          },
-                         required: ["files"]
+                         required: ["files", "mi", "gCi"]
                      }
                  }
              } 

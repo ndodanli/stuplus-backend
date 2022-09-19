@@ -53,13 +53,13 @@ export class AnnouncementAccess {
                 {
                     $or: [
                         { fromDate: null },
-                        { fromDate: { $gte: now } },
+                        { fromDate: { $lte: now } },
                     ]
                 },
                 {
                     $or: [
                         { toDate: null },
-                        { toDate: { $lte: now } },
+                        { toDate: { $gte: now } },
                     ],
                 }
             ],
@@ -75,9 +75,9 @@ export class AnnouncementAccess {
         }
 
         if (payload.schoolSearch) {
-            announcementsQuery = announcementsQuery.where({ ownerSchoolId: payload.ownerSchoolId });
+            announcementsQuery = announcementsQuery.where({ relatedSchoolIds: { $in: [payload.ownerSchoolId] } });
         } else {
-            announcementsQuery = announcementsQuery.where({ ownerSchoolId: { $ne: payload.ownerSchoolId } });
+            announcementsQuery = announcementsQuery.where({ relatedSchoolIds: { $nin: [payload.ownerSchoolId] } });
         }
 
         if (payload.lastRecordId)
@@ -91,17 +91,17 @@ export class AnnouncementAccess {
 
         if (payload.schoolSearch && announcements.length < payload.take) {
             let announcementsSecond = await AnnouncementEntity.find({
-                ownerSchoolId: { $ne: payload.ownerSchoolId }, isActive: true, $and: [
+                relatedSchoolIds: { $nin: [payload.ownerSchoolId] }, isActive: true, $and: [
                     {
                         $or: [
                             { fromDate: null },
-                            { fromDate: { $gte: now } },
+                            { fromDate: { $lte: now } },
                         ]
                     },
                     {
                         $or: [
                             { toDate: null },
-                            { toDate: { $lte: now } },
+                            { toDate: { $gte: now } },
                         ],
                     }
                 ],
