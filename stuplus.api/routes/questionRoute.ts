@@ -5,11 +5,14 @@ import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { validateAddQuestion, validateCommentQuestion, validateCommentLikeDislikeQuestion, validateGetQuestionsQuestion, validateGetCommentsQuestion, validateLikeDislikeQuestion, validateGetSubCommentsQuestion, validateSubCommentQuestion, validateSubCommentLikeDislikeQuestion } from "../middlewares/validation/question/validateQuestionRoute";
 import { authorize } from "../middlewares/auth";
-import { Role } from "../../stuplus-lib/enums/enums";
+import { OSNotificationType, Role } from "../../stuplus-lib/enums/enums";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { QuestionAddDTO, QuestionCommenLikeDisliketDTO, QuestionCommentDTO, QuestionLikeDislikeDTO, QuestionGetMultipleDTO, QuestionGetCommentsDTO, QuestionGetSubCommentsDTO, QuestionSubCommentDTO, QuestionSubCommenLikeDisliketDTO } from "../dtos/QuestionDTOs";
 import { QuestionAccess } from "../dataAccess/questionAccess";
 import axios from "axios";
+import OneSignalService from "../../stuplus-lib/services/oneSignalService";
+import { QuestionCommentEntity, QuestionEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { truncate } from "../../stuplus-lib/utils/general";
 const router = Router();
 
 router.post("/add", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateAddQuestion, async (req: CustomRequest<QuestionAddDTO>, res: any) => {
@@ -163,7 +166,7 @@ schema: { $ref: "#/definitions/QuestionCommentRequest" }
      "$ref": "#/definitions/NullResponse"
    }
  } */
-  const response = new BaseResponse<object>();
+  const response = new BaseResponse<any>();
   try {
     response.data = await QuestionAccess.commentQuestion(req.selectedLangs(), new QuestionCommentDTO(req.body), res.locals.user._id);
   } catch (err: any) {
@@ -173,7 +176,22 @@ schema: { $ref: "#/definitions/QuestionCommentRequest" }
       return InternalError(res, response, err);
   }
 
-  return Ok(res, response)
+  Ok(res, response)
+
+  const question = await QuestionEntity.findOne({ _id: req.body.questionId }, { _id: 0, ownerId: 1, title: 1 });
+  if (question) {
+    await OneSignalService.sendNotificationWithUserIds({
+      userIds: [question.ownerId],
+      heading: `${truncate(question.title, 20)} yeni bir yorum aldı.`,
+      content: `${truncate(req.body.comment, 50)}`,
+      chatId: req.body.questionId,
+      data: {
+        type: OSNotificationType.QuestionNewComment,
+        questionId: req.body.questionId,
+        commentId: response.data?._id
+      }
+    })
+  }
 });
 
 router.post("/commentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateCommentLikeDislikeQuestion, async (req: CustomRequest<QuestionCommenLikeDisliketDTO>, res: any) => {
@@ -241,7 +259,7 @@ schema: { $ref: "#/definitions/QuestionSubCommentRequest" }
      "$ref": "#/definitions/NullResponse"
    }
  } */
-  const response = new BaseResponse<object>();
+  const response = new BaseResponse<any>();
   try {
     response.data = await QuestionAccess.subCommentQuestion(req.selectedLangs(), new QuestionSubCommentDTO(req.body), res.locals.user._id);
   } catch (err: any) {
@@ -251,7 +269,40 @@ schema: { $ref: "#/definitions/QuestionSubCommentRequest" }
       return InternalError(res, response, err);
   }
 
-  return Ok(res, response)
+  Ok(res, response)
+
+  const question = await QuestionEntity.findOne({ _id: req.body.questionId }, { _id: 0, ownerId: 1, title: 1 });
+  if (question) {
+    await OneSignalService.sendNotificationWithUserIds({
+      userIds: [question.ownerId],
+      heading: `${truncate(question.title, 20)} yeni bir yorum aldı.`,
+      content: `${truncate(req.body.comment, 50)}`,
+      chatId: req.body.questionId,
+      data: {
+        type: OSNotificationType.QuestionNewSubComment,
+        questionId: req.body.questionId,
+        subCommentId: response.data?._id
+      }
+    })
+  }
+  const comment = await QuestionCommentEntity.findOne({ _id: req.body.commentId }, { _id: 0, ownerId: 1 });
+  if (comment) {
+    const subCommentOwner = await UserEntity.findOne({ _id: res.locals.user._id }, { _id: 0, username: 1 });
+    if (subCommentOwner) {
+      await OneSignalService.sendNotificationWithUserIds({
+        userIds: [comment.ownerId],
+        heading: `${truncate(subCommentOwner.username, 20)} yorumuna cevap verdi.`,
+        content: `${truncate(req.body.comment, 50)}`,
+        chatId: req.body.commentId,
+        data: {
+          type: OSNotificationType.QuestionCommentResponse,
+          questionId: req.body.questionId,
+          commentId: req.body.commentId,
+          subCommentId: response.data?._id
+        }
+      });
+    }
+  }
 });
 
 router.post("/subCommentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateSubCommentLikeDislikeQuestion, async (req: CustomRequest<QuestionSubCommenLikeDisliketDTO>, res: any) => {

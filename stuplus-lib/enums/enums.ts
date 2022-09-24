@@ -115,3 +115,14 @@ export enum MessageType {
    Link = 5,
    Location = 6,
 }
+
+export enum OSNotificationType {
+   PrivateMessageReceived = 0,
+   GroupMessageReceived = 1,
+   AnnouncementNewComment = 2,
+   AnnouncementNewSubComment = 3,
+   AnnouncementCommentResponse = 4,
+   QuestionNewComment = 5,
+   QuestionNewSubComment = 6,
+   QuestionCommentResponse = 7
+}

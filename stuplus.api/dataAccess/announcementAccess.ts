@@ -337,7 +337,7 @@ export class AnnouncementAccess {
         return announcement;
     }
 
-    public static async commentAnnouncement(acceptedLanguages: Array<string>, payload: AnnouncementCommentDTO, currentUserId: string): Promise<Boolean> {
+    public static async commentAnnouncement(acceptedLanguages: Array<string>, payload: AnnouncementCommentDTO, currentUserId: string): Promise<object> {
         let now = new Date();
         const announcementCommentEntity = new AnnouncementCommentEntity({});
         const announcementCommentData: any = {
@@ -353,7 +353,7 @@ export class AnnouncementAccess {
         }
         await RedisService.client.hSet(RedisKeyType.DBAnnouncementComment + payload.announcementId, announcementCommentData.id, stringify(announcementCommentData));
 
-        return true;
+        return { _id: announcementCommentEntity.id.toString() };
     }
 
     public static async commentLikeDislikeAnnouncement(acceptedLanguages: Array<string>, payload: AnnouncementCommenLikeDisliketDTO, currentUserId: string): Promise<object> {

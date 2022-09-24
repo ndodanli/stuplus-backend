@@ -14,7 +14,7 @@ import { groupChatName, userWatchRoomName } from "../../stuplus-lib/utils/namesp
 import RedisService from "../../stuplus-lib/services/redisService";
 import { searchable, stringify, searchableWithSpaces, chunk, sortByCreatedAtDesc, isValidUrl, isIncludingBadWord } from "../../stuplus-lib/utils/general";
 import { MessageDocument, MessageFiles, ReplyToDTO } from "../../stuplus-lib/entities/MessageEntity";
-import { DeleteChatForType, GroupChatUserRole, MessageLimitation, MessageType, RecordStatus, RedisMessagesNotFoundType, Role } from "../../stuplus-lib/enums/enums";
+import { DeleteChatForType, GroupChatUserRole, MessageLimitation, MessageType, OSNotificationType, RecordStatus, RedisMessagesNotFoundType, Role } from "../../stuplus-lib/enums/enums";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { Router } from "express";
 import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
@@ -24,7 +24,8 @@ import { GroupChatUserDocument } from "../../stuplus-lib/entities/GroupChatUserE
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { Chat } from "../../stuplus-lib/entities/ChatEntity";
 import { GroupChat } from "../../stuplus-lib/entities/GroupChatEntity";
-import mongoose, { isValidObjectId, mongo } from "mongoose";
+import { isValidObjectId } from "mongoose";
+import mongoose from "mongoose";
 import { GroupAccess } from "../dataAccess/groupAccess";
 import OnlineUserService from "../../stuplus-lib/services/onlineUsersService";
 import OneSignalService from "../../stuplus-lib/services/oneSignalService";
@@ -204,11 +205,16 @@ io.on("connection", async (socket: ISocket) => {
                 socket.to(data.to).emit("cPmSend", emitData);
             }
             else {
-                // await OneSignalService.sendNotificationWithUserIds({
-                //     heading: socket.data.user.username,
-                //     userIds: [data.to],
-                //     content: data.m,
-                // })
+                await OneSignalService.sendNotificationWithUserIds({
+                    heading: socket.data.user.username,
+                    userIds: [data.to],
+                    content: data.t,
+                    chatId: data.ci,
+                    data: {
+                        type: OSNotificationType.PrivateMessageReceived,
+                        chatId: data.ci,
+                    }
+                })
             }
 
             cb(responseData);
@@ -337,15 +343,29 @@ io.on("connection", async (socket: ISocket) => {
 
             //#region After callback
             //TODO: send notification to offline users
-            // const clients = io.sockets.adapter.rooms.get('chatId');
-            // for (const clientId of clients) {
+            const onlineUserIds: string[] = [];
+            const clients = io.sockets.adapter.rooms.get(gcName);
+            for (const clientId of clients) {
+                const clientSocket = io.sockets.sockets.get(clientId);
+                onlineUserIds.push(clientSocket.data.user._id);
+                clientSocket.connected
+            }
+            const groupUserIds = await GroupChatUserEntity.find({ groupChatId: data.gCi }, { userId: 1 });
+            const offlineUserIds = groupUserIds.filter(x => !onlineUserIds.includes(x.userId)).map(x => x.userId);
 
-            //     //this is the socket of each client in the room.
-            //     const clientSocket = io.sockets.sockets.get(clientId);
-            //     clientSocket.connected
-            //     //you can do whatever you need with this
+            if (offlineUserIds.length > 0) {
+                await OneSignalService.sendNotificationWithUserIds({
+                    heading: socket.data.user.username,
+                    userIds: offlineUserIds,
+                    content: data.t,
+                    chatId: data.gCi,
+                    data: {
+                        type: OSNotificationType.GroupMessageReceived,
+                        groupChatId: data.gCi,
+                    }
+                })
+            }
 
-            // }
             const groupChat = await RedisService.acquireGroupChat(data.gCi);
             if (groupChat) {
                 if (groupChat.settings?.checkBadWords) {
@@ -1201,7 +1221,7 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator,
             const userGroupChat = userGroupChats[i];
             userGroupChat.unreadMessageCount = 0;
             const userReadCount = userReadCounts.get(userGroupChat._id.toString());
-            if (userReadCount == undefined || userReadCount == null || userReadCount == NaN) {
+            if (userReadCount == undefined || userReadCount == null || isNaN(userReadCount)) {
                 const redisGMAll = await RedisService.client.hVals(RedisKeyType.DBGroupMessage + userGroupChat._id.toString());
                 for (let i = 0; i < redisGMAll.length; i++) {
                     const chatData = JSON.parse(redisGMAll[i]);
@@ -1234,13 +1254,14 @@ router.get("/getGMChats", authorize([Role.User, Role.Admin, Role.ContentCreator,
                 }
             } else {
                 userGroupChat.unreadMessageCount = (groupChatNewMessageCount.get(userGroupChat._id.toString()) ?? 0) - userReadCount;
+                let a = 3;
             }
         }
 
         if (unreadMessageCountQueries.length > 0) {
             unreadMessageCounts = await Promise.all(unreadMessageCountQueries);
             for (let i = 0; i < userGroupChats.length; i++) {
-                userGroupChats[i].unreadMessageCount += unreadMessageCounts[i];
+                userGroupChats[i].unreadMessageCount += unreadMessageCounts[i] ?? 0;
                 const groupMessageCount = groupChatNewMessageCount.get(userGroupChats[i]._id.toString()) ?? 0;
                 await RedisService.client.hSet(RedisKeyType.User + res.locals.user._id + RedisSubKeyType.GroupChatReadCounts, userGroupChatsIds[i], groupMessageCount - userGroupChats[i].unreadMessageCount);
             }
@@ -1363,8 +1384,9 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
         let chatUsers = payload.userIds.map((userId: string) => {
             return new GroupChatUserEntity({ userId: userId, username: usernames.find(x => x._id.toString() == userId)?.username, groupChatId: groupChatId, groupRole: GroupChatUserRole.Member });
         });
-        chatUsers.push(new GroupChatUserEntity({ userId: res.locals.user._id, groupChatId: groupChatId, groupRole: GroupChatUserRole.Owner }));
+        const ownerUser = await RedisService.acquireUser(res.locals.user._id, ["username"]);
         await GroupChatUserEntity.insertMany(chatUsers);
+        chatUsers.push(new GroupChatUserEntity({ userId: res.locals.user._id, groupChatId: groupChatId, groupRole: GroupChatUserRole.Owner, username: ownerUser.username }));
         await UserEntity.updateMany({ _id: { $in: chatUsers.map(x => x.userId) } }, { $inc: { "statistics.groupCount": 1 } });
 
         await RedisService.incrementGroupMemberCount(groupChatId, chatUsers.length);
@@ -2332,14 +2354,15 @@ router.post("/sendGMFile", authorize([Role.User, Role.Admin, Role.ContentCreator
         const files = [new MessageFiles(req.file?.location, req.file.mimetype, req.file.size, new mongoose.Types.ObjectId())];
         const groupMessageEntity = await MessageService.sendGroupMessage({
             ownerId: res.locals.user._id,
-            text: payload.m,
+            text: payload.t,
             groupChatId: payload.gCi,
             files: files,
             replyToId: payload.replyToId,
             fromUser: senderUser,
-            type: parseInt(payload.type),
-            mentionedUsers: JSON.parse(payload.mentionedUsers)
+            type: parseInt(payload.type)
         });
+        if (payload.mentionedUsers)
+            groupMessageEntity["mentionedUsers"] = JSON.parse(payload.mentionedUsers)
         response.data["gCi"] = payload.gCi;
         response.data["mi"] = groupMessageEntity._id;
         response.data["files"] = files[0];

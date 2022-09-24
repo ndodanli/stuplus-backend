@@ -30,7 +30,7 @@ import OnlineUserService from "../../stuplus-lib/services/onlineUsersService";
 import TelegramService from "../../stuplus-lib/services/telegramService";
 export class UserAccess {
     public static async getUserProfile(acceptedLanguages: Array<string>, currentUserId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
-        let response: any;
+        let response: any = {};
         response.user = await RedisService.acquireUser(targetUserId, ["_id", "firstName", "lastName", "profilePhotoUrl",
             "role", "grade", "schoolId", "departmentId", "isAccEmailConfirmed", "relatedSchoolIds",
             "isSchoolEmailConfirmed", "interestIds", "avatarKey", "username", "about", "privacySettings", "lastSeenDate", "blockedUserIds"]);

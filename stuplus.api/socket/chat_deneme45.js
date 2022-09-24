@@ -73,27 +73,25 @@ $(document).ready(async function () {
             $(`<span style="color:yellow;">sended</span>`).appendTo(`#${res.mi}`)
         });
 
-        // socket.emit("gm-send", {
-        //     gCi: "62a8db3451e63a44bfcc8116",
-        //     m: msgText,
-        //     ci: "dasds"
-        //     + Math.random() * 10000
-        // }, (res) => {
-        //     console.log("response: ", res);
-        //     socket.emit("gm-forwarded", {
-        //         gCi: "62a8db3451e63a44bfcc8116",
-        //         mids: [res.mi],
-        //     }, (res) => {
-        //         console.log("response: ", res);
-        //     });
+        socket.emit("gmSend", {
+            gCi: "62a8db3451e63a44bfcc8116",
+            t: msgText
+        }, (res) => {
+            console.log("response: ", res);
+            socket.emit("gm-forwarded", {
+                gCi: "62a8db3451e63a44bfcc8116",
+                mids: [res.mi],
+            }, (res) => {
+                console.log("response: ", res);
+            });
 
-        //     socket.emit("gm-readed", {
-        //         gCi: "62a8db3451e63a44bfcc8116",
-        //         mids: [res.mi],
-        //     }, (res) => {
-        //         console.log("response: ", res);
-        //     });
-        // });
+            socket.emit("gm-readed", {
+                gCi: "62a8db3451e63a44bfcc8116",
+                mids: [res.mi],
+            }, (res) => {
+                console.log("response: ", res);
+            });
+        });
     });
     socket.on("cPmSend", data => {
         console.log("cPmSend: ", data);

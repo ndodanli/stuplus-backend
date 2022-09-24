@@ -11,7 +11,7 @@ export class QuestionAddDTO {
     hashTags: string[] = [];
     ownerSchoolId: string = "";
     constructor(obj: any) {
-        if (obj) {
+    if (obj) {
             mapToDTO(this, obj);
         }
     }

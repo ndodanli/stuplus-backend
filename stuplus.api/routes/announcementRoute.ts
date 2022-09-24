@@ -5,11 +5,14 @@ import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { validateAddAnnouncement, validateCommentAnnouncement, validateCommentLikeDislikeAnnouncement, validateGetAnnouncementsAnnouncement, validateGetCommentsAnnouncement, validateGetSubCommentsAnnouncement, validateLikeDislikeAnnouncement, validateSubCommentAnnouncement, validateSubCommentLikeDislikeAnnouncement } from "../middlewares/validation/announcement/validateAnnouncementRoute";
 import { authorize } from "../middlewares/auth";
-import { Role } from "../../stuplus-lib/enums/enums";
+import { OSNotificationType, Role } from "../../stuplus-lib/enums/enums";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { AnnouncementAddDTO, AnnouncementCommenLikeDisliketDTO, AnnouncementCommentDTO, AnnouncementLikeDislikeDTO, AnnouncementGetMultipleDTO, AnnouncementGetCommentsDTO, AnnouncementSubCommentDTO, AnnouncementSubCommenLikeDisliketDTO, AnnouncementGetSubCommentsDTO } from "../dtos/AnnouncementDTOs";
 import { AnnouncementAccess } from "../dataAccess/announcementAccess";
 import axios from "axios";
+import { AnnouncementCommentEntity, AnnouncementEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import OneSignalService from "../../stuplus-lib/services/oneSignalService";
+import { truncate } from "../../stuplus-lib/utils/general";
 const router = Router();
 
 router.post("/add", authorize([Role.ContentCreator, Role.Admin]), validateAddAnnouncement, async (req: CustomRequest<AnnouncementAddDTO>, res: any) => {
@@ -163,9 +166,9 @@ schema: { $ref: "#/definitions/AnnouncementCommentRequest" }
      "$ref": "#/definitions/NullResponse"
    }
  } */
-  const response = new BaseResponse<object>();
+  const response = new BaseResponse<any>();
   try {
-    await AnnouncementAccess.commentAnnouncement(req.selectedLangs(), new AnnouncementCommentDTO(req.body), res.locals.user._id);
+    response.data = await AnnouncementAccess.commentAnnouncement(req.selectedLangs(), new AnnouncementCommentDTO(req.body), res.locals.user._id);
   } catch (err: any) {
     response.setErrorMessage(err.message)
 
@@ -173,7 +176,22 @@ schema: { $ref: "#/definitions/AnnouncementCommentRequest" }
       return InternalError(res, response, err);
   }
 
-  return Ok(res, response)
+  Ok(res, response)
+
+  const announcement = await AnnouncementEntity.findOne({ _id: req.body.announcementId }, { _id: 0, ownerId: 1, title: 1 });
+  if (announcement) {
+    await OneSignalService.sendNotificationWithUserIds({
+      userIds: [announcement.ownerId],
+      heading: `${truncate(announcement.title, 20)} yeni bir yorum aldı.`,
+      content: `${truncate(req.body.comment, 50)}`,
+      chatId: req.body.announcementId,
+      data: {
+        type: OSNotificationType.AnnouncementNewComment,
+        announcementId: req.body.announcementId,
+        commentId: response.data?._id
+      }
+    })
+  }
 });
 
 router.post("/commentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin]), validateCommentLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementCommenLikeDisliketDTO>, res: any) => {
@@ -241,7 +259,7 @@ schema: { $ref: "#/definitions/AnnouncementSubCommentRequest" }
      "$ref": "#/definitions/NullResponse"
    }
  } */
-  const response = new BaseResponse<object>();
+  const response = new BaseResponse<any>();
   try {
     response.data = await AnnouncementAccess.subCommentAnnouncement(req.selectedLangs(), new AnnouncementSubCommentDTO(req.body), res.locals.user._id);
   } catch (err: any) {
@@ -251,7 +269,40 @@ schema: { $ref: "#/definitions/AnnouncementSubCommentRequest" }
       return InternalError(res, response, err);
   }
 
-  return Ok(res, response)
+  Ok(res, response)
+
+  const announcement = await AnnouncementEntity.findOne({ _id: req.body.announcementId }, { _id: 0, ownerId: 1, title: 1 });
+  if (announcement) {
+    await OneSignalService.sendNotificationWithUserIds({
+      userIds: [announcement.ownerId],
+      heading: `${truncate(announcement.title, 20)} yeni bir yorum aldı.`,
+      content: `${truncate(req.body.comment, 50)}`,
+      chatId: req.body.announcementId,
+      data: {
+        type: OSNotificationType.AnnouncementNewSubComment,
+        announcementId: req.body.announcementId,
+        subCommentId: response.data?._id
+      }
+    })
+  }
+  const comment = await AnnouncementCommentEntity.findOne({ _id: req.body.commentId }, { _id: 0, ownerId: 1 });
+  if (comment) {
+    const subCommentOwner = await UserEntity.findOne({ _id: res.locals.user._id }, { _id: 0, username: 1 });
+    if (subCommentOwner) {
+      await OneSignalService.sendNotificationWithUserIds({
+        userIds: [comment.ownerId],
+        heading: `${truncate(subCommentOwner.username, 20)} yorumuna cevap verdi.`,
+        content: `${truncate(req.body.comment, 50)}`,
+        chatId: req.body.commentId,
+        data: {
+          type: OSNotificationType.AnnouncementCommentResponse,
+          announcementId: req.body.announcementId,
+          commentId: req.body.commentId,
+          subCommentId: response.data?._id
+        }
+      });
+    }
+  }
 });
 
 router.post("/subCommentLikeDislike", authorize([Role.ContentCreator, Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateSubCommentLikeDislikeAnnouncement, async (req: CustomRequest<AnnouncementSubCommenLikeDisliketDTO>, res: any) => {

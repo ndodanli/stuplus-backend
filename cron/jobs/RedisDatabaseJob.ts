@@ -186,7 +186,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                 try {
                     const data = await RedisService.client.hVals(currentKey);
                     const keysToDelete: {
-                        searchHistoryBatches: string[][]
+                        searchHistoryBatches: string[][];
                     } = { searchHistoryBatches: [] };
                     const searchHistoryBatches: Array<Array<object>> = [];
                     const batchSize = config.BATCH_SIZES.PM_BATCH_SIZE;
@@ -194,6 +194,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         searchHistoryBatches[iterator] = new Array<object>();
+                        keysToDelete.searchHistoryBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             searchHistoryBatches[iterator].push(query.e);
@@ -490,6 +491,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         announcementLikeBatches[iterator] = new Array<object>();
+                        keysToDelete.announcementLikeBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             announcementLikeBatches[iterator].push({ ...query.e, type: LikeType.Like });
@@ -528,6 +530,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         announcementDislikeBatches[iterator] = new Array<object>();
+                        keysToDelete.announcementDislikeBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             announcementDislikeBatches[iterator].push({ ...query.e, type: LikeType.Dislike });
@@ -567,6 +570,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         announcementCommentBatches[iterator] = new Array<object>();
+                        keysToDelete.announcementCommentBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             announcementCommentBatches[iterator].push(query.e);
@@ -605,6 +609,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         announcementCommentLikeBatches[iterator] = new Array<object>();
+                        keysToDelete.announcementCommentLikeBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             announcementCommentLikeBatches[iterator].push({ ...query.e, type: LikeType.Like });
@@ -643,6 +648,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         announcementCommentDislikeBatches[iterator] = new Array<object>();
+                        keysToDelete.announcementCommentDislikeBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             announcementCommentDislikeBatches[iterator].push({ ...query.e, type: LikeType.Dislike });
@@ -681,6 +687,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         questionLikeBatches[iterator] = new Array<object>();
+                        keysToDelete.questionLikeBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             questionLikeBatches[iterator].push({ ...query.e, type: LikeType.Like });
@@ -719,6 +726,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         questionDislikeBatches[iterator] = new Array<object>();
+                        keysToDelete.questionDislikeBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             questionDislikeBatches[iterator].push({ ...query.e, type: LikeType.Dislike });
@@ -757,6 +765,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         questionCommentBatches[iterator] = new Array<object>();
+                        keysToDelete.questionCommentBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             questionCommentBatches[iterator].push(query.e);
@@ -795,6 +804,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         questionCommentLikeBatches[iterator] = new Array<object>();
+                        keysToDelete.questionCommentLikeBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             questionCommentLikeBatches[iterator].push({ ...query.e, type: LikeType.Like });
@@ -833,6 +843,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         questionCommentDislikeBatches[iterator] = new Array<object>();
+                        keysToDelete.questionCommentDislikeBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             questionCommentDislikeBatches[iterator].push({ ...query.e, type: LikeType.Dislike });
@@ -871,6 +882,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         questionSubCommentBatches[iterator] = new Array<object>();
+                        keysToDelete.questionSubCommentBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             questionSubCommentBatches[iterator].push(query.e);
@@ -909,6 +921,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         questionSubCommentLikeBatches[iterator] = new Array<object>();
+                        keysToDelete.questionSubCommentLikeBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             questionSubCommentLikeBatches[iterator].push({ ...query.e, type: LikeType.Like });
@@ -947,6 +960,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
                     for (let i = 0; i < data.length; i += batchSize) {
                         const currentBatch = data.slice(i, i + batchSize);
                         questionSubCommentDislikeBatches[iterator] = new Array<object>();
+                        keysToDelete.questionSubCommentDislikeBatches[iterator] = new Array<string>();
                         for (let j = 0; j < currentBatch.length; j++) {
                             const query: any = currentBatch[j].toJSONObject();
                             questionSubCommentDislikeBatches[iterator].push({ ...query.e, type: LikeType.Dislike });

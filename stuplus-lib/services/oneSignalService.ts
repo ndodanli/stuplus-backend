@@ -63,7 +63,7 @@ export default class OneSignalService {
                 for (let i = 0; i < userIdChunks.length; i++) {
                     notification.include_external_user_ids = userIdChunks[i];
                     notification.android_group = chatId;
-                    notification.android_group_message = "You have new messages";
+                    notification.android_group_message = "Yeni mesajlarınız var";
                     if (chatId)
                         notification.adm_group = chatId;
                     // notification.small_icon = smallIcon;
