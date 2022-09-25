@@ -190,8 +190,12 @@ io.on("connection", async (socket: ISocket) => {
             await RedisService.updatePrivateChatLastMessage(chatData.e, chatData.e.chatId);
             if (data.ci)
                 await RedisService.incrementUnreadPCCountForUser(data.to, data.ci);
+            let replyToText;
+            if (data.rToId) {
+                replyToText = await MessageEntity.findOne({ _id: data.rToId }).lean();
+            }
             const emitData = {
-                t: data.t, mi: messageEntity.id, ci: data.ci, f: {
+                t: data.t, mi: messageEntity.id, ci: data.ci, rToId: data.rToId, rToText: replyToText, ca: now, f: {
                     _id: socket.data.user._id,
                     username: socket.data.user.username,
                     firstName: socket.data.user.firstName,
@@ -328,8 +332,12 @@ io.on("connection", async (socket: ISocket) => {
             await RedisService.client.hSet(RedisKeyType.User + socket.data.user._id + RedisSubKeyType.GroupChatReadCounts, data.gCi, groupMessageCount);
 
             const gcName = groupChatName(data.gCi);
+            let replyToText;
+            if (data.rToId) {
+                replyToText = await GroupMessageEntity.findOne({ _id: data.rToId }).lean();
+            }
             socket.to(gcName).emit("cGmSend", {
-                t: data.t, mi: gMessageEntity.id, gCi: data.gCi, mentionedUsers: data.mentionedUsers, f: {
+                t: data.t, mi: gMessageEntity.id, gCi: data.gCi, rToId: data.rToId, rToText: replyToText, ca: now, mentionedUsers: data.mentionedUsers, f: {
                     _id: socket.data.user._id,
                     username: socket.data.user.username,
                     firstName: socket.data.user.firstName,
