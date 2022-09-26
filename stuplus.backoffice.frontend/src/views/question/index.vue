@@ -23,7 +23,7 @@
       <el-table-column label="Order No" width="70px" align="center">
         <template slot-scope="scope">
           <span>{{
-              (listQuery.page - 1) * listQuery.pageSize + scope.$index + 1
+          (listQuery.page - 1) * listQuery.pageSize + scope.$index + 1
           }}</span>
         </template>
       </el-table-column>
@@ -42,7 +42,8 @@
       </el-table-column>
       <el-table-column label="Cover Image" width="120px" prop="coverImageUrl" align="center">
         <template slot-scope="{ row }">
-          <span><img :src="row.coverImageUrl || 'https://www.ibavet.com.tr/wp-content/uploads/2021/11/a01.png'" width="100px" height="100px" style="border: 0;"></span>
+          <span><img :src="row.coverImageUrl || 'https://www.ibavet.com.tr/wp-content/uploads/2021/11/a01.png'"
+              width="100px" height="100px" style="border: 0;"></span>
         </template>
       </el-table-column>
       <el-table-column label="Related Schools" prop="relatedSchoolIds" align="center">
@@ -54,7 +55,7 @@
           </span>
           <span v-else style="font-size:14px;" class="m-1" v-for="relatedSchoolId in row.relatedSchoolIds">
             <el-tag type="light">
-              {{ schools.find(school => school._id === relatedSchoolId)?.title }}
+              {{ getSchoolTitle(relatedSchoolId) }}
             </el-tag>
           </span>
         </template>
@@ -133,7 +134,7 @@
         </el-form-item>
         <el-form-item label="Related Schools" prop="relatedSchoolIds">
           <el-select v-model="temp.relatedSchoolIds" multiple filterable placeholder="Select a school...">
-            <el-option v-for="item in schools" :key="item._id" :label="item.title" :value="item._id">
+            <el-option v-for="item in schools" :key="item._id" :label="getSchoolTitle(item._id)" :value="item._id">
             </el-option>
           </el-select>
         </el-form-item>
@@ -274,6 +275,11 @@ export default {
       users: [],
       owners: [],
       remoteLoading: false,
+      schoolTypes: {
+        OpenEducation: 0,
+        Government: 1,
+        Special: 2
+      }
     }
   },
   async created() {
@@ -285,6 +291,18 @@ export default {
     anySchool(relatedSchoolIds) {
       console.log("anyschool", this.schools.map(x => x._id).some(x => relatedSchoolIds.includes(x)));
       return this.schools.map(x => x._id).some(x => relatedSchoolIds.includes(x));
+    },
+    getSchoolTitle(schoolId) {
+      const school = this.schools.find(x => x._id === schoolId);
+      let title = school?.title;
+      if (school.type === this.schoolTypes.OpenEducation) {
+        title = `${title} (Açık Öğretim)`
+      } else if (school.type === this.schoolTypes.Government) {
+        title = `${title} (Devlet)`
+      } else if (school.type === this.schoolTypes.Special) {
+        title = `${title} (Özel)`
+      }
+      return title;
     },
     async remoteMethod(query) {
       if (query !== '') {

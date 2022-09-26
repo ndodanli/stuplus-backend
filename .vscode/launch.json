@@ -42,6 +42,19 @@
                 "<node_internals>/**"
             ],
             "type": "pwa-node"
+        },
+        {
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "name": "cron",
+            "program": "${workspaceFolder}/stuplus.cron/server.ts",
+            "request": "launch",
+            "restart": true,
+            "runtimeExecutable": "ts-node",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "pwa-node"
         }
         // {
         //     "console": "integratedTerminal",

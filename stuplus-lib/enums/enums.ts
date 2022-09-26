@@ -124,5 +124,7 @@ export enum OSNotificationType {
    AnnouncementCommentResponse = 4,
    QuestionNewComment = 5,
    QuestionNewSubComment = 6,
-   QuestionCommentResponse = 7
+   QuestionCommentResponse = 7,
+   NewFollower = 8,
+   NewFollowerRequest = 9,
 }

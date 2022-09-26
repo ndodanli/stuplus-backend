@@ -3,9 +3,9 @@ import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { authorize } from "../middlewares/auth";
 import { UserAccess } from "../dataAccess/userAccess";
-import { GroupChatUserRole, MessageType, ReportType, Role } from "../../stuplus-lib/enums/enums";
-import { validateChangeFollowStatus, validateEmailConfirmation, validateFollowUser, validateForgotPassword, validateForgotPasswordCode, validateNotifyReadNotifications, validateReport, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdatePrivacySettings, validateUpdateProfile, validateUpdateSchool } from "../middlewares/validation/account/validateAccountRoute";
-import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO, UpdateUserSchoolDTO, UpdatePrivacySettingsDTO } from "../dtos/UserDTOs";
+import { Role } from "../../stuplus-lib/enums/enums";
+import { validateChangeFollowStatus, validateEmailConfirmation, validateFollowUser, validateForgotPassword, validateForgotPasswordCode, validateReport, validateResetPassword, validateUpdateInterests, validateUpdatePassword, validateUpdatePrivacySettings, validateUpdateProfile, validateUpdateSchool } from "../middlewares/validation/account/validateAccountRoute";
+import { UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, UpdateUserSchoolDTO, UpdatePrivacySettingsDTO } from "../dtos/UserDTOs";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import path from "path";
@@ -15,13 +15,10 @@ import RedisService from "../../stuplus-lib/services/redisService";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { isValidObjectId } from "mongoose";
 import { User } from "../../stuplus-lib/entities/UserEntity";
-import { FollowEntity, GroupChatEntity, GroupChatUserEntity, GroupMessageEntity, GroupMessageReadEntity, MessageEntity, NotificationEntity, UserEntity } from "../../stuplus-lib/entities/BaseEntity";
+import { FollowEntity, NotificationEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { RedisKeyType, RedisSubKeyType } from "../../stuplus-lib/enums/enums_socket";
 import redisTTL from "../../stuplus-lib/constants/redisTTL";
 import { SearchAccess } from "../dataAccess/searchAccess";
-import EmailService from "../../stuplus-lib/services/emailService";
-import TelegramService from "../../stuplus-lib/services/telegramService";
-import { getReportTypeFromValue } from "../../stuplus-lib/utils/general";
 
 const router = Router();
 

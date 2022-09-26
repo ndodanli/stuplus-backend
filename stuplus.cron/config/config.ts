@@ -1,5 +1,5 @@
 let config = {
-    PORT: 25020
+    PORT: 25060
 }
 
 export {

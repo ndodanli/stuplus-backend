@@ -63,6 +63,10 @@ router.post("/addUpdatequestion", authorize([Role.Admin, Role.Moderator]), async
         throw new NotValidError("question not found", 404);
       }
       questionToUpdate.ownerId = question.ownerId;
+      const user = await UserEntity.findOne({ _id: res.locals.user._id });
+      if (user && user.schoolId) {
+        questionToUpdate.ownerSchoolId = user.schoolId;
+      }
       questionToUpdate.title = question.title;
       questionToUpdate.titlesch = searchableWithSpaces(question.title);
       questionToUpdate.coverImageUrl = question.coverImageUrl;
@@ -76,6 +80,10 @@ router.post("/addUpdatequestion", authorize([Role.Admin, Role.Moderator]), async
     else {
       const newquestion = new QuestionEntity(question);
       newquestion.titlesch = searchableWithSpaces(question.title);
+      const user = await UserEntity.findOne({ _id: res.locals.user._id });
+      if (user && user.schoolId) {
+        newquestion.ownerSchoolId = user.schoolId;
+      }
       await newquestion.save();
     }
   } catch (err: any) {

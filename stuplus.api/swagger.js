@@ -797,6 +797,24 @@ const doc = {
                 }
             ],
         },
+        ChatAddToGroupRequest: {
+            $userIds: ["62ab8a204166fd1eaebbb3fa", "62ab8a204166fd1eaebbb3fa"],
+            $groupChatId: "62ab8a204166fd1eaebbb3fa",
+        },
+        ChatMakeUsersGroupAdminRequest: {
+            $userIds: ["62ab8a204166fd1eaebbb3fa", "62ab8a204166fd1eaebbb3fa"],
+            $groupChatId: "62ab8a204166fd1eaebbb3fa",
+        },
+        ChatRemoveFromGroupRequest: {
+            $userIds: ["62ab8a204166fd1eaebbb3fa", "62ab8a204166fd1eaebbb3fa"],
+            $groupChatId: "62ab8a204166fd1eaebbb3fa",
+        },
+        ChatLeaveGroupRequest: {
+            $groupChatId: "62ab8a204166fd1eaebbb3fa",
+        },
+        ChatRemovePrivateChatsRequest: {
+            $privateChatsIds: "62ab8a204166fd1eaebbb3fa",
+        },
         NullResponse: {
             hasError: {
                 type: "boolean",
@@ -813,24 +831,6 @@ const doc = {
             data: {
                 type: "null"
             }
-        },
-        AnnouncementAddRequest: {
-            images: [
-                {
-                    "url": "https://stuplus-bucket.s3.amazonaws.com/public/sdasds/1658614127031-1657324327987-S3eDQ3yqXMw.jpg",
-                    "mimeType": "image/jpeg",
-                    "size": 2250194,
-                    "isCompressed": true
-                },
-            ],
-            $relatedSchoolIds: ["62ab8a204166fd1eaebbb3fa", "62ab8a204166fd1eaebbb3fa"],
-            $title: "string",
-            $text: "string",
-            $ownerSchoolId: {
-                type: "string",
-                description: "Duyurunun sahibinin school idsi."
-            },
-            hashTags: ["string"],
         },
         QuestionAddRequest: {
             images: [

@@ -29,7 +29,7 @@ async function setup() {
   await initializeDatabese();
   await initializeRedis();
   await initializeSocket();
-  await import("../cron/index");
+  await import("./cron/index");
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(bodyParser.json());
 

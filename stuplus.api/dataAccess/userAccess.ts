@@ -3,11 +3,11 @@ import { FollowEntity, FollowRequestEntity, GroupChatEntity, GroupChatUserEntity
 import { SchoolEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { ExternalLogin, User, UserDocument } from "../../stuplus-lib/entities/UserEntity";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
-import { FollowLimitation, FollowStatus, NotificationType, RecordStatus, ReportType, Role } from "../../stuplus-lib/enums/enums";
+import { FollowLimitation, FollowStatus, NotificationType, OSNotificationType, RecordStatus, ReportType, Role } from "../../stuplus-lib/enums/enums";
 import { getNewToken } from "../utils/token";
 import EmailService from "../../stuplus-lib/services/emailService";
 import moment from "moment-timezone";
-import { checkIfStudentEmail, generateCode, getReportTypeFromValue, searchable, searchables } from "../../stuplus-lib/utils/general";
+import { checkIfStudentEmail, generateCode, getReportTypeFromValue, searchable, searchables, truncate } from "../../stuplus-lib/utils/general";
 import { LoginUserDTO, LoginUserGoogleDTO, RegisterUserDTO, UpdateUserInterestsDTO, UpdateUserProfileDTO, UserUnfollowDTO, UserFollowReqDTO, UserFollowUserRequestDTO, UserRemoveFollowerDTO, ReportDTO, NotificationsReadedDTO, UpdateUserSchoolDTO, UpdatePrivacySettingsDTO } from "../dtos/UserDTOs";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { config } from "../config/config";
@@ -28,6 +28,7 @@ import { AddToGroupChatDTO } from "../socket/dtos/Chat";
 import { SearchAccess } from "./searchAccess";
 import OnlineUserService from "../../stuplus-lib/services/onlineUsersService";
 import TelegramService from "../../stuplus-lib/services/telegramService";
+import OneSignalService from "../../stuplus-lib/services/oneSignalService";
 export class UserAccess {
     public static async getUserProfile(acceptedLanguages: Array<string>, currentUserId: string, targetUserId: string): Promise<UserProfileResponseDTO | null> {
         let response: any = {};
@@ -665,6 +666,16 @@ export class UserAccess {
             await RedisService.client.sRem(RedisKeyType.UserFollowings + followRequest.ownerId, followRequest.requestedId);
             throw error;
         }
+        if (followingUser) {
+            await OneSignalService.sendNotificationWithUserIds({
+                userIds: [followRequest.ownerId],
+                heading: `Takip isteği kabul edildi🥳`,
+                content: `${truncate(followingUser.username, 20)} takip isteğini kabul etti.`,
+                data: {
+                    type: OSNotificationType.NewFollowerRequest
+                }
+            });
+        }
 
         //TODO: send notification to user
 
@@ -708,11 +719,12 @@ export class UserAccess {
             if (follow)
                 throw new NotValidError(getMessage("alreadyFollowing", acceptedLanguages));
 
-            const followingUser = await UserEntity.findOne({ _id: payload.requestedId }, {
-                _id: 0, schoolId: 1,
+            const users = await UserEntity.find({ _id: { $in: [userId, payload.requestedId] } }, {
+                _id: 1, schoolId: 1,
                 username: 1, firstName: 1, lastName: 1
             }).lean(true);
-
+            const followingUser = users.find(x => x._id.toString() == payload.requestedId);
+            const followerUser = users.find(x => x._id.toString() == userId);
 
             await NotificationEntity.create({
                 ownerId: payload.requestedId,
@@ -734,6 +746,17 @@ export class UserAccess {
             await RedisService.refreshFollowingsIfNotExists(userId);
             await RedisService.client.sAdd(RedisKeyType.UserFollowings + userId, payload.requestedId);
 
+            if (followerUser) {
+                await OneSignalService.sendNotificationWithUserIds({
+                    userIds: [payload.requestedId],
+                    heading: `Yeni takipçi🤗`,
+                    content: `${truncate(followerUser.username, 20)} seni takip etmeye başladı.`,
+                    data: {
+                        type: OSNotificationType.NewFollower
+                    }
+                });
+
+            }
         } else {
             const followReq = await FollowRequestEntity.exists({ ownerId: userId, requestedId: payload.requestedId, recordStatus: RecordStatus.Active });
             if (followReq)
@@ -747,6 +770,17 @@ export class UserAccess {
             followId = followReqEntity.id;
             response.followStatus = FollowStatus.Pending;
             response.followId = followId;
+            const followerUser = await UserEntity.findOne({ _id: userId }, { _id: 0, username: 1 });
+            if (followerUser) {
+                await OneSignalService.sendNotificationWithUserIds({
+                    userIds: [payload.requestedId],
+                    heading: `Yeni takipçi isteği👋`,
+                    content: `${truncate(followerUser.username, 20)} sana takip isteği gönderdi.`,
+                    data: {
+                        type: OSNotificationType.NewFollowerRequest
+                    }
+                });
+            }
         }
 
         await RedisService.incrementDailyFollowCount(userId);

@@ -20,7 +20,6 @@ import { Router } from "express";
 import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
 import { validateAddToGroup, validateBlockUser, validateClearPMChat, validateCreateGroup, validateDeleteSinglePM, validateGetGroupChatData, validateGetGroupMessages, validateGetPrivateChatData, validateGetPrivateMessages, validateLeaveGroup, validateRemoveFromGroup, validateRemovePrivateChats, validateSendFileGM, validateSendFileMessage, validateUpdateFileGM, validateUpdateFileMessage } from "../middlewares/validation/chat/validateChatRoute";
 import { GroupMessageDocument } from "../../stuplus-lib/entities/GroupMessageEntity";
-import { GroupChatUserDocument } from "../../stuplus-lib/entities/GroupChatUserEntity";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { Chat } from "../../stuplus-lib/entities/ChatEntity";
 import { GroupChat } from "../../stuplus-lib/entities/GroupChatEntity";
@@ -2484,7 +2483,11 @@ router.post("/updateGMFile", authorize([Role.User, Role.Admin, Role.ContentCreat
 });
 
 router.post("/addToGroup", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateAddToGroup, async (req: CustomRequest<AddToGroupChatDTO>, res: any) => {
-
+    /* #swagger.tags = ['Chat']
+    /*	#swagger.requestBody = {
+  required: true,
+  schema: { $ref: "#/definitions/ChatAddToGroupRequest" }
+  } */
     var response = new BaseResponse<object>();
     try {
         response.message = await GroupAccess.addUsersToGroupChat(req.selectedLangs(), res.locals.user._id, new AddToGroupChatDTO(req.body));
@@ -2499,7 +2502,11 @@ router.post("/addToGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
 });
 
 router.post("/makeUsersGroupAdmin", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), async (req: CustomRequest<MakeUsersGroupAdminDTO>, res: any) => {
-
+    /* #swagger.tags = ['Chat']
+        /*	#swagger.requestBody = {
+      required: true,
+      schema: { $ref: "#/definitions/ChatMakeUsersGroupAdminRequest" }
+      } */
     var response = new BaseResponse<object>();
     try {
         var payload = new MakeUsersGroupAdminDTO(req.body);
@@ -2599,6 +2606,11 @@ router.post("/makeUsersGroupAdmin", authorize([Role.User, Role.Admin, Role.Conte
 });
 
 router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateRemoveFromGroup, async (req: CustomRequest<RemoveFromGroupChatDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+        /*	#swagger.requestBody = {
+      required: true,
+      schema: { $ref: "#/definitions/ChatRemoveFromGroupRequest" }
+      } */
     var response = new BaseResponse<object>();
     try {
         var payload = new RemoveFromGroupChatDTO(req.body);
@@ -2757,6 +2769,11 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
 });
 
 router.post("/leaveGroup", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateLeaveGroup, async (req: CustomRequest<LeaveGroupDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+      /*	#swagger.requestBody = {
+    required: true,
+    schema: { $ref: "#/definitions/ChatLeaveGroupRequest" }
+    } */
     const response = new BaseResponse<any>();
     try {
         const payload = new LeaveGroupDTO(req.body);
@@ -3500,6 +3517,11 @@ schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
 });
 
 router.post("/removePrivateChats", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateRemovePrivateChats, async (req: CustomRequest<RemovePrivateChatsDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+     /*	#swagger.requestBody = {
+   required: true,
+   schema: { $ref: "#/definitions/ChatRemovePrivateChatsRequest" }
+   } */
     const response = new BaseResponse<object>();
     try {
         const payload = new RemovePrivateChatsDTO(req.body);

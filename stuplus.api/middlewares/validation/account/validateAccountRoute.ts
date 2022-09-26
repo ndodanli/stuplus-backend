@@ -49,6 +49,9 @@ export const validateUpdateProfile = [
         .bail()
         .isLength({ min: 1, max: 50 })
         .withMessage((value: any, { req }: any) => "50 karakterden fazla olamaz.")
+        .bail()
+        .matches(/^[A-Za-z\s]+$/)
+        .withMessage('İsim geçersiz.')
         .bail(),
     check('lastName')
         .notEmpty()
@@ -56,6 +59,9 @@ export const validateUpdateProfile = [
         .bail()
         .isLength({ min: 1, max: 50 })
         .withMessage((value: any, { req }: any) => "50 karakterden fazla olamaz.")
+        .bail()
+        .matches(/^[A-Za-z\s]+$/)
+        .withMessage('Soyadı geçersiz.')
         .bail(),
     check('avatarKey')
         .notEmpty()
@@ -64,6 +70,9 @@ export const validateUpdateProfile = [
     check('username')
         .notEmpty()
         .withMessage("Kullanıcı adı boş olamaz.")
+        .bail()
+        .isAlphanumeric()
+        .withMessage('Kullanıcı adı alfanumerik olmalıdır.')
         .bail(),
     (req: CustomRequest<object>, res: any, next: any) => {
         const errors = validationResult(req);

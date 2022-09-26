@@ -17,7 +17,6 @@ const setLogger = async (name: string) => {
                 })
             ]
         });
-
 }
 
 export {

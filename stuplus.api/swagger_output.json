@@ -3733,6 +3733,9 @@
     },
     "/chat/addToGroup": {
       "post": {
+        "tags": [
+          "Chat"
+        ],
         "description": "",
         "parameters": [],
         "responses": {},
@@ -3740,11 +3743,29 @@
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatAddToGroupRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatAddToGroupRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/makeUsersGroupAdmin": {
       "post": {
+        "tags": [
+          "Chat"
+        ],
         "description": "",
         "parameters": [],
         "responses": {},
@@ -3752,11 +3773,29 @@
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatMakeUsersGroupAdminRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatMakeUsersGroupAdminRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/removeFromGroup": {
       "post": {
+        "tags": [
+          "Chat"
+        ],
         "description": "",
         "parameters": [],
         "responses": {},
@@ -3764,11 +3803,29 @@
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRemoveFromGroupRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRemoveFromGroupRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/leaveGroup": {
       "post": {
+        "tags": [
+          "Chat"
+        ],
         "description": "",
         "parameters": [],
         "responses": {},
@@ -3776,7 +3833,22 @@
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatLeaveGroupRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatLeaveGroupRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/chat/gc/getProfile/{groupChatId}": {
@@ -4095,6 +4167,9 @@
     },
     "/chat/removePrivateChats": {
       "post": {
+        "tags": [
+          "Chat"
+        ],
         "description": "",
         "parameters": [],
         "responses": {},
@@ -4102,7 +4177,22 @@
           {
             "bearerAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRemovePrivateChatsRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRemovePrivateChatsRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/doc/": {
@@ -5496,6 +5586,114 @@
           "name": "ChatGetNewChatUsersResponse"
         }
       },
+      "ChatAddToGroupRequest": {
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "type": "array",
+            "example": [
+              "62ab8a204166fd1eaebbb3fa",
+              "62ab8a204166fd1eaebbb3fa"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "groupChatId": {
+            "type": "string",
+            "example": "62ab8a204166fd1eaebbb3fa"
+          }
+        },
+        "required": [
+          "userIds",
+          "groupChatId"
+        ],
+        "xml": {
+          "name": "ChatAddToGroupRequest"
+        }
+      },
+      "ChatMakeUsersGroupAdminRequest": {
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "type": "array",
+            "example": [
+              "62ab8a204166fd1eaebbb3fa",
+              "62ab8a204166fd1eaebbb3fa"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "groupChatId": {
+            "type": "string",
+            "example": "62ab8a204166fd1eaebbb3fa"
+          }
+        },
+        "required": [
+          "userIds",
+          "groupChatId"
+        ],
+        "xml": {
+          "name": "ChatMakeUsersGroupAdminRequest"
+        }
+      },
+      "ChatRemoveFromGroupRequest": {
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "type": "array",
+            "example": [
+              "62ab8a204166fd1eaebbb3fa",
+              "62ab8a204166fd1eaebbb3fa"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "groupChatId": {
+            "type": "string",
+            "example": "62ab8a204166fd1eaebbb3fa"
+          }
+        },
+        "required": [
+          "userIds",
+          "groupChatId"
+        ],
+        "xml": {
+          "name": "ChatRemoveFromGroupRequest"
+        }
+      },
+      "ChatLeaveGroupRequest": {
+        "type": "object",
+        "properties": {
+          "groupChatId": {
+            "type": "string",
+            "example": "62ab8a204166fd1eaebbb3fa"
+          }
+        },
+        "required": [
+          "groupChatId"
+        ],
+        "xml": {
+          "name": "ChatLeaveGroupRequest"
+        }
+      },
+      "ChatRemovePrivateChatsRequest": {
+        "type": "object",
+        "properties": {
+          "privateChatsIds": {
+            "type": "string",
+            "example": "62ab8a204166fd1eaebbb3fa"
+          }
+        },
+        "required": [
+          "privateChatsIds"
+        ],
+        "xml": {
+          "name": "ChatRemovePrivateChatsRequest"
+        }
+      },
       "NullResponse": {
         "type": "object",
         "properties": {
@@ -5550,84 +5748,6 @@
         },
         "xml": {
           "name": "NullResponse"
-        }
-      },
-      "AnnouncementAddRequest": {
-        "type": "object",
-        "properties": {
-          "images": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "url": {
-                  "type": "string",
-                  "example": "https://stuplus-bucket.s3.amazonaws.com/public/sdasds/1658614127031-1657324327987-S3eDQ3yqXMw.jpg"
-                },
-                "mimeType": {
-                  "type": "string",
-                  "example": "image/jpeg"
-                },
-                "size": {
-                  "type": "number",
-                  "example": 2250194
-                },
-                "isCompressed": {
-                  "type": "boolean",
-                  "example": true
-                }
-              }
-            }
-          },
-          "relatedSchoolIds": {
-            "type": "array",
-            "example": [
-              "62ab8a204166fd1eaebbb3fa",
-              "62ab8a204166fd1eaebbb3fa"
-            ],
-            "items": {
-              "type": "string"
-            }
-          },
-          "title": {
-            "type": "string",
-            "example": "string"
-          },
-          "text": {
-            "type": "string",
-            "example": "string"
-          },
-          "ownerSchoolId": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "example": "string"
-              },
-              "description": {
-                "type": "string",
-                "example": "Duyurunun sahibinin school idsi."
-              }
-            }
-          },
-          "hashTags": {
-            "type": "array",
-            "example": [
-              "string"
-            ],
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "relatedSchoolIds",
-          "title",
-          "text",
-          "ownerSchoolId"
-        ],
-        "xml": {
-          "name": "AnnouncementAddRequest"
         }
       },
       "QuestionAddRequest": {
