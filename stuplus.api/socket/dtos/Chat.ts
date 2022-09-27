@@ -222,3 +222,12 @@ export class RemovePrivateChatsDTO extends BaseFilter {
         }
     }
 }
+
+export class JoinGroupDTO {
+    groupChatId: string = "";
+    constructor(obj: any) {
+        if (obj) {
+            mapToDTO(this, obj);
+        }
+    }
+}

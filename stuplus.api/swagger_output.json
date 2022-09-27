@@ -4195,6 +4195,36 @@
         }
       }
     },
+    "/chat/joinGroup": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "description": "",
+        "parameters": [],
+        "responses": {},
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatJoinGroupRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatJoinGroupRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/doc/": {
       "get": {
         "description": "",
@@ -10300,6 +10330,21 @@
         ],
         "xml": {
           "name": "ChatGetMoreMediaRequest"
+        }
+      },
+      "ChatJoinGroupRequest": {
+        "type": "object",
+        "properties": {
+          "groupChatId": {
+            "type": "string",
+            "example": "groupChatId"
+          }
+        },
+        "required": [
+          "groupChatId"
+        ],
+        "xml": {
+          "name": "ChatJoinGroupRequest"
         }
       },
       "ChatGetPrivateChatProfileResponse": {

@@ -2486,6 +2486,9 @@ const doc = {
             lastRecordId: "62ee7233490026ff5d31726b",
             $pageSize: 20,
         },
+        ChatJoinGroupRequest: {
+            $groupChatId: "groupChatId",
+        },
         ChatGetPrivateChatProfileResponse: {
             hasError: {
                 type: "boolean",

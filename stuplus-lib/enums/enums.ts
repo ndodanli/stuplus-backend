@@ -127,4 +127,5 @@ export enum OSNotificationType {
    QuestionCommentResponse = 7,
    NewFollower = 8,
    NewFollowerRequest = 9,
+   joinedToGroupChat = 10,
 }

@@ -128,6 +128,7 @@ const systemLangs: Record<string, Function> = {
             deletePrivateChatsLimit: "Çok fazla özel sohbet silmek istedin, bir sorun mu var? Varsa destek ekibine(o da biziz =) ) bildir lütfen. Bu arada en fazla 500 tanesini aynı anda silebilirsin.",
             messageTooLong: "Ne yaptın be dostum roman mı yazıyorsun, parça parça gönder böyle uzun mesajları.",
             userMuted: `Seni bi süre susturduk, bu sürede ne yaptığını bi düşün istersen. Ha beni boş yere susturdunuz diyorsan da bizimle support@stuplus.app adresinden iletişime geçebilirsin. Şu tarihte tekrar konuşabilirsin: ${args ? args[0] : ""}`,
+            alreadyJoinedGroup: "Bu gruba zaten katılmışsın.",
         }
     },
     "en": function (args: string[] = []) {

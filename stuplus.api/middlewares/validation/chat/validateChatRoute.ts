@@ -446,3 +446,15 @@ export const validateRemovePrivateChats = [
         next();
     },
 ];
+
+export const validateJoinGroup = [
+    check('groupChatId')
+        .notEmpty()
+        .withMessage((value: any, { req }: any) => getMessage("emptyError", req.selectedLangs()))
+        .bail()
+        .custom(async (value, { req }) => {
+            if (!isValidObjectId(value)) {
+                throw new Error(getMessage("incorrectId", req.selectedLangs()));
+            }
+        }),
+];

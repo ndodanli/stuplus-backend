@@ -8,7 +8,7 @@ import { authorize, authorizeSocket } from "./utils/auth";
 import BaseResponse from "../../stuplus-lib/utils/base/BaseResponse";
 import { InternalError, Ok } from "../../stuplus-lib/utils/base/ResponseObjectResults";
 import { CustomRequest } from "../../stuplus-lib/utils/base/baseOrganizers";
-import { AddToGroupChatDTO, ClearPMChatHistoryDTO, CreateGroupDTO, DeleteSingleGMDTO, DeleteSinglePMDTO, GetChatMessagesDTO, GetGroupChatMessagesDTO, GetGroupChatDataDTO, GetGroupUsersDTO, GetSearchedChatMessageDTO, GetSearchedChatMessagesDTO, GetSearchedGroupChatMessageDTO, GetSearchedGroupChatMessagesDTO, LeaveGroupDTO, MakeUsersGroupAdminDTO, RemoveFromGroupChatDTO, RemovePrivateChatsDTO, UpdateGroupInfoDTO, WatchUsersDTO, GetPrivateChatDataDTO } from "./dtos/Chat";
+import { AddToGroupChatDTO, ClearPMChatHistoryDTO, CreateGroupDTO, DeleteSingleGMDTO, DeleteSinglePMDTO, GetChatMessagesDTO, GetGroupChatMessagesDTO, GetGroupChatDataDTO, GetGroupUsersDTO, GetSearchedChatMessageDTO, GetSearchedChatMessagesDTO, GetSearchedGroupChatMessageDTO, GetSearchedGroupChatMessagesDTO, LeaveGroupDTO, MakeUsersGroupAdminDTO, RemoveFromGroupChatDTO, RemovePrivateChatsDTO, UpdateGroupInfoDTO, WatchUsersDTO, GetPrivateChatDataDTO, JoinGroupDTO } from "./dtos/Chat";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import { groupChatName, userWatchRoomName } from "../../stuplus-lib/utils/namespaceCreators";
 import RedisService from "../../stuplus-lib/services/redisService";
@@ -18,7 +18,7 @@ import { DeleteChatForType, GroupChatUserRole, MessageLimitation, MessageType, O
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { Router } from "express";
 import { uploadFileS3 } from "../../stuplus-lib/services/fileService";
-import { validateAddToGroup, validateBlockUser, validateClearPMChat, validateCreateGroup, validateDeleteSinglePM, validateGetGroupChatData, validateGetGroupMessages, validateGetPrivateChatData, validateGetPrivateMessages, validateLeaveGroup, validateRemoveFromGroup, validateRemovePrivateChats, validateSendFileGM, validateSendFileMessage, validateUpdateFileGM, validateUpdateFileMessage } from "../middlewares/validation/chat/validateChatRoute";
+import { validateAddToGroup, validateBlockUser, validateClearPMChat, validateCreateGroup, validateDeleteSinglePM, validateGetGroupChatData, validateGetGroupMessages, validateGetPrivateChatData, validateGetPrivateMessages, validateJoinGroup, validateLeaveGroup, validateRemoveFromGroup, validateRemovePrivateChats, validateSendFileGM, validateSendFileMessage, validateUpdateFileGM, validateUpdateFileMessage } from "../middlewares/validation/chat/validateChatRoute";
 import { GroupMessageDocument } from "../../stuplus-lib/entities/GroupMessageEntity";
 import { BaseFilter } from "../../stuplus-lib/dtos/baseFilter";
 import { Chat } from "../../stuplus-lib/entities/ChatEntity";
@@ -668,7 +668,7 @@ router.post("/deleteSingleGM", authorize([Role.User, Role.Admin, Role.ContentCre
                 );
             }
             io.to(groupChatName(payload.groupChatId)).emit("singleGMDeleted", { mi: payload.messageId, ci: payload.groupChatId });
-            response.setMessage(getMessage("singleMessageDeletedMeSuccess", req.selectedLangs()));
+            response.setMessage(getMessage("singleMessageDeletedBothSuccess", req.selectedLangs()));
         } else {
             if (message) {
                 const newMessageEntity = new GroupMessageEntity({}); //for duplications with clearing history, assing a new id
@@ -689,7 +689,7 @@ router.post("/deleteSingleGM", authorize([Role.User, Role.Admin, Role.ContentCre
                     }
                 );
             }
-            response.setMessage(getMessage("singleMessageDeletedBothSuccess", req.selectedLangs()));
+            response.setMessage(getMessage("singleMessageDeletedMeSuccess", req.selectedLangs()));
         }
 
         // if (!deleted)
@@ -1388,13 +1388,13 @@ router.post("/createGroup", authorize([Role.User, Role.Admin, Role.ContentCreato
             anyUserReachedLimit = true;
         payload.userIds = filteredUserIds.map(x => x._id.toString());
         const usernames = await UserEntity.find({ _id: { $in: payload.userIds } }, { _id: 1, username: 1 }).lean(true);
-        let chatUsers = payload.userIds.map((userId: string) => {
+        let chatUsers: any = payload.userIds.map((userId: string) => {
             return new GroupChatUserEntity({ userId: userId, username: usernames.find(x => x._id.toString() == userId)?.username, groupChatId: groupChatId, groupRole: GroupChatUserRole.Member });
         });
         const ownerUser = await RedisService.acquireUser(res.locals.user._id, ["username"]);
-        await GroupChatUserEntity.insertMany(chatUsers);
         chatUsers.push(new GroupChatUserEntity({ userId: res.locals.user._id, groupChatId: groupChatId, groupRole: GroupChatUserRole.Owner, username: ownerUser.username }));
-        await UserEntity.updateMany({ _id: { $in: chatUsers.map(x => x.userId) } }, { $inc: { "statistics.groupCount": 1 } });
+        await GroupChatUserEntity.insertMany(chatUsers);
+        await UserEntity.updateMany({ _id: { $in: chatUsers.map((x: { userId: any; }) => x.userId) } }, { $inc: { "statistics.groupCount": 1 } });
 
         await RedisService.incrementGroupMemberCount(groupChatId, chatUsers.length);
         const addToUserGroupChatIdRedisOps = [];
@@ -2647,6 +2647,7 @@ router.post("/removeFromGroup", authorize([Role.User, Role.Admin, Role.ContentCr
                 const oldMemberId = oldestMembers[Math.floor(Math.random() * oldestMembers.length)].userId;
                 randomOldMember = await RedisService.acquireUser(oldMemberId, ["username"]);
                 groupChat.ownerId = oldMemberId;
+                await GroupChatUserEntity.updateOne({ userId: oldMemberId, groupChatId: payload.groupChatId }, { groupRole: GroupChatUserRole.Owner });
                 await groupChat.save();
                 await OneSignalService.sendNotificationWithUserIds({
                     heading: `${groupChat.title} grubunda yeni kurucu oldun.`,
@@ -2823,6 +2824,7 @@ router.post("/leaveGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
                 const oldMemberId = oldestMembers[Math.floor(Math.random() * oldestMembers.length)].userId;
                 randomOldMember = await RedisService.acquireUser(oldMemberId, ["username"]);
                 groupChat.ownerId = oldMemberId;
+                await GroupChatUserEntity.updateOne({ userId: oldMemberId, groupChatId: payload.groupChatId }, { groupRole: GroupChatUserRole.Owner });
                 await groupChat.save();
                 await OneSignalService.sendNotificationWithUserIds({
                     heading: `${groupChat.title} grubunda yeni kurucu oldun.`,
@@ -2832,7 +2834,7 @@ router.post("/leaveGroup", authorize([Role.User, Role.Admin, Role.ContentCreator
                 await OneSignalService.sendNotificationWithUserIds({
                     heading: `Hey!👋`,
                     content: `Kendi grubundan ayrıldın, iyi misin?. Herhangi bir problemin varsa ya da sadece kötü hissettiysen bizimle iletişime geçebilirsin, her zaman buradayız.`,
-                    userIds: [user._id]
+                    userIds: [user.res.locals.user._id]
                 })
                 await MessageService.sendGroupMessage({
                     ownerId: "62ab8a204166fd1eaebbb3fa",
@@ -2915,7 +2917,13 @@ router.get("/gc/getProfile/:groupChatId", authorize([Role.User, Role.Admin, Role
             groupChat: groupChat,
             last10User: users,
             totalMemberCount: totalMemberCount
-        }
+        };
+
+        response.data["ownerId"] = groupChat.ownerId;
+        const groupAdmins = await GroupChatUserEntity.find({ groupChatId: groupChatId, role: GroupChatUserRole.Admin }, { userId: 1 }).lean(true);
+        const groupAdminIds = groupAdmins.map(x => x.userId);
+        groupAdminIds.push(groupChat.ownerId);
+        response.data["adminIds"] = groupAdminIds;
 
         if (groupChatUser) {
             const redisMessages: any[] = [];
@@ -3531,6 +3539,62 @@ router.post("/removePrivateChats", authorize([Role.User, Role.Admin, Role.Conten
         response.setMessage(getMessage("removePrivateChatsSuccess", req.selectedLangs()));
     }
     catch (err: any) {
+        response.setErrorMessage(err.message);
+
+        if (err.status != 200)
+            return InternalError(res, response, err);
+    }
+
+    return Ok(res, response);
+});
+
+router.post("/joinGroup", authorize([Role.User, Role.Admin, Role.ContentCreator, Role.Moderator]), validateJoinGroup, async (req: CustomRequest<JoinGroupDTO>, res: any) => {
+    /* #swagger.tags = ['Chat']
+    /*	#swagger.requestBody = {
+       required: true,
+       schema: { $ref: "#/definitions/ChatJoinGroupRequest" }
+  } */
+    const response = new BaseResponse<any>();
+    try {
+        const payload = new JoinGroupDTO(req.body);
+
+        const groupChat = await GroupChatEntity.findOne({ _id: payload.groupChatId }, {
+            hashTags: 0,
+            hashTags_fuzzy: 0,
+            titlesch: 0,
+            titlesch_fuzzy: 0,
+        }).lean(true);
+        if (!groupChat || groupChat.type == GroupChatType.Private)
+            throw new NotValidError(getMessage("unauthorized", req.selectedLangs()));
+
+        if (await GroupChatUserEntity.exists({ groupChatId: payload.groupChatId, userId: res.locals.user._id, recordStatus: RecordStatus.Active }))
+            throw new NotValidError(getMessage("alreadyJoinedGroup", req.selectedLangs()));
+
+        const user = await RedisService.acquireUser(res.locals.user._id, ["username"]);
+        await GroupChatUserEntity.create({ userId: res.locals.user._id, username: user.username, groupChatId: payload.groupChatId, groupRole: GroupChatUserRole.Member });
+
+        await RedisService.addToUserGroupChatIds(res.locals.user._id, payload.groupChatId);
+        await RedisService.incrementGroupMemberCount(payload.groupChatId, 1);
+        const groupGuard = await RedisService.acquireGroupGuard();
+        const message = await MessageService.sendGroupMessage({
+            groupChatId: payload.groupChatId,
+            ownerId: "62ab8a204166fd1eaebbb3fa",
+            text: `${user.username} ${getMessage("addedToGroup", req.selectedLangs())}`,
+            fromUser: groupGuard
+        });
+
+        response.data = groupChat;
+        response.data["lastMessage"] = {
+            ownerId: groupGuard._id,
+            owner: groupGuard,
+            text: `${user.username} ${getMessage("addedToGroup", req.selectedLangs())}`,
+            type: MessageType.Text,
+            files: [],
+            createdAt: message.createdAt,
+        };
+        response.data["unreadMessageCount"] = 1;
+
+    } catch (err: any) {
         response.setErrorMessage(err.message);
 
         if (err.status != 200)

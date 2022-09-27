@@ -3,11 +3,12 @@ import { _LeanDocument } from "mongoose";
 import userLimits from "../../stuplus-lib/constants/userLimits";
 import { GroupChatEntity, GroupChatUserEntity, UserEntity, GroupMessageEntity, NotificationEntity } from "../../stuplus-lib/entities/BaseEntity";
 import { User } from "../../stuplus-lib/entities/UserEntity";
-import { RecordStatus, NotificationType, GroupChatUserRole } from "../../stuplus-lib/enums/enums";
+import { RecordStatus, NotificationType, GroupChatUserRole, OSNotificationType } from "../../stuplus-lib/enums/enums";
 import { RedisKeyType, RedisGMOperationType } from "../../stuplus-lib/enums/enums_socket";
 import NotValidError from "../../stuplus-lib/errors/NotValidError";
 import { getMessage } from "../../stuplus-lib/localization/responseMessages";
 import MessageService from "../../stuplus-lib/services/messageService";
+import OneSignalService from "../../stuplus-lib/services/oneSignalService";
 import OnlineUserService from "../../stuplus-lib/services/onlineUsersService";
 import RedisService from "../../stuplus-lib/services/redisService";
 import { stringify } from "../../stuplus-lib/utils/general";
@@ -57,6 +58,8 @@ export class GroupAccess {
         }
         await Promise.all(addToUserGroupChatIdRedisOps);
 
+        await RedisService.incrementGroupMemberCount(payload.groupChatId, chatUsers.length);
+
         const socketUserDatas = [];
         const usersIdsNotFound = [];
         for (let i = 0; i < payload.userIds.length; i++) {
@@ -68,7 +71,6 @@ export class GroupAccess {
                 io.to(socketId).emit("cAddedToGroup", {
                     t: groupChat.title,
                     gCoIm: groupChat.coverImage,
-                    gAvKey: groupChat.avatarKey,
                     gCi: groupChat._id.toString(),
                 });
 
@@ -118,7 +120,19 @@ export class GroupAccess {
                 type: NotificationType.AddedYouToGroupChat,
                 groupChatId: groupChat._id.toString(),
             }));
-        }
+        };
+
+        await OneSignalService.sendNotificationWithUserIds({
+            heading: groupChat.title,
+            userIds: socketUserDatas.map(x => x.uId),
+            content: `${groupChat.title} grubuna katıldın.`,
+            chatId: "joinedToGroupChat",
+            data: {
+                type: OSNotificationType.joinedToGroupChat,
+                groupChatId: groupChat._id.toString(),
+            }
+        })
+
         await NotificationEntity.insertMany(notifications);
         let responseMessage = findGuardInPayloadUsers != -1 ? getMessage("groupUsersAddedGuardSuccess", acceptedLanguages) : getMessage("groupUsersAddedSuccess", acceptedLanguages);
         if (anyUserReachedLimit)
