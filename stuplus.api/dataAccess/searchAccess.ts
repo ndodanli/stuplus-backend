@@ -28,7 +28,7 @@ export class SearchAccess {
             });
         }
         const announcements = await announcementQuery
-            .sort({ _id: -1 })
+            .sort({ updatedAt: 1, _id: -1 })
             .select({ hashTags_fuzzy: 0, titlesch_fuzzy: 0 })
             .skip(payload.skip)
             .limit(payload.pageSize)
@@ -52,7 +52,7 @@ export class SearchAccess {
             });
         }
         const questions = await questionQuery
-            .sort({ _id: -1 })
+            .sort({ updatedAt: 1, _id: -1 })
             .select({ hashTags_fuzzy: 0, titlesch_fuzzy: 0 })
             .skip(payload.skip)
             .limit(payload.pageSize)
@@ -77,7 +77,7 @@ export class SearchAccess {
         }
         //TODO: add school relation to sort(schoolId)
         const users = await usersQuery
-            .sort({ popularity: -1, lastSeenDate: -1 })
+            .sort({ updatedAt: 1, popularity: -1, lastSeenDate: -1 })
             .select({ username: 1, firstName: 1, lastName: 1, profilePhotoUrl: 1, avatarKey: 1 })
             .skip(payload.skip)
             .limit(payload.pageSize)
@@ -103,7 +103,7 @@ export class SearchAccess {
         //TODO: add school relation to sort(schoolId)
 
         const groupChats = await groupChatsQuery
-            .sort({ popularity: -1 })
+            .sort({ updatedAt: 1, popularity: -1 })
             .select({ title: 1, type: 1, about: 1, coverImageUrl: 1, hashTags: 1, schoolId: 1, departmentId: 1, grade: 1 })
             .skip(payload.skip)
             .limit(payload.pageSize)
@@ -137,7 +137,7 @@ export class SearchAccess {
         let hashTagQuery = HashtagEntity.find({ tag: { $regex: searchable(payload.searchTerm), $options: "i" } });
         //TODO: add school relation to sort(schoolId)
         const hashTags = await hashTagQuery
-            .sort({ overallPopularity: -1 })
+            .sort({ updatedAt: 1, overallPopularity: -1 })
             .skip(payload.skip)
             .limit(payload.pageSize)
             .lean(true) as Hashtag[];
@@ -150,7 +150,7 @@ export class SearchAccess {
             { userId: 1, username: 1 });
         //TODO: add school relation to sort(schoolId)
         const groupChatUsers = await groupChatUsersQuery
-            .sort({ _id: -1 })
+            .sort({ updatedAt: 1, _id: -1 })
             .skip(payload.skip)
             .limit(payload.pageSize)
             .lean(true);
@@ -180,7 +180,7 @@ export class SearchAccess {
         }, {
             _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
         })
-            .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
+            .sort({ updatedAt: 1, _id: -1, popularity: -1, lastSeenDate: -1 })
             .limit(queryLimit)
             .lean(true);
         if (users.length > 0) {
@@ -207,7 +207,7 @@ export class SearchAccess {
                     }, {
                         _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
                     })
-                        .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
+                        .sort({ updatedAt: 1, _id: -1, popularity: -1, lastSeenDate: -1 })
                         .limit(queryLimit)
                         .lean(true);
                     if (secondQueryUsers.length === 0)
@@ -235,7 +235,7 @@ export class SearchAccess {
             }, {
                 _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
             })
-                .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
+                .sort({ updatedAt: 1, _id: -1, popularity: -1, lastSeenDate: -1 })
                 .limit(queryLimit)
                 .lean(true);
             if (usersWithSameDepartment.length > 0) {
@@ -262,7 +262,7 @@ export class SearchAccess {
                         }, {
                             _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
                         })
-                            .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
+                            .sort({ updatedAt: 1, _id: -1, popularity: -1, lastSeenDate: -1 })
                             .limit(queryLimit)
                             .lean(true);
                         if (secondQueryUsers.length === 0)
@@ -290,7 +290,7 @@ export class SearchAccess {
             }, {
                 _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
             })
-                .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
+                .sort({ updatedAt: 1, _id: -1, popularity: -1, lastSeenDate: -1 })
                 .limit(queryLimit)
                 .lean(true);
             if (usersWithSameSchool.length > 0) {
@@ -316,7 +316,7 @@ export class SearchAccess {
                         }, {
                             _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
                         })
-                            .sort({ _id: -1, popularity: -1, lastSeenDate: -1 })
+                            .sort({ updatedAt: 1, _id: -1, popularity: -1, lastSeenDate: -1 })
                             .limit(queryLimit)
                             .lean(true);
                         if (secondQueryUsers.length === 0)
@@ -343,7 +343,7 @@ export class SearchAccess {
             }, {
                 _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
             })
-                .sort({ popularity: -1, lastSeenDate: -1 })
+                .sort({ updatedAt: 1, popularity: -1, lastSeenDate: -1 })
                 .limit(queryLimit)
                 .lean(true);
             if (usersRandom.length > 0) {
@@ -368,7 +368,7 @@ export class SearchAccess {
                         }, {
                             _id: 1, profilePhotoUrl: 1, avatarKey: 1, username: 1, firstName: 1, lastName: 1, createdAt: 1, schoolId: 1, departmentId: 1, grade: 1
                         })
-                            .sort({ popularity: -1, lastSeenDate: -1 })
+                            .sort({ updatedAt: 1, popularity: -1, lastSeenDate: -1 })
                             .limit(queryLimit)
                             .lean(true);
                         if (thirdQueryUsers.length === 0)

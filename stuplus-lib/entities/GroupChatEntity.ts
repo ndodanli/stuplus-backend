@@ -30,7 +30,7 @@ export interface GroupChat extends BaseEntity {
 
 export class GroupChatSettings {
   checkBadWords: boolean;
-  
+
   constructor(checkBadWords: boolean) {
     this.checkBadWords = checkBadWords;
   }
@@ -61,7 +61,7 @@ export const GroupChatSchema: Schema = new Schema({
   },
 });
 
-GroupChatSchema.index({ recordStatus: -1, popularity: -1 });
+GroupChatSchema.index({ recordStatus: -1, updatedAt: 1, popularity: -1 });
 
 GroupChatSchema.plugin(mongoose_fuzzy_searching,
   {

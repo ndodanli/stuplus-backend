@@ -20,7 +20,7 @@ export const GroupChatUserSchema: Schema = new Schema({
   groupRole: { type: String, required: true },
 });
 
-GroupChatUserSchema.index({ recordStatus: -1, groupChatId: 1 })
+GroupChatUserSchema.index({ recordStatus: -1, updatedAt: 1, groupChatId: 1 })
 
 GroupChatUserSchema.pre("save", function (next) {
   //
