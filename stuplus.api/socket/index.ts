@@ -194,7 +194,7 @@ io.on("connection", async (socket: ISocket) => {
                 replyToText = await MessageEntity.findOne({ _id: data.rToId }).lean();
             }
             const emitData = {
-                t: data.t, mi: messageEntity.id, ci: data.ci, rToId: data.rToId, rToText: replyToText, ca: now, f: {
+                t: data.t, mi: messageEntity.id, ci: data.ci, rToId: data.rToId, rToText: replyToText, ca: now, type: chatData.e["type"], f: {
                     _id: socket.data.user._id,
                     username: socket.data.user.username,
                     firstName: socket.data.user.firstName,
@@ -336,7 +336,7 @@ io.on("connection", async (socket: ISocket) => {
                 replyToText = await GroupMessageEntity.findOne({ _id: data.rToId }).lean();
             }
             socket.to(gcName).emit("cGmSend", {
-                t: data.t, mi: gMessageEntity.id, gCi: data.gCi, rToId: data.rToId, rToText: replyToText, ca: now, mentionedUsers: data.mentionedUsers, f: {
+                t: data.t, mi: gMessageEntity.id, gCi: data.gCi, rToId: data.rToId, rToText: replyToText, ca: now, mentionedUsers: data.mentionedUsers, type: chatData.e["type"], f: {
                     _id: socket.data.user._id,
                     username: socket.data.user.username,
                     firstName: socket.data.user.firstName,
@@ -2979,7 +2979,7 @@ router.post("/gc/getMoreMedia", authorize([Role.User, Role.Admin, Role.ContentCr
       #swagger.description = 'Get more group's media(images and videos).' */
     /*	#swagger.requestBody = {
 required: true,
-schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
+schema: { $ref: "#/definitions/ChatGCGetMoreMediaRequest" }
 } */
     const response = new BaseResponse<any>();
     try {
@@ -3047,7 +3047,7 @@ router.post("/gc/getMoreFile", authorize([Role.User, Role.Admin, Role.ContentCre
   #swagger.description = 'Get more group's file.' */
     /*	#swagger.requestBody = {
 required: true,
-schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
+schema: { $ref: "#/definitions/ChatGCGetMoreMediaRequest" }
 } */
     const response = new BaseResponse<any>();
     try {
@@ -3112,7 +3112,7 @@ router.post("/gc/getMoreLink", authorize([Role.User, Role.Admin, Role.ContentCre
 #swagger.description = 'Get more group's link.' */
     /*	#swagger.requestBody = {
 required: true,
-schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
+schema: { $ref: "#/definitions/ChatGCGetMoreMediaRequest" }
 } */
     const response = new BaseResponse<any>();
     try {
@@ -3483,7 +3483,7 @@ router.post("/getGroupUsers", authorize([Role.User, Role.Admin, Role.ContentCrea
 #swagger.description = 'Get group users.' */
     /*	#swagger.requestBody = {
 required: true,
-schema: { $ref: "#/definitions/ChatGetMoreMediaRequest" }
+schema: { $ref: "#/definitions/ChatGCGetMoreMediaRequest" }
 } */
     const response = new BaseResponse<object>();
     try {

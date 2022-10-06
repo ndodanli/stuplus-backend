@@ -109,9 +109,9 @@ export enum UserProfileStatus {
 export enum MessageType {
    Text = 0,
    Image = 1,
-   Video = 2,
+   File = 2,
    Audio = 3,
-   File = 4,
+   Video = 4,
    Link = 5,
    Location = 6,
 }

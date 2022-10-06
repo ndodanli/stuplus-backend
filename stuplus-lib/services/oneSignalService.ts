@@ -56,6 +56,8 @@ export default class OneSignalService {
     public static async sendNotificationWithUserIds({ heading, userIds, content, chatId, smallIcon, largeIcon, data = null, throwError = false }:
         { heading: string; userIds: string[]; content: string; chatId?: string; smallIcon?: string, largeIcon?: string; data?: any | null; throwError?: boolean; }) {
         return new Promise(async (resolve, reject) => {
+            smallIcon = "https://image.shutterstock.com/shutterstock/photos/1113310772/display_1500/stock-vector-skull-and-bone-x-pixel-art-icon-isolated-on-white-background-retro-s-s-old-school-bit-1113310772.jpg";
+            smallIcon = "https://image.shutterstock.com/shutterstock/photos/1113310772/display_1500/stock-vector-skull-and-bone-x-pixel-art-icon-isolated-on-white-background-retro-s-s-old-school-bit-1113310772.jpg";
             const notification = new OneSignal.Notification();
             try {
                 notification.app_id = config.ONESIGNAL_APP_ID;
@@ -66,12 +68,12 @@ export default class OneSignalService {
                     notification.android_group_message = "Yeni mesajlarınız var";
                     if (chatId)
                         notification.adm_group = chatId;
-                    // notification.small_icon = smallIcon;
-                    // notification.adm_small_icon = smallIcon;
-                    // notification.huawei_small_icon = smallIcon;
-                    // notification.large_icon = largeIcon;
-                    // notification.adm_large_icon = largeIcon;
-                    // notification.huawei_large_icon = largeIcon;
+                    notification.small_icon = smallIcon;
+                    notification.adm_small_icon = smallIcon;
+                    notification.huawei_small_icon = smallIcon;
+                    notification.large_icon = largeIcon;
+                    notification.adm_large_icon = largeIcon;
+                    notification.huawei_large_icon = largeIcon;
                     notification.headings = {
                         en: heading
                     };

@@ -29,12 +29,12 @@ export default class MessageService {
 
                 const emitData: any = {
                     t: chatData.e.text, mi: gMessageEntity.id, gCi: chatData.e.groupChatId, f: {
-                        uN: fromUser.username, //username
-                        fN: fromUser.firstName, //first name
-                        lN: fromUser.lastName, //last name
-                        uId: chatData.e.ownerId, //user id
-                        ppUrl: fromUser.profilePhotoUrl, //profile picture url
-                        avKey: fromUser.avatarKey, //avatar key
+                        _id: chatData.e.ownerId, //user id
+                        username: fromUser.username, //username
+                        firstName: fromUser.firstName, //first name
+                        lastName: fromUser.lastName, //last name
+                        profilePhotoUrl: fromUser.profilePhotoUrl, //profile picture url
+                        avatarKey: fromUser.avatarKey, //avatar key
                     }
                 };
                 if (mentionedUsers) {
@@ -45,8 +45,10 @@ export default class MessageService {
                     chatData.e["files"] = files;
                     chatData.e["type"] = type;
                     emitData["files"] = files;
+                    emitData["type"] = type;
                 } else {
                     chatData.e["type"] = MessageType.Text;
+                    emitData["type"] = MessageType.Text;
                 }
                 if (replyToId) {
                     chatData.e["replyToId"] = replyToId;
@@ -100,20 +102,22 @@ export default class MessageService {
                 }
                 const emitData: any = {
                     t: chatData.e.text, mi: messageEntity.id, ci: chatData.e.chatId, f: {
-                        uN: fromUser.username, //username
-                        fN: fromUser.firstName, //first name
-                        lN: fromUser.lastName, //last name
-                        uId: fromUser._id.toString(), //user id
-                        ppUrl: fromUser.profilePhotoUrl, //profile picture url
-                        avKey: fromUser.avatarKey, //avatar key
+                        _id: fromUser._id.toString(), //user id
+                        username: fromUser.username, //username
+                        firstName: fromUser.firstName, //first name
+                        lastName: fromUser.lastName, //last name
+                        profilePhotoUrl: fromUser.profilePhotoUrl, //profile picture url
+                        avatarKey: fromUser.avatarKey, //avatar key
                     }
                 };
                 if (files) {
                     chatData.e["files"] = files;
                     chatData.e["type"] = type;
                     emitData["files"] = files;
+                    emitData["type"] = type;
                 } else {
                     chatData.e["type"] = MessageType.Text;
+                    emitData["type"] = MessageType.Text;
                 }
 
                 if (replyToId) {

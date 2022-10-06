@@ -356,7 +356,7 @@ export class UserAccess {
 
         const verifyLink = config.DOMAIN + `/account/emailConfirmation?uid=${createdUser._id}&code=${code}&t=${isStudentEmail ? "1" : "0"}`
 
-        await EmailService.sendEmail(
+        const result = await EmailService.sendEmail(
             payload.email,
             "Hesabınızı onaylayın",
             "Hesabınızı onaylamak için linkiniz hazır.",

@@ -1,7 +1,7 @@
 let config = {
     DOMAIN: process.env.DOMAIN || "http://46.101.160.93",
     EMAIL_SERVICE: {
-        HOST_EMAIL: "fakultemdestekmail@gmail.com",
+        HOST_EMAIL: "info@stuplus.app",
         HOST_EMAIL_PASSWORD: "yqplxujmtvszkwmx"
     },
     LOGGER_NAME: "",

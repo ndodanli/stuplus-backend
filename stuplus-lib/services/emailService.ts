@@ -5,12 +5,12 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 export default class EmailService {
     private static emailTransporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'mail.stuplus.app',
         port: 465,
         secure: true,
         auth: {
-            user: "fakultemdestek@gmail.com",
-            pass: "yqplxujmtvszkwmx"
+            user: "info@stuplus.app",
+            pass: "YQQ8EvwpAzAg9HL"
         },
     });
 
@@ -21,6 +21,6 @@ export default class EmailService {
             subject: subject,
             text: text,
             html: html
-        })
+        });
     }
 }
