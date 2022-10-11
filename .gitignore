@@ -68,7 +68,17 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-# .env
+.env
+stuplus.api/.env
+stuplus.api/config/config.ts
+stuplus.backoffice.api/.env
+stuplus.backoffice.api/config/config.ts
+stuplus.cron/.env
+stuplus.cron/config/config.ts
+stuplus.image-service
+notes.txt
+Stuplus-API-SOCKET-out.log
+tests.ts
 # .env.test
 
 # parcel-bundler cache (https://parceljs.org/)
