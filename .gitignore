@@ -69,7 +69,6 @@ typings/
 
 # dotenv environment variables file
 .env
-stuplus.api/.env
 stuplus.api/config/config.ts
 stuplus.backoffice.api/.env
 stuplus.backoffice.api/config/config.ts
