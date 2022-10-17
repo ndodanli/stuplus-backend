@@ -28,7 +28,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
     }
 
     async run(): Promise<void> {
-        console.log("RedisDatabaseJob Cron job started");
+        // console.log("RedisDatabaseJob Cron job started");
         const totalKeySize = await RedisService.client.dbSize();
         let currentKeySize = 0;
         try {
@@ -141,7 +141,7 @@ export default class RedisDatabaseJob implements IBaseCronJob {
             } while (RedisDatabaseJob.currentCursor != 0 && currentKeySize < totalKeySize);
             console.timeEnd("scan")
 
-            console.log("RedisDatabaseJob Cron job finished");
+            // console.log("RedisDatabaseJob Cron job finished");
         } catch (error) {
             console.log("RedisDatabaseJob Cron job error", error);
         }
